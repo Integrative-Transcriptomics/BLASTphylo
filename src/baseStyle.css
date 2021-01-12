@@ -1,7 +1,7 @@
 html {
   font-family: sans-serif;
-  background: #eee;
-  padding: 1rem;
+  background: white;
+  padding: 1rem 0 0.5rem 0;
 }
 
 body {
@@ -9,52 +9,125 @@ body {
   background: white;
 }
 
-h1, h2, h3, h4, h5, h6 {
+
+
+h1, h2, h3, h4, h5, h6, #title{
   font-family: serif;
   color: #377ba8;
-  margin: 1rem 0;
+  margin: 10rem;
+  text-align: left;
 }
 
-a {
+
+#menuLink, #helpLink{
+  height: 100%;
+  border: none;
   color: #377ba8;
+  text-decoration: none;
+  background: lightgray;
+  padding: 10px;
 }
+
+#link1:hover, #link2:hover{
+  background: #377ba8;
+}
+
+#menuLink:hover, #helpLink:hover{
+  border:none;
+  color: white;
+  text-decoration: none;
+  background: #377ba8;
+}
+
+
 
 hr {
   border: none;
-  border-top: 1px solid lightgray;
+  border-top: 1px solid white;
 }
 
 /* Website header styling */
 nav {
   background: lightgray;
+  width: 100%;
   display: flex;
   align-items: center;
-  padding: 0 0.5rem;
+  padding: 10px 0.5rem;
 }
-
-nav h1 {
+nav h1, #title {
   flex: auto;
-  margin: 0;
+  margin: 0px 15px;
 }
-
-nav h1 a {
+nav, h1, a, #title{
   text-decoration: none;
   padding: 0.25rem 0.5rem;
 }
 
-nav ul  {
+nav, ul  {
   display: flex;
   list-style: none;
-  margin: 0;
+  margin: 0 ;
   padding: 0;
 }
 
+
+
 nav ul li a, nav ul li span, header .action {
+  width: 100%;
   display: block;
   padding: 0.5rem;
 }
 
+/* Error message*/
+#alert {
+  padding: 10px;
+  background-color: #c2291a;
+  color: white;
+}
 
+#alert ul{
+ display: block;
+}
 
+#alert li{
+ margin: 0 0 5px 0;
+}
 
+.closebtn {
+  margin-left: 15px;
+  color: white;
+  font-weight: bold;
+  float: right;
+  font-size: 22px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
 
+.closebtn:hover {
+  color: black;
+}
+
+/* Visualisation div style */
+#treeVis{
+  width: 100%;
+  margin-top: 160px;
+  position: absolute;
+  display: flex;
+  /*border-top: 2px solid  #1f618d ; */
+}
+
+#tree{
+  display: left;
+  overflow: visible;
+}
+
+#additionalInfo{
+  display: inline-block;
+  overflow: visible;
+  text-overflow: ellipsis
+}
+
+#tree_vis{
+  width: auto !important;
+}
