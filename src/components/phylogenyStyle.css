@@ -1,0 +1,52 @@
+
+#phylogenyMenu {
+  width: 100%;
+  position: absolute;
+}
+
+#phylogenyMenu label, #phylogenyMenu select{
+  margin: 0 0 0 5px;
+}
+
+#phylogenyMenu li{
+ display: inline-block;
+ width: 50%;
+ list-style-type: none;
+ text-align: center;
+ padding: 5px 0 5px 0;
+ background: #6ea9d0;
+ border: solid 1.5px white;
+}
+
+#phylogenyMenu li:hover{
+  background: #377ba8;
+}
+
+
+#distTree, #d3Tree {
+ border: none;
+ background: transparent;
+ display: block;
+ color: white;
+ width: 100%;
+}
+
+#distTree:hover, #d3Tree:hover{
+ color: white;
+ width: 100%;
+ text-decoration: none;
+}
+
+
+#phylogenyMenu h2{
+ padding: 2px 0 2px 20px;
+ margin: 5px 0 0 0 ;
+ font-size: 17px;
+ color: white;
+ background: #377ba8;
+ border: solid 1.5px white;
+}
+
+.labels {
+  overflow: visible;
+}

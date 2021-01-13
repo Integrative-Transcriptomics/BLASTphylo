@@ -1,0 +1,54 @@
+
+#menu legend {
+  max-width: 200px;
+  text-align: center;
+  padding: 5px 7px 5px 7px;
+  border: 2px solid #6495ED;
+  border-radius: 4px;
+  background: white; 
+
+}
+
+fieldset{
+  border-radius: 5px;
+}
+
+#menu {
+  margin: 30px 10px;
+}
+
+#menu label {
+  margin-right: 5px;
+}
+
+input[type='file']{
+  margin: 5px ;
+}
+
+ #menu select, textarea {
+  padding: 2px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#submit{
+ padding: 10px 15px 10px 15px;
+ border-radius: 10px;
+ border: 1.5px solid black;
+ background: linear-gradient(180deg, rgba(108,163,244,1) 0%, rgba(37,73,196,1) 100%);
+ color: white;
+ text-align: center;
+ text-decoration: none;
+}
+
+#submit:hover{
+ padding: 10px 15px 10px 15px;
+ border-radius: 10px;
+ background: rgba(108,163,244,1);
+ color: white;
+ text-align: center;
+ text-decoration: none;
+}
+
+
+

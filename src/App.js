@@ -84,7 +84,7 @@ class App extends Component {
         <div className="App">
           <header className="App-header">
           <nav>
-          <h1 id='title'>PhyloBlast</h1>
+          <h1 id='title'>PhyloBLAST</h1>
           <ul>
             <li id='link1'>
                <button id='menuLink' onClick={this.handleHomeClick} >Home </button>
