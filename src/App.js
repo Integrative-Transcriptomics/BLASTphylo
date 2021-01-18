@@ -1,7 +1,7 @@
 // used libraries
 import React, {Component} from 'react';
-import NewWindow from 'react-new-window';
 import html2canvas from 'html2canvas';
+
 
 
 // own components and style sheets
@@ -10,7 +10,6 @@ import Menu from './components/Menu.js';
 import Phyloblast from './components/Phyloblast.js';
 import Phylogeny from './components/Phylogeny.js';
 import Help from './components/Help.js';
-
 
 class App extends Component {
   
@@ -84,13 +83,13 @@ class App extends Component {
         <div className="App">
           <header className="App-header">
           <nav>
-          <h1 id='title'>PhyloBLAST</h1>
+          <h1 id='title'>BLASTPhylo</h1>
           <ul>
             <li id='link1'>
-               <button id='menuLink' onClick={this.handleHomeClick} >Home </button>
+               <button id='menuLink' onClick={this.handleHomeClick} >home </button>
             </li>
             <li id='link2'>
-              <button id='helpLink' onClick={this.handleHelpClick} >Help </button>
+              <button id='helpLink' onClick={this.handleHelpClick} >help </button>
             </li>
           </ul>
           </nav>
@@ -116,13 +115,13 @@ class App extends Component {
     <div className="App">
       <header className="App-header">
       <nav>
-	  <h1 id='title'>PhyloBlast</h1>
+	  <h1 id='title'>BLASTPhylo</h1>
  	  <ul>
         <li id='link1'>
-	       <button id='menuLink' onClick={this.handleHomeClick} >Home </button>
+	       <button id='menuLink' onClick={this.handleHomeClick} >home </button>
         </li>
       	<li id='link2'>
-          <button id='helpLink' onClick={this.handleHelpClick} >Help </button>
+          <button id='helpLink' onClick={this.handleHelpClick} >help </button>
         </li>
 	  </ul>
       </nav>
@@ -154,10 +153,22 @@ class ExportTrees extends Component{
     }
 
     exportJPEG(){
-       html2canvas(document.getElementById('treeVis')).then(function (canvas) {
-            void(window.open().location = canvas.toDataURL("image/jpeg", 5.0));
-       });
-   }
+        // change size to full treesize + bars/clade info
+        var element = document.getElementById('treeVis');
+        var styleOrig = element.getBoundingClientRect();
+        var treefigure = document.getElementById('tree_vis').getBoundingClientRect();
+        element.style.width = treefigure.width+350;
+        element.style.height = treefigure.height;
+
+        html2canvas(element).then(function (canvas) {
+            javascript:void(window.open().location = canvas.toDataURL("image/jpeg", 5.0));
+        });
+
+
+        // resize window to original size
+        element.style.width = styleOrig.width;
+        element.style.height = styleOrig.height;
+    }
 
    render(){
         return(<button id="export_pdf" onClick={this.exportJPEG}>export tree as jpeg</button>);

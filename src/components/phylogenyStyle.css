@@ -1,11 +1,14 @@
 
 #phylogenyMenu {
-  width: 100%;
-  position: absolute;
+  margin: 0px 0px 10px 0px;
 }
 
 #phylogenyMenu label, #phylogenyMenu select{
   margin: 0 0 0 5px;
+}
+
+#phylogenyMenu button {
+  margin: 0 0 0 10px;
 }
 
 #phylogenyMenu li{
@@ -14,12 +17,12 @@
  list-style-type: none;
  text-align: center;
  padding: 5px 0 5px 0;
- background: #6ea9d0;
+ background: #28b463;
  border: solid 1.5px white;
 }
 
 #phylogenyMenu li:hover{
-  background: #377ba8;
+  background: #1d8348;
 }
 
 
@@ -43,10 +46,12 @@
  margin: 5px 0 0 0 ;
  font-size: 17px;
  color: white;
- background: #377ba8;
+ background: #1d8348;
  border: solid 1.5px white;
 }
 
 .labels {
   overflow: visible;
 }
+
+

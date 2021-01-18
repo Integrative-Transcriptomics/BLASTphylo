@@ -36,7 +36,12 @@ class Phylogeny extends Component {
         this.distTree = this.distTree.bind(this);
         this.d3Tree = this.d3Tree.bind(this);
         this.showAdditional = this.showAdditional.bind(this);
+
+        d3v6.select('#treeVis').style('border', '2px solid #1d8348')
+                                .style('border-radius', '5px');
     }
+
+
 
     distTree(){
         d3v6.selectAll('#tree_vis').remove(); // remove old vis & new empty svg
@@ -93,6 +98,8 @@ class Phylogeny extends Component {
             labeling = <label>Show additional clade information</label>;
         }
 
+
+
         return(
             <div id="phylogeny">
                 <div id='phylogenyMenu'>
@@ -107,12 +114,12 @@ class Phylogeny extends Component {
                         <option value="0">aligned seqs</option>
                         <option value="1">full seqs</option>
                     </select>
+                   <button id="public_ready" title="Result will be a static tree. Reload the page to start a new interpolation of the basic tree" onClick={publicationReady}>publication ready</button>
+                   <ExportTrees />
+                   <br></br>
                    <br></br>
                    {additionalInformation}
                    {labeling}
-                   <br></br>
-                   <button id="public_ready" title="Result will be a static tree. Reload the page to start a new interpolation of the basic tree" onClick={publicationReady}>publication ready</button>
-                   <ExportTrees />
                 </div>
             </div>
         );

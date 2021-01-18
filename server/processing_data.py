@@ -305,8 +305,8 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
             except KeyError:
                 hitAcc_info[subject_seqs[key][0][0]] = [key]
 
-        orderedAccs = sorted(hitAcc_info, key=lambda k: len(hitAcc_info[k]))[:33]
-        mosthitAcc = {taxa: key for key in orderedAccs for taxa in hitAcc_info[key]}
+
+        mosthitAcc = [hitAcc_info[key][0] for key in hitAcc_info.keys() if len(hitAcc_info[key]) == 1]
 
 
         newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10)

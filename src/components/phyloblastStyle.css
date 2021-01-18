@@ -1,8 +1,7 @@
 
 
 #phyloblastMenu{
-  width: 100%; 
-  position: absolute;
+  margin: 0px 0px 10px 0px;
 }
 
 #phyloblastMenu label {

@@ -8,7 +8,7 @@
 
 import * as d3v6 from 'd3v6';
 
-// global variable for one click interaction
+// global variables
 var clicked_nodes = {}
 var treeVis = null;
 var extraInfo = null;
@@ -34,6 +34,8 @@ function startTreevis(tree){
 
 
 // ****************** Tooltip: show Nodevalues ***************************
+const tooltip_x_pos = 10;
+const tooltip_y_pos = 35;
 
 function showTooltip(node, barhover, extraDataLength){
   var tooltip = d3v6.select("#tree")
@@ -46,25 +48,20 @@ function showTooltip(node, barhover, extraDataLength){
 	.style("color", "white")
 	.style("background-color", "rgba(35, 29, 51, 0.7)");
 
-  var tooltip_y_pos = -150;
+  var text = null;
   if(extraDataLength === 1){
-    tooltip.style("visibility", "visible")
-	.html('<b>' + node.data.name + '</b> <br /> taxa: ' + String(node.data.value[0]) + '<br />')
-	.style("left", window.event.pageX  + "px")
-	.style("top",(window.event.pageY + tooltip_y_pos) + "px")
+    text = '<b>' + node.data.name + '</b> <br /> taxa: ' + String(node.data.value[0]) + '<br />';
   }else if (extraDataLength === 2){
-    tooltip.style("visibility", "visible")
-	.html(node.data.name )
-	.style("left", window.event.pageX  + "px")
-	.style("top",(window.event.pageY + tooltip_y_pos) + "px")
+    text = '<b>' + node.data.name + '</b>';
   }else{
-    tooltip.style("visibility", "visible")
-	.html('<b>' + node.data.name + '</b> <br /> hits: ' + String(node.data.value[0]) + '<br />' +
-	 'subtree hits: ' + String(node.data.value[1]))
-	.style("left", window.event.pageX  + "px")
-	.style("top",(window.event.pageY + tooltip_y_pos) + "px")
+    text = '<b>' + node.data.name + '</b> <br /> hits: ' + String(node.data.value[0]) + '<br />' +
+	 'subtree hits: ' + String(node.data.value[1]);
   }
 
+  tooltip.style("visibility", "visible")
+	    .html(text)
+	    .style("left", (window.event.pageX + tooltip_x_pos) + "px")
+	    .style("top", (window.event.pageY + tooltip_y_pos) + "px");
 
   // change styling of the circle to indicate on click action
   if(barhover){
@@ -76,9 +73,8 @@ function showTooltip(node, barhover, extraDataLength){
 }
 
 function moveTooltip(node, barhover){
-  var tooltip_y_pos = -150;
-  d3v6.select('#tooltip').style("left", window.event.pageX + "px")
-         .style("top", (window.event.pageY + tooltip_y_pos) + "px")
+  d3v6.select('#tooltip').style("left", (window.event.pageX + tooltip_x_pos) + "px")
+         .style("top", (window.event.pageY + tooltip_y_pos) + "px");
 
 }
 
@@ -89,7 +85,9 @@ function hideTooltip(node, barhover, oldCircleSize){
   if(barhover){
 	  if(node.children || node._children){
 	  	d3v6.select('#nodecircle' + node.id).attr('r', oldCircleSize)
-	 	 .attr("fill", node._children || node.children ? "#555" : "#999")
+	 	 .attr("fill", function(d){ if(d.parent === null){return '#377ba8';} // violet: #9038c7
+                                        else if(d._children || d.children){return "#555";}
+                                        else{return "#999";}})
  	 }
   }
 
@@ -104,7 +102,9 @@ const taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'ph
 var treeData = null;
 var treeHeight = 0;
 var svgWidth = 300;
-var margin = ({top: 15 , right: 10, bottom: 40, left: 20});
+var margin = ({top: 20 , right: 10, bottom: 40, left: 60});
+var leftmostnode = null;
+var rightmostnode = null;
 
 
 // Collapse the node and all it's children
@@ -208,7 +208,7 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
      		.style("user-select", "none")
 
     var g = svg
-        .attr("width", width+margin.left+margin.right)
+        .attr("width", width)
         .attr("height", treeHeight)
         .append("g")
         .attr('id', 'group')
@@ -218,22 +218,23 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
     root.x0 = 0;
     root.y0 = 0;
   
-
-
+    // center the scrolling bar to the root
+    document.getElementById("treeVis").scrollTop = treeHeight/2-window.innerHeight/2;
 
     update(root);
-
-
-
-
 
 
     function update(source) {
          
         // Assigns the x and y position to the nodes
         treeData = flexLayout(root);
-	    //this.setState({actualData: treeData});
 
+        leftmostnode = treeData;
+	    rightmostnode = treeData;
+	    treeData.eachBefore(node => {
+	        if(node.x < leftmostnode.x) leftmostnode = node;
+	        if(node.x > rightmostnode.x) rightmostnode = node;
+	    });
 
         // Switch x and y coordinates for horizontal layout
         treeData.each(d=>{
@@ -264,7 +265,9 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
             .attr('class', 'node')
 	        .attr('id', function(d){return 'nodecircle' + d.id;})
             .attr('r', d => extraData != null && Object.keys(extraData).length === 1 ? circleSize(Math.log2(d.data.value[0])) : 3.5)
-            .attr("fill", d => d._children || d.children ? "#555" : "#999")
+            .attr("fill", function(d,i){ if( i === 0){return '#377ba8';} // violet: #9038c7
+                                        else if(d._children || d.children){return "#555";}
+                                        else{return "#999";}})
             .attr("stroke-width", 10)
             .attr("cursor", "pointer")
             .on('click', click)
@@ -422,6 +425,8 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
 // show hit values based on the actual state of the tree (phyloblast.html)
 function hitBars(){
   var value = document.getElementById('tree_menu').value;
+  var barheight = 7;
+
   var hitValue = null;
   if (value === '0'){  // show node bars
 	hitValue = 0;
@@ -450,7 +455,7 @@ function hitBars(){
            .style("user-select", "none");
       
       hitbars.append('g')
-             .attr('transform', 'translate(' + margin.left + ',' + (margin.top+10) + ')')
+             .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
              .call(d3v6.axisTop(scaleX));
 
       hitbars.append('g')
@@ -465,14 +470,14 @@ function hitBars(){
 	   //.attr("y", function(d){return d.y;})
    	   .attr('fill',  d => d.children  ? "transparent" : "#377ba8")	
 	   .attr("width", function(d){ return scaleX(d.data.value[hitValue]);})
-	   .attr("height", 7)
+	   .attr("height", barheight)
         .on("mouseover", function(d, i){showTooltip(i, false, null);})
         .on("mouseout", function(d, i){hideTooltip(i, false, 3.5);})
         .on("mousemove", function(d, i){moveTooltip(i, false);});
 
-     if(treeHeight >= window.innerHeight){
+     if((rightmostnode.y-leftmostnode.y) >= (window.innerHeight*0.8)){
          hitbars.append('g')
-                 .attr('transform', 'translate(' + margin.left + ',' + (treeHeight-margin.bottom+20) + ')')
+                 .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2+rightmostnode.y+barheight) + ')')
                  .call(d3v6.axisBottom(scaleX));
      }
 }
@@ -490,20 +495,12 @@ function validNodename(taxa){
 
 // show parent taxa as color-coded bars  (phylogeny.html)
 function showClades(taxData, accData, libTree){
-
    var checked = document.getElementById('clade_info').checked;
    
    // color-encoding of the taxids   Problem to much ids/accs as colors
    var taxids = Object.keys(taxData);
    var colorsParent = d3v6.scaleOrdinal().domain(taxids).range(d3v6.schemeCategory10);
   //console.log(taxids)
-  // color-encoding for the hit accessions
-  var accs = new Set()
-  for (var key in accData){
-     accs.add(accData[key]);
-  }
-  //console.log(accs) 
-  var colorsAccs = d3v6.scaleOrdinal().domain([...accs]).range(d3v6.schemeDark2);
 
 //[...new Set(d3v6.schemeDark2.concat(d3v6.schemePaired).concat(d3v6.schemeCategory10).concat(d3v6.schemeTableau10))])
 
@@ -539,26 +536,6 @@ function showClades(taxData, accData, libTree){
            .style("font", "10px sans-serif")
            .style("user-select", "none");
 
-
-      clades.append('g')
-           .attr('transform', 'translate(' + margin.left + ',' + actualTreeHeight + ')')
-           .selectAll('.clades')
-           .data(nodes)
-           .enter()
-           .append('rect')
-           .attr('class', 'clades')
-           .attr('transform', function(d,i) {var taxaName = validNodename(d.data.name);
-                                if(phylotreePresent && dataInfo[taxaName] !== undefined){
-                                return 'translate(0,' + (dataInfo[taxaName].screen_y-(rectSize/2)) + ')';}
-                                else{return 'translate(0,' + (d.y-(rectSize/2)) + ')'; }})
-           .attr('stroke', d => d.data.value[0] === 0 || d.children ? 'none' : 'black')
-   	       .attr('fill', function(d){if(d.data.value[0] === 0 || d.children) {
-				return 'transparent';}
-                                else{
-                                return colorsParent(d.data.value[0]);}})	
-	       .attr("width", rectSize*2)
-	       .attr("height", rectSize);
-
       clades.append('g')
            .attr('transform', 'translate(' + margin.left + ',' + actualTreeHeight + ')')
            .selectAll('.accession')
@@ -568,17 +545,36 @@ function showClades(taxData, accData, libTree){
            .attr('class', 'accession')
            .attr('transform',function(d,i) { var taxaName = validNodename(d.data.name);
                                 if(phylotreePresent && dataInfo[taxaName] !== undefined){
-                                return 'translate(' + (rectSize*2+10)+ ',' + (dataInfo[taxaName].screen_y-(rectSize/2)) + ')';}
-                                else{return 'translate(' + (rectSize*2+10)+ ','  + (d.y-(rectSize/2)) + ')'; }})
-           .attr('stroke', d => accData[d.data.value[1]] === undefined  ? 'none' : 'black')
-   	       .attr('fill', function(d){if(accData[d.data.value[1]] === undefined || d.children) {
-				return 'transparent';}
+                                return 'translate(0,' + (dataInfo[taxaName].screen_y-(rectSize/2)) + ')';}
+                                else{return 'translate(0,' + (d.y-(rectSize/2)) + ')'; }})
+           .attr('stroke', d => accData.includes(d.data.value[1]) ? 'black' : 'none')
+   	       .attr('fill', function(d){if(accData.includes(d.data.value[1])) {
+				return 'blue';}
                                 else{
-                                return colorsAccs(accData[d.data.value[1]]);}})
+                                return 'transparent';}})
 	       .attr("width", rectSize*2)
 	       .attr("height", rectSize);
 
-      var labels = ['phylum', 'hit ID'];
+	  clades.append('g')
+           .attr('transform', 'translate(' + margin.left + ',' + actualTreeHeight + ')')
+           .selectAll('.clades')
+           .data(nodes)
+           .enter()
+           .append('rect')
+           .attr('class', 'clades')
+           .attr('transform', function(d,i) {var taxaName = validNodename(d.data.name);
+                                if(phylotreePresent && dataInfo[taxaName] !== undefined){
+                                return 'translate(' + (rectSize*2+10)+ ',' + (dataInfo[taxaName].screen_y-(rectSize/2)) + ')';}
+                                else{return 'translate(' + (rectSize*2+10)+ ',' + (d.y-(rectSize/2)) + ')'; }})
+           .attr('stroke', d => d.data.value[0] === 0 || d.children ? 'none' : 'black')
+   	       .attr('fill', function(d){if(d.data.value[0] === 0 || d.children) {
+				return 'transparent';}
+                                else{
+                                return colorsParent(d.data.value[0]);}})
+	       .attr("width", rectSize*2)
+	       .attr("height", rectSize);
+
+      var labels = ['unique', 'phylum'];
 
       clades.append('g')
             .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
@@ -591,7 +587,7 @@ function showClades(taxData, accData, libTree){
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "central")
             .attr('transform', function(d,i){return 'rotate(-45,' + i*(rectSize+15) + ', 0 )';})
-            .attr('x', function(d,i){ return i*(rectSize+15);})
+            .attr('x', function(d,i){ return i*(rectSize+20);})
             .attr('y', 0)
             .text(function(d){return d;});
 

@@ -8,6 +8,7 @@ import * as d3v6 from 'd3v6';
 import './phyloblastStyle.css';
 import {ExportTrees} from '../App.js'
 
+
 // own visualisations
 import {chart, hitBars, startTreevis, collapseTree, publicationReady} from '../visualisations/phyloblast.js';
 
@@ -22,9 +23,10 @@ class Phyloblast extends Component {
         this.handleHits = this.handleHits.bind(this);
         this.handleRanks = this.handleRanks.bind(this);
 
+        d3v6.select('#treeVis').style('border', '2px solid #69a2c9')
+                                .style('border-radius', '5px');
 
         // generation of the tree visualisation
-
         var tree = startTreevis(this.props.phyloData);
         //console.log(tree)
         if (tree !== 0){
@@ -34,6 +36,9 @@ class Phyloblast extends Component {
         }
 
    }
+
+
+
 
    calculatePhylogeny(event){
       var self = this;
@@ -71,7 +76,6 @@ class Phyloblast extends Component {
     var MakeItem = function(X){
         return <option value={X}>{X}</option>;
     };
-
 
 
     return(

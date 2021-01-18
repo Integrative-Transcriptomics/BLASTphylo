@@ -22,9 +22,8 @@ class Menu extends Component {
                    hit_cover: '50',
                    hit_ident: '50'}
 
-     this.handleSubmit = this.handleSubmit.bind(this);
-     this.handleChange = this.handleChange.bind(this);
-
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
 
    }
 
@@ -131,7 +130,7 @@ class Menu extends Component {
 
         <div id="menu" >
         <fieldset>
-		<legend>BLAST search</legend>
+		<legend>BLASTp search</legend>
         <label>
         Enter protein sequence:</label>
         <br></br>

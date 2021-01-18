@@ -1,7 +1,7 @@
 html {
   font-family: sans-serif;
   background: white;
-  padding: 1rem 0 0.5rem 0;
+  padding: 5px 100px 40px 100px;
 }
 
 body {
@@ -111,11 +111,11 @@ nav ul li a, nav ul li span, header .action {
 /* Visualisation div style */
 #treeVis{
   width: 100%;
-  margin-top: 160px;
-  position: absolute;
+  height: 80vh;
   display: flex;
-  /*border-top: 2px solid  #1f618d ; */
+  overflow: auto;
 }
+
 
 #tree{
   display: left;
@@ -130,4 +130,5 @@ nav ul li a, nav ul li span, header .action {
 
 #tree_vis{
   width: auto !important;
+  overflow: visible;
 }
