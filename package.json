@@ -12,7 +12,7 @@
     "d3": "^3.5.17",
     "d3-flextree": "^2.1.1",
     "d3v6": "npm:d3@^6.3.0",
-    "html2canvas": "^1.0.0-rc.7",
+    "dom-to-image": "^2.6.0",
     "jquery": "^3.5.1",
     "lodash": "^4.17.20",
     "phylotree": "github:jenmuell/phylotree.js",

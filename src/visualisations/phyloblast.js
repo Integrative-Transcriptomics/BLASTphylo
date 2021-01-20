@@ -25,7 +25,7 @@ function removeNullroot(tree){
 
 // check if the dataset have any hits
 function startTreevis(tree){
-   if  (tree === null){
+   if(Object.keys(tree).length === 0){
 	return 0
    }else{
         return removeNullroot(tree);
@@ -264,7 +264,7 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
         nodeEnter.append('circle')
             .attr('class', 'node')
 	        .attr('id', function(d){return 'nodecircle' + d.id;})
-            .attr('r', d => extraData != null && Object.keys(extraData).length === 1 ? circleSize(Math.log2(d.data.value[0])) : 3.5)
+            .attr('r', d => extraData != null && Object.keys(extraData).length === 1 ? circleSize(Math.log2(d.data.value[0])) : 4)
             .attr("fill", function(d,i){ if( i === 0){return '#377ba8';} // violet: #9038c7
                                         else if(d._children || d.children){return "#555";}
                                         else{return "#999";}})
@@ -274,7 +274,7 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
             .on("mouseover", function(d, i){ if (extraData != null){showTooltip(i, true, Object.keys(extraData).length);}
                                            else{ showTooltip(i, true, 0);}})
             .on("mouseout", function(d,i){ if (extraData != null && Object.keys(extraData).length === 1){hideTooltip(i, true, circleSize(Math.log2(i.data.value[0])));}
-                                           else{ hideTooltip(i, true, 3.5);}})
+                                           else{ hideTooltip(i, true, 4);}})
             .on("mousemove", function(d, i){moveTooltip(i, true);});
 
         // Add labels for the nodes
@@ -290,7 +290,7 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
             .on("mouseover", function(d, i){if (extraData != null){showTooltip(i, true, Object.keys(extraData).length);}
                                            else{ showTooltip(i, true, 0);}})
             .on("mouseout", function(d,i){ if (extraData != null && Object.keys(extraData).length === 1){hideTooltip(i, true, circleSize(Math.log2(i.data.value[0])));}
-                                           else{ hideTooltip(i, true, 3.5);}})
+                                           else{ hideTooltip(i, true, 4);}})
             .on("mousemove", function(d, i){moveTooltip(i, true);});
 
         // UPDATE
@@ -472,7 +472,7 @@ function hitBars(){
 	   .attr("width", function(d){ return scaleX(d.data.value[hitValue]);})
 	   .attr("height", barheight)
         .on("mouseover", function(d, i){showTooltip(i, false, null);})
-        .on("mouseout", function(d, i){hideTooltip(i, false, 3.5);})
+        .on("mouseout", function(d, i){hideTooltip(i, false, 4);})
         .on("mousemove", function(d, i){moveTooltip(i, false);});
 
      if((rightmostnode.y-leftmostnode.y) >= (window.innerHeight*0.8)){
@@ -574,10 +574,33 @@ function showClades(taxData, accData, libTree){
 	       .attr("width", rectSize*2)
 	       .attr("height", rectSize);
 
+      var legend =  clades.selectAll('.legend')
+                            .data(taxids)
+                            .enter()
+                            .append('g')
+                            .attr('class', 'legend')
+                            .attr('transform', 'translate(' + (8*rectSize) + ','+(treeHeight/2+leftmostnode.y) + ')');
+
+	  legend.append('rect')
+	        .attr('transform', function(d,i){return 'translate('+ (8*rectSize) + ',' + i*(rectSize+15) + ')';})
+	        .attr('fill', function(d){return colorsParent(d);})
+	        .attr('stroke', 'black')
+	        .attr('width', rectSize*1.5)
+	        .attr('height', rectSize*1.5)
+
+	  legend.append('text')
+	        .attr('transform', function(d,i){return 'translate('+ (8*rectSize) + ',' + i*(rectSize+15) + ')';})
+	        .attr('x',rectSize*1.5+3)
+	        .attr('y', rectSize*1.5/2)
+	        .attr('dy', '0.31em')
+            .attr("text-anchor", 'start')
+            .attr('fill', 'black')
+            .text(d => taxData[d]);
+
       var labels = ['unique', 'phylum'];
 
       clades.append('g')
-            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+            .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2-rectSize*3+leftmostnode.y) + ')')
             .selectAll('.labels')
             .data(labels)
             .enter()
@@ -624,7 +647,7 @@ function publicationReady(){
     if (extraInfo === null){
         hitBars();
     } else {
-        showClades();
+        showClades(extraInfo[0], extraInfo[1], null);
     }
     d3v6.select('#public_ready').remove();
 }

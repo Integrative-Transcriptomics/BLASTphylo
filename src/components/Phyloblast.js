@@ -28,12 +28,14 @@ class Phyloblast extends Component {
 
         // generation of the tree visualisation
         var tree = startTreevis(this.props.phyloData);
-        //console.log(tree)
         if (tree !== 0){
             chart(tree, null, 6, 6, true);
         }else{
-          d3v6.select('#tree').append('div').text('Found 0 hits. Return to the main page and try another phylogentic tree');
+          d3v6.select('#phyloblastAlert').remove();
+          d3v6.select('#tree').append('div').attr('id', 'phyloblastAlert')
+                    .text('Found 0 hits. Return to the main page and try another phylogentic tree');
         }
+
 
    }
 
@@ -105,7 +107,6 @@ class Phyloblast extends Component {
           </div>
      </div>
     );
-
     }
 }
 

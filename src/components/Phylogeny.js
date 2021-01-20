@@ -37,7 +37,7 @@ class Phylogeny extends Component {
         this.d3Tree = this.d3Tree.bind(this);
         this.showAdditional = this.showAdditional.bind(this);
 
-        d3v6.select('#treeVis').style('border', '2px solid #1d8348')
+        d3v6.select('#treeVis').style('border', '2px solid #5e66b4')
                                 .style('border-radius', '5px');
     }
 

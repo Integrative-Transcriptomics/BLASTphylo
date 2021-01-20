@@ -55,7 +55,11 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
 
 
     if prot_file_type == "1":
-        preFilter = pd.read_csv(prot, sep='\t')
+        try:
+            preFilter = pd.read_csv(prot, sep='\t')
+        except:
+            preFilter = pd.read_csv(prot, sep=',')
+
         if len(preFilter.columns) == len(header):
             preFilter.columns = header
         else:
@@ -284,8 +288,6 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
     pseudo_filtered_blast = {}  # instead of the hit counts the parent taxid is saved
     parentnode_info = {}
     hitAcc_info = {}
-    taxaNames = None
-    defaultvalue = None
 
     if d3_version:
         for key in list(treeIDs):
@@ -366,7 +368,7 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
 
     elif ncbi_boolean == '2' and not needTaxIDs:
         tree = Tree(tree_input)
-        tree_taxIDs = None
+        tree_taxIDs = set()
 
     else:
         sys.stderr.write('no tree given')
@@ -402,7 +404,7 @@ def translate_nodes(tree_nodes):
     ncbi_boolean:           dependent on the input tree the nodes could have a mixed labeling 
 '''
 def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean):
-    d3_tree = None
+    d3_tree = {}
     if ncbi_boolean == '0':
         d3_tree = wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, 30)
     elif ncbi_boolean == '1':
@@ -556,7 +558,7 @@ def unique_transfer_tree(tree, unique_count, branch_length):
 
 
 ''' Translate taxid and return sci_name and taxid
-    node_label: given label of the node (taxid or sci_name)
+    node_label: given label of sthe node (taxid or sci_name)
     count:      for the phylogeny calculation count the number of unlabeled clades
 
 '''
@@ -594,9 +596,9 @@ min_hit_identity:           minimal matches between subject and hit (percentage)
 out_dir:	   
 '''
 def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_query_cover, min_query_identity, min_hit_cover, min_hit_identity, out_dir):
-    d3_tree = None
-    sequence_dic = None
-    uniqueAccs = None
+    d3_tree = {}
+    sequence_dic = {}
+    uniqueAccs = {}
 
     # read tree
     try:
@@ -605,7 +607,7 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         print('complete')
     except:
         sys.stderr.write('Tree calculation failed')
-        return None, None, None
+        return d3_tree, sequence_dic, uniqueAccs
 
     # run BLAST
     try:
@@ -614,7 +616,7 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         print('complete')
     except:
         sys.stderr.write('Blast run failed')
-        return None, None, None
+        return d3_tree, sequence_dic, uniqueAccs
 
     # filtering
     try:
@@ -623,7 +625,7 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         print('complete')
     except:
         sys.stderr.write('Filtering failed')
-        return None, None, None
+        return d3_tree, sequence_dic, uniqueAccs
 
     if filtered_blast:
         try:
@@ -631,7 +633,7 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
             return d3_tree, sequence_dic, uniqueAccs
         except:
             sys.stderr.write('Transfer in d3 compatible tree/newick failed')
-            return None, None, None
+            return d3_tree, sequence_dic, uniqueAccs
 
 
 ######################################################################################################################## Output/Export files

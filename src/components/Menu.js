@@ -36,10 +36,8 @@ class Menu extends Component {
      }
     if(this.state.tree_menu_selection === '1'){
 
-        formData.append('newick_file', this.protFileInput.current.files[0]);
-        formData.append('newick_filename', this.protFileInput.current.files[0].name);
-      alert(
-      `Selected tree file - ${this.treeFileInput.current.files[0].name}`);
+        formData.append('newick_file', this.treeFileInput.current.files[0]);
+        formData.append('newick_filename', this.treeFileInput.current.files[0].name);
     }
     for (var key in this.state){
         formData.append(String(key), this.state[key]);
@@ -142,7 +140,7 @@ class Menu extends Component {
 	     <option value="0">Fasta file</option>
              <option value="1">BLAST result</option>
         </select>
-        <input  ref={this.protFileInput}  type="file" id="fasta_file" name="fasta_file"/>
+        <input  ref={this.protFileInput}  type="file" id="fasta_file" name="fasta_file" accept=".fasta,.fastq, .csv"/>
         </fieldset>
         <br></br>
         <br></br>
@@ -165,7 +163,7 @@ class Menu extends Component {
   		  <textarea id="newick_string" name="newick_string" placeholder="(A:0.1,(C:0.3,D:0.4)E:0.5)F;"
 			cols="50" rows="5" onChange={this.handleChange}></textarea><br></br>
         	   <label>Or, upload dnd file:</label>
-		   <input ref={this.treeFileInput} type="file" id="newick_file" name="newick_file" onChange={this.handleChange}/><br></br>
+		   <input ref={this.treeFileInput} type="file" id="newick_file" name="newick_file" onChange={this.handleChange} accept=".txt, .dnd" /><br></br>
 	     </div>
 	     </fieldset>
          <br></br>

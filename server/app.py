@@ -9,10 +9,16 @@ import sys
 import json
 import os
 import shutil, re
+
+# check menu inputs and preprocess them
+import pandas as pd
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from ete3 import Tree
 import processing_data
+
+# flask server packages
 from flask import Flask, render_template, redirect, url_for, request, jsonify, make_response
 from werkzeug.utils import secure_filename
 from flask_cors import CORS, cross_origin
@@ -26,15 +32,14 @@ shutil.rmtree(flask_tmp_dir, ignore_errors=True)
 os.mkdir(flask_tmp_dir)
 
 UPLOAD_FOLDER = '/server/flask_tmp'
-ALLOWED_EXTENSIONS = set(['fasta', 'fastq', 'csv'])
 
 # start server
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
 CORS(app, resources={r"*": {"origins": "*"}})
 
-hit_seqs = None
-accs_seqs = None
+hit_seqs = {}
+accs_seqs = {}
 
 @app.route('/server/phylogeny', methods=['POST', 'GET'])
 def phylogeny():
@@ -99,12 +104,22 @@ def phyloblast():
             elif protein_file_type == '1': # blast result xml file
                 protein_data = request.files['fasta_file'].save('flask_tmp/blast_result.csv')
                 protein = 'flask_tmp/blast_result.csv'
+                try:
+                    blastResult = pd.read_csv(protein, sep='\t')
+                except:
+                    blastResult = pd.read_csv(protein, sep=',')
+                if len(blastResult.columns) != 13:
+                    error.append({'message': 'Uploaded BLAST result has to much/less columns. Check the help page for '
+                                             'more details.'})
+                    protein = None
+
         print(protein)
 
         # tree
         tree_menu_selection = request.form['tree_menu_selection']
 
         # ncbi taxonomy
+        taxaIDs = None
         if tree_menu_selection == '0':
             tree_data = request.form['tree_data']
 
@@ -119,6 +134,14 @@ def phyloblast():
             if len(tree_data) == 0:
                 tree_file = request.files['newick_file'].read().decode('utf-8')
                 tree_data = tree_file.replace("\n", "")
+            try:
+                print(tree_data)
+                tree = Tree(tree_data)
+                print(tree)
+            except:
+                error.append({'message': 'Uploaded tree file contain a no valid newick string'})
+                tree_data = None
+
         print(tree_data)
 
         # filter parameter
@@ -133,7 +156,7 @@ def phyloblast():
         min_hit_cover = request.form['hit_cover']
         print('min. hit coverage: ' + min_hit_cover)
 
-        if len(taxaIDs) == 0:
+        if tree_menu_selection == '0' and len(taxaIDs) == 0:
             error.append({'message': 'Given taxa are not present in NCBI taxonomy'})
         print(error)
 
@@ -143,12 +166,15 @@ def phyloblast():
             # start processing of the data
             # run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_query_cover, min_identity, protein_length):
             print('\nStart PhyloBlast')
-            d3_tree, hit_seqs, accs_seqs = processing_data.run_phyloblast(protein, protein_file_type, tree_data, tree_menu_selection, 'blastp', eValue, min_query_cover, min_query_identity, min_hit_cover, min_hit_identity, 'flask_tmp/')
-            #print(d3_tree)
-            processing_data.generate_phyloblast_output(d3_tree, 'flask_tmp/')  # generate mapping output as csv
+            try:
+                d3_tree, hit_seqs, accs_seqs = processing_data.run_phyloblast(protein, protein_file_type, tree_data, tree_menu_selection, 'blastp', eValue, min_query_cover, min_query_identity, min_hit_cover, min_hit_identity, 'flask_tmp/')
+                #print(d3_tree)
+                processing_data.generate_phyloblast_output(d3_tree, 'flask_tmp/')  # generate mapping output as csv
 
-            print('Root of the tree: ' + d3_tree['name'])
-            return {'tree': d3_tree, 'error': None}
+                print('Root of the tree: ' + d3_tree['name'])
+                return {'tree': d3_tree, 'error': None}
+            except:
+                return {'tree': None, 'error': None}
     else:
         return None
       

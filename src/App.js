@@ -1,6 +1,7 @@
 // used libraries
 import React, {Component} from 'react';
-import html2canvas from 'html2canvas';
+import * as d3v6 from 'd3v6';
+import domtoimage from 'dom-to-image';
 
 
 
@@ -57,6 +58,9 @@ class App extends Component {
 
    //console.log(data)
    let actualComponent;
+   d3v6.select('#treeVis').style('border', 'none');
+   d3v6.select('#phyloblastAlert').remove();
+
    if (isActualComponent === 'help'){
      actualComponent = <Help />;
    }
@@ -152,22 +156,33 @@ class ExportTrees extends Component{
         this.exportJPEG = this.exportJPEG.bind(this);
     }
 
-    exportJPEG(){
-        // change size to full treesize + bars/clade info
-        var element = document.getElementById('treeVis');
-        var styleOrig = element.getBoundingClientRect();
-        var treefigure = document.getElementById('tree_vis').getBoundingClientRect();
-        element.style.width = treefigure.width+350;
-        element.style.height = treefigure.height;
 
-        html2canvas(element).then(function (canvas) {
-            javascript:void(window.open().location = canvas.toDataURL("image/jpeg", 5.0));
+
+    exportJPEG(){
+        var element = document.getElementById('treeVis');
+        var borderStyle = element.style.border;
+        element.style.border = 'none';
+
+        // labeling of the tree
+        var figureName = '';
+        if(borderStyle.includes('#69a2c9')){
+            figureName = 'taxamapping.jpeg';
+        }else{
+            figureName = 'phylogeny.jpeg';
+        }
+
+        domtoimage.toJpeg(element, { quality: 0.95, bgcolor: 'white',
+                                            style:{overflow:'visible'} })
+            .then(function (dataUrl) {
+                var link = document.createElement('a');
+                link.download = figureName;
+                link.href = dataUrl;
+                link.click();
+                link.remove();
+                element.style.border = borderStyle;
         });
 
 
-        // resize window to original size
-        element.style.width = styleOrig.width;
-        element.style.height = styleOrig.height;
     }
 
    render(){
