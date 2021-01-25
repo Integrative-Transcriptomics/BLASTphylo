@@ -1,12 +1,13 @@
 // used libraries
 import React, {Component} from 'react';
-import axios from 'axios';
 import * as d3v6 from 'd3v6';
+import {Link, BrowserRouter, Route, Switch } from "react-router-dom";
 
 
 // own components and style sheets
 import './phyloblastStyle.css';
 import {ExportTrees} from '../App.js'
+import Phylogeny from './Phylogeny.js';
 
 
 // own visualisations
@@ -19,7 +20,6 @@ class Phyloblast extends Component {
         this.state = {hitSelect: "2",
                       rankSelect: 'class'};
 
-        this.calculatePhylogeny = this.calculatePhylogeny.bind(this);
         this.handleHits = this.handleHits.bind(this);
         this.handleRanks = this.handleRanks.bind(this);
 
@@ -39,24 +39,6 @@ class Phyloblast extends Component {
 
    }
 
-
-
-
-   calculatePhylogeny(event){
-      var self = this;
-      var path = 'server/' + event.target.value;
-      axios.post(path, null)
-        .then(function (response) {
-             console.log(response.data);
-             self.props.changeComp('data', response.data);
-             self.props.changeComp('actual', 'phylogeny');
-        })
-        .catch(error => {
-            console.log(error);
-      })
-   }
-
-
    handleHits(event){
      this.setState({hitSelect: event.target.value});
 
@@ -69,8 +51,10 @@ class Phyloblast extends Component {
    }
 
    handleRanks(event){
-      this.setState({rankSelect: event.target.value});
-      collapseTree(this.props.phyloData);
+      if(document.getElementById('public_ready')){
+              this.setState({rankSelect: event.target.value});
+              collapseTree(this.props.phyloData);
+      }
    }
 
    render(){
@@ -85,10 +69,16 @@ class Phyloblast extends Component {
 
           <div id="phyloblastMenu">
               <h2>taxonomic Analysis</h2>
+              <BrowserRouter>
               <ul>
-                <li><button id='taxaPhylo' type='button' value='phylogeny' onClick={this.calculatePhylogeny}>taxa seqs. based phylogeny </button></li>
-                <li><button id='uniquePhylo' type='button' value='phylogenyUnique' onClick={this.calculatePhylogeny}>unique seqs. based phylogeny </button></li>
+              <Link to='/phylogeny' target='_blank'>taxa seqs. based phylogeny </Link>
+              <Link to='/phylogenyUnique' target='_blank'>unique seqs. based phylogeny</Link>
               </ul>
+              <Switch>
+                    <Route exact path="/phylogny" render={(props) => <Phylogeny {...props} changeComp={this.changeComp} />}/>
+                    <Route exact path="/phylogenyUnique" component={Phylogeny}/>
+              </Switch>
+              </BrowserRouter>
               <br></br>
               <label>Collapse to:</label>
               <select id="collapse_menu" name="collapse_menu" value={this.state.rankSelect} onChange={this.handleRanks}>

@@ -9,7 +9,9 @@
  margin-right: 5px;
 }
 
-#phyloblastMenu li{
+#phyloblastMenu li, a{
+ text-decoration: none;
+ color: white;
  display: inline-block;
  width: 50%;
  margin: 0;
@@ -20,8 +22,10 @@
  border: solid 1.5px white;
 }
 
-#phyloblastMenu li:hover{
+#phyloblastMenu li:hover, a:hover{
+  text-decoration: none;
   background: #377ba8;
+  color: white;
 }
 
 #taxaPhylo, #uniquePhylo{

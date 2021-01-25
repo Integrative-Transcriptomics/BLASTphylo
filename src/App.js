@@ -2,29 +2,50 @@
 import React, {Component} from 'react';
 import * as d3v6 from 'd3v6';
 import domtoimage from 'dom-to-image';
-
-
+import "bootstrap/dist/css/bootstrap.min.css";
+//import "./visualisations/defaultFirefox.css";
 
 // own components and style sheets
 import './baseStyle.css';
 import Menu from './components/Menu.js';
+import Help from './components/Help.js';
 import Phyloblast from './components/Phyloblast.js';
 import Phylogeny from './components/Phylogeny.js';
-import Help from './components/Help.js';
+import HandlePhylogenyServer from './components/HandlePhylogenyServer.js';
+
+
+/*** #################################### IMPORTANT
+    1.
+        update of window.location.href for home/help links has to be updated if tool become online version
+    2.
+        at the moment tool is adapted to linux like file systems most likely don't work with Windows
+    3.
+        export of figures is limited by node number especially unique sequence based phylogeny
+
+***/
 
 class App extends Component {
-  
+
   constructor(props){
     super(props);
     //console.log(this.props)
+
+    // check if new Tab for phylogeny was "opened"
+    var actualWebsite = window.location.href.split('/');
+    if(actualWebsite[actualWebsite.length-1].length === 0){
+        this.state = {isActualComponent: 'menu',
+                   data: null,
+                   error: null};
+    }else{
+        this.state = {isActualComponent: 'handlePhylogeny',
+                   data: actualWebsite[actualWebsite.length-1],
+                   error: null};
+    }
+
     this.changeComp = this.changeComp.bind(this);
     this.handleHomeClick = this.handleHomeClick.bind(this);
     this.handleHelpClick = this.handleHelpClick.bind(this);
     this.handleAlert = this.handleAlert.bind(this);
-
-    this.state = {isActualComponent: 'menu',
-                   data: null,
-                   error: null};
   }	
 
   changeComp(stateName, stateValue){
@@ -40,10 +61,12 @@ class App extends Component {
   }
       
   handleHomeClick(){
+    window.location.href = 'http://localhost:3000/';
     this.setState({isActualComponent: 'menu'});
   }
   
   handleHelpClick(){
+    window.location.href = 'http://localhost:3000/';
     this.setState({isActualComponent: 'help'});	
   }
 
@@ -71,9 +94,10 @@ class App extends Component {
      const copy = {...data};
      actualComponent = <Phyloblast phyloData={copy} changeComp={this.changeComp}/>;
 
+   }else if (isActualComponent === 'handlePhylogeny'){
+     actualComponent = <HandlePhylogenyServer data={data} changeComp={this.changeComp} />;
    }else if (isActualComponent === 'phylogeny'){
      actualComponent = <Phylogeny data={data} changeComp={this.changeComp} />;
-
    } else {
      actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp}/>;
    }
@@ -149,6 +173,8 @@ function Wait(){
     );
 
 }
+
+
 
 class ExportTrees extends Component{
     constructor(props) {

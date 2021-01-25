@@ -9,13 +9,13 @@ body {
   background: white;
 }
 
-
-
-h1, h2, h3, h4, h5, h6, #title{
+#root h1, #root h2, #root h3, #root h4, #root h5, #root h6, #title{
   font-family: serif;
   color: #377ba8;
   margin: 10rem;
   text-align: left;
+  font-weight: bold;
+  font-size: 1.75rem;
 }
 
 
@@ -41,29 +41,29 @@ h1, h2, h3, h4, h5, h6, #title{
 
 
 
-hr {
+#root hr {
   border: none;
   border-top: 1px solid white;
 }
 
 /* Website header styling */
-nav {
+#root nav {
   background: lightgray;
   width: 100%;
   display: flex;
   align-items: center;
   padding: 10px 0.5rem;
 }
-nav h1, #title {
+#root nav h1, #title {
   flex: auto;
   margin: 0px 15px;
 }
-nav, h1, a, #title{
+#root nav, #root h1, #root a, #title{
   text-decoration: none;
   padding: 0.25rem 0.5rem;
 }
 
-nav, ul  {
+#root nav, #root ul  {
   display: flex;
   list-style: none;
   margin: 0 ;
@@ -72,7 +72,7 @@ nav, ul  {
 
 
 
-nav ul li a, nav ul li span, header .action {
+#root nav ul li a, #root nav ul li span, #root header .action {
   width: 100%;
   display: block;
   padding: 0.5rem;
@@ -93,7 +93,7 @@ nav ul li a, nav ul li span, header .action {
  margin: 0 0 5px 0;
 }
 
-.closebtn {
+#root .closebtn {
   margin-left: 15px;
   color: white;
   font-weight: bold;
@@ -104,7 +104,7 @@ nav ul li a, nav ul li span, header .action {
   transition: 0.3s;
 }
 
-.closebtn:hover {
+#root .closebtn:hover {
   color: black;
 }
 

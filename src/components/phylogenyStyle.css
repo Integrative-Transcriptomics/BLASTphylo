@@ -17,12 +17,12 @@
  list-style-type: none;
  text-align: center;
  padding: 5px 0 5px 0;
- background: #28b463;
+ background: #8e93ca;
  border: solid 1.5px white;
 }
 
 #phylogenyMenu li:hover{
-  background: #1d8348;
+  background: #5e66b4;
 }
 
 
@@ -46,7 +46,7 @@
  margin: 5px 0 0 0 ;
  font-size: 17px;
  color: white;
- background: #1d8348;
+ background: #5e66b4;
  border: solid 1.5px white;
 }
 

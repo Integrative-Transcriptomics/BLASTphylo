@@ -33,14 +33,23 @@ class Phylogeny extends Component {
         }
         console.log(this.state);
         // own functions
+
+        this.handleHomeClick = this.handleHomeClick.bind(this);
+        this.handleHelpClick = this.handleHelpClick.bind(this);
         this.distTree = this.distTree.bind(this);
         this.d3Tree = this.d3Tree.bind(this);
         this.showAdditional = this.showAdditional.bind(this);
 
-        d3v6.select('#treeVis').style('border', '2px solid #5e66b4')
-                                .style('border-radius', '5px');
+
     }
 
+    handleHomeClick(){
+        this.props.changeComp('actual', 'menu');
+    }
+
+    handleHelpClick(){
+        this.props.changeComp('actual', 'help');
+    }
 
 
     distTree(){
@@ -61,7 +70,10 @@ class Phylogeny extends Component {
            // hljs.initHighlightingOnLoad();
 
         this.setState({actualTree: libTree});
-        showClades(this.state.extra[0], this.state.extra[1], libTree);
+        if(document.getElementById('clade_info')){
+            showClades(this.state.extra[0], this.state.extra[1], libTree);
+        }
+
 
     }
 
@@ -71,7 +83,7 @@ class Phylogeny extends Component {
         if (tree !== 0){
 
             chart(tree, this.state.extra, null, null, true);
-            if (this.state.counter !== 0){
+            if (this.state.counter !== 0 && document.getElementById('clade_info')){
                 showClades(this.state.extra[0], this.state.extra[1], this.state.actualTree);
             }
 
@@ -86,6 +98,9 @@ class Phylogeny extends Component {
     }
 
     render(){
+        d3v6.select('#treeVis').style('border', '2px solid #5e66b4')
+                                .style('border-radius', '5px');
+
         if (this.state.counter === 0){
             this.d3Tree();
             this.setState({counter: 1});
@@ -101,27 +116,28 @@ class Phylogeny extends Component {
 
 
         return(
-            <div id="phylogeny">
-                <div id='phylogenyMenu'>
-                    <h2>phylogenetic Analysis</h2>
-                    <ul>
-	                <li ><button id="distTree" onClick={this.distTree} >distance focused tree </button></li>
-                    <li ><button id="d3Tree" onClick={this.d3Tree}>clade focused tree </button></li>
-                    </ul>
-                    <br></br>
-                    <label>Calculated with:</label>
-                    <select id="seq_menu" name="seq_menu">
-                        <option value="0">aligned seqs</option>
-                        <option value="1">full seqs</option>
-                    </select>
-                   <button id="public_ready" title="Result will be a static tree. Reload the page to start a new interpolation of the basic tree" onClick={publicationReady}>publication ready</button>
-                   <ExportTrees />
-                   <br></br>
-                   <br></br>
-                   {additionalInformation}
-                   {labeling}
-                </div>
-            </div>
+                    <div id="phylogeny">
+                        <div id='phylogenyMenu'>
+                            <h2>phylogenetic Analysis</h2>
+                            <ul>
+                            <li ><button id="distTree" onClick={this.distTree} >distance focused tree </button></li>
+                            <li ><button id="d3Tree" onClick={this.d3Tree}>clade focused tree </button></li>
+                            </ul>
+                            <br></br>
+                            <label>Calculated with:</label>
+                            <select id="seq_menu" name="seq_menu">
+                                <option value="0">aligned seqs</option>
+                                <option value="1">full seqs</option>
+                            </select>
+                           <button id="public_ready" title="Result will be a static tree. Reload the page to start a new interpolation of the basic tree" onClick={publicationReady}>publication ready</button>
+                           <ExportTrees />
+                           <br></br>
+                           <br></br>
+                           {additionalInformation}
+                           {labeling}
+                        </div>
+                    </div>
+
         );
     }
 }

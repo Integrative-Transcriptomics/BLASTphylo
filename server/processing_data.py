@@ -85,7 +85,17 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
         print(blastp_cline)
         stdout, stderr = blastp_cline()
         print(stderr)
-        result = pd.read_csv(blast_out_path, sep='\t', names=header)
+        preFilter = pd.read_csv(blast_out_path, sep='\t', names=header)
+
+        #print(preFilter.head())
+        subjectAlignedLength = preFilter['send'] - preFilter['sstart']
+        #print(subjectAlignedLength)
+        subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
+        #print(subjectCoverage)
+        subjectIdent = (preFilter['slen']/subjectAlignedLength) > (int(min_subject_ident)/100)
+        #print(subjectIdent)
+        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['pident'] > (int(min_query_cover) / 100)) & subjectCoverage & subjectIdent]
+
 
     return result
 
@@ -105,9 +115,13 @@ def filter_blast_result(blast_record, tree_tax_IDs, min_query_ident):
 
     ncbi = NCBITaxa()
     for index, row in filtered_blast.iterrows():  # taxids from the hit table with number of occurence
-        for start_taxa in row['staxids'].split(';'):
+        if isinstance(row['staxids'], float):  # column only contain one element
+            taxIDlist = [int(row['staxids'])]
+        else:
+            taxIDlist = row['staxids'].split(';')
+        for start_taxa in taxIDlist:
             if int(start_taxa) in tree_tax_IDs:
-                uniqueAccs[row['sacc']] = [row['sseq'], len(row['staxids'].split(';'))]
+                uniqueAccs[row['sacc']] = [row['sseq'], len(taxIDlist)]
 
                 try:
                     filtered_result[int(start_taxa)] += 1
@@ -118,7 +132,10 @@ def filter_blast_result(blast_record, tree_tax_IDs, min_query_ident):
                     sequence_dic[int(start_taxa)] = [[row['sacc']], [row['sseq']]]
 
             else:
-                taxID_lineage = ncbi.get_lineage(start_taxa)
+                try:
+                    taxID_lineage = ncbi.get_lineage(start_taxa)
+                except:
+                    continue
                 uniqueAccs[row['sacc']] = [row['sseq'], 0]
                 for line_taxa in taxID_lineage:  # all higher level taxa of these taxids
                     if line_taxa in tree_tax_IDs:
@@ -599,6 +616,7 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     d3_tree = {}
     sequence_dic = {}
     uniqueAccs = {}
+    filtered_blast = None
 
     # read tree
     try:
