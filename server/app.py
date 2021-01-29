@@ -46,7 +46,7 @@ def phylogeny():
     global hit_seqs
     output_tree = "flask_tmp/fasttree.tree"
     if os.path.isfile(output_tree):
-        tree, tree_tax_ids = processing_data.read_tree_input(output_tree, '2', True)
+        tree, tree_tax_ids,_ = processing_data.read_tree_input(output_tree, '2', True)
         d3Tree, phylum_info, acc_info = processing_data.phylogeny_data(tree, hit_seqs,tree_tax_ids, output_tree, True)
         newick_phylogeny = processing_data.phylogeny_data(tree, hit_seqs, tree_tax_ids, output_tree, False)
     else:
@@ -60,7 +60,7 @@ def phylogenyUnique():
     global accs_seqs
     output_tree = "flask_tmp/fasttree_unique.tree"
     if os.path.isfile(output_tree):
-        tree, tree_tax_ids = processing_data.read_tree_input(output_tree, '2', True)
+        tree, tree_tax_ids, _ = processing_data.read_tree_input(output_tree, '2', True)
         d3_phylogeny, newick_phylogeny = processing_data.unique_phylogeny_data(tree, accs_seqs, output_tree)
     else:
         print('Start Phylogeny calculation')

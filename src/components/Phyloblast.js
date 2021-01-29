@@ -68,24 +68,22 @@ class Phyloblast extends Component {
        <div id="phyloblast">
 
           <div id="phyloblastMenu">
-              <h2>taxonomic Analysis</h2>
+              <h2>taxonomic analysis</h2>
               <BrowserRouter>
-              <ul>
-              <Link to='/phylogeny' target='_blank'>taxa seqs. based phylogeny </Link>
-              <Link to='/phylogenyUnique' target='_blank'>unique seqs. based phylogeny</Link>
-              </ul>
+              <Link to='/phylogeny' target='_blank'>taxa sequence based phylogeny </Link>
+              <Link to='/phylogenyUnique' target='_blank'>unique sequence based phylogeny</Link>
               <Switch>
                     <Route exact path="/phylogny" render={(props) => <Phylogeny {...props} changeComp={this.changeComp} />}/>
                     <Route exact path="/phylogenyUnique" component={Phylogeny}/>
               </Switch>
               </BrowserRouter>
-              <br></br>
-              <label>Collapse to:</label>
+              <br></br><br></br>
+              <label>collapse to:</label>
               <select id="collapse_menu" name="collapse_menu" value={this.state.rankSelect} onChange={this.handleRanks}>
               {taxonomyLevel.map(MakeItem)}
               </select>
 
-              <label>Show barchart for:</label>
+              <label>show barchart for:</label>
                <select id="tree_menu" name="tree_menu" value={this.state.hitSelect} onChange={this.handleHits} >
                 <option value="2">none</option>
                 <option value="0">node hits</option>

@@ -35,20 +35,20 @@ count_clades = 0
 # functions
 ######################################################################################################################## BLAST
 ''' run and parse the blast result dependent on the server input 
-    prot         amino acid sequence or direct Blast result as xml file
-    prot_file_type:     0= aa sequence, 1= xml file
-    blast_type:         blastp or blastx dependent on the input (by now only blastp)
-    eValue:             significant threshold for the blast search
+    prot                    amino acid sequence or direct Blast result as xml file
+    prot_file_type:         0= aa sequence, 1= xml file
+    blast_type:             blastp or blastx dependent on the input (by now only blastp)
+    eValue:                 significant threshold for the blast search
     min_query_cover:        minimal coverage with the query
     min_subject_ident:      minimal identity with the subject (hit)
-    min_subject_cover:      minimal coverage with the subject (hit) 
-    out_dir:            path to output directory
+    min_subject_cover:      minimal coverage with the subject (hit)
+    entrez_query:           restrict the blast search to 'roots' of the given taxonomy
+    out_dir:                path to output directory
 
     output: Tabular only WP identifier lesser hits as with XML file ?
     tab sep: # Fields: query acc.ver, subject acc.ver, % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score, % positives
 '''
-def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_subject_ident, min_subject_cover, out_dir):
-    #header = ['qacc', 'sacc', 'qstart', 'qend', 'evalue', 'pident', 'staxids', 'qcovs', 'sseq']
+def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_subject_ident, min_subject_cover, entrez_query, out_dir):
     header = ['qacc', 'sacc', 'qstart', 'qend', 'sstart', 'send', 'slen', 'nident', 'evalue', 'pident', 'staxids', 'qcovs', 'sseq']
 
     header_basic = ['qacc', 'sacc', 'pident', 'alen', 'mm', 'g', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bit', 'm']
@@ -73,14 +73,12 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
         #print(subjectIdent)
         result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['pident'] > (int(min_query_cover) / 100)) & subjectCoverage & subjectIdent]
 
-        #result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['pident'] > (int(min_query_cover) / 100))]
         print(result.shape)
-        #result = evalueFilter[evalueFilter['pident'] > (int(min_query_cover) / 100)]
 
     else:
         blast_out_path = out_dir + 'blast_result.csv'
         blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='refseq_protein', evalue=eValue,
-                              qcov_hsp_perc=min_query_cover,
+                              qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
                               outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq', out=blast_out_path)
         print(blastp_cline)
         stdout, stderr = blastp_cline()
@@ -95,7 +93,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
         subjectIdent = (preFilter['slen']/subjectAlignedLength) > (int(min_subject_ident)/100)
         #print(subjectIdent)
         result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['pident'] > (int(min_query_cover) / 100)) & subjectCoverage & subjectIdent]
-
+        print(result.shape)
 
     return result
 
@@ -112,13 +110,17 @@ def filter_blast_result(blast_record, tree_tax_IDs, min_query_ident):
     uniqueAccs = {}  # accession ID encoded seq dic
     filtered_blast = blast_record[blast_record['pident'] > (int(min_query_ident) / 100)]
     filtered_blast = filtered_blast[filtered_blast['staxids'].notna()]  # remove all rows with no taxid information
-
     ncbi = NCBITaxa()
-    for index, row in filtered_blast.iterrows():  # taxids from the hit table with number of occurence
+
+    for index, row in filtered_blast.iterrows():  # taxids from the hit table with number of occurrence
+
         if isinstance(row['staxids'], float):  # column only contain one element
             taxIDlist = [int(row['staxids'])]
+        elif isinstance(row['staxids'], int):  # column only contain one element
+            taxIDlist = [row['staxids']]
         else:
             taxIDlist = row['staxids'].split(';')
+
         for start_taxa in taxIDlist:
             if int(start_taxa) in tree_tax_IDs:
                 uniqueAccs[row['sacc']] = [row['sseq'], len(taxIDlist)]
@@ -183,12 +185,11 @@ def generate_fasta(seqs, output_file):
 def generate_fasttree_input(mafft_out, taxid_accession):
     new_mafft = []
     records = SeqIO.parse(mafft_out, 'fasta')
-    count = 0
     for record in records:
         try:
             [new_mafft.append(SeqRecord(record.seq, id=str(taxId), description='')) for taxId in taxid_accession[record.id[:-2]]]
         except KeyError:
-            count += 1
+            continue
     SeqIO.write(new_mafft, mafft_out.split('.')[0] + '_NEW.fasta', 'fasta')
 
     return None
@@ -204,12 +205,12 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
     output_seqs = output_dir + "blast_subject_seqs.fasta"
 
     if from_aligned_seq == 'True':
-        if not uniqueSeqs:
-            print('Extract best Hit')
-            extract_best_hit(subject_seqs, output_seqs)
-        else:
+        if uniqueSeqs:
             print('Generate FastA file')
             generate_fasta(subject_seqs, output_seqs)
+        else:
+            print('Extract best Hit')
+            extract_best_hit(subject_seqs, output_seqs)
     else:
         output_seqs = fasta
         print('Input was fasta file')
@@ -249,7 +250,7 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
     stdout_FastTree, stderr_FastTree = fasttree_cline()
 
     print('Start Tree calculation and processing data')
-    tree, tree_tax_ids = read_tree_input(output_tree, '2', True)
+    tree, tree_tax_ids, _ = read_tree_input(output_tree, '2', True)
 
     global count_clades
     if uniqueSeqs:
@@ -282,9 +283,7 @@ def replace_ID_Name(newick, treeIDs):
     newTree = newick
     for taxa in list(treeIDs):
         taxaName = newick_valid_name(taxaNames[taxa])
-        #print([taxaName, taxa])
         newTree = newTree.replace(str(taxa)+':', taxaName+':')
-        #print(newTree)
     return newTree
 
 
@@ -319,8 +318,7 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
             except:
                 pseudo_filtered_blast[key] = defaultvalue
             try:
-                hitAcc_info[subject_seqs[key][0][0]].append(
-                    key)  # subject_seqs[key][0][0] == accession number of the used hit
+                hitAcc_info[subject_seqs[key][0][0]].append(key)  # subject_seqs[key][0][0] == accession number of the used hit
             except KeyError:
                 hitAcc_info[subject_seqs[key][0][0]] = [key]
 
@@ -330,6 +328,7 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
 
         newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10)
         return newTree, parentnode_info, mosthitAcc
+
     else:
         with open(treefile, 'r') as treehandle:
             newickTree = treehandle.read()
@@ -359,10 +358,13 @@ def unique_phylogeny_data(tree, uniqueAccs, treefile):
 '''
 def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
     tree = None
+    roots = ''  # ncbi taxonomy can begin with more than one 'root'
     tree_taxIDs = set()
-    if ncbi_boolean == '0':
+
+    if ncbi_boolean == '0': # NCBI taxonomy
         ncbi_taxa = []
         subtrees = tree_input.split(',')
+
         for node in subtrees:  # user could select the complete subtree
             ncbi = NCBITaxa()
             descendants = node.split('|')
@@ -372,25 +374,29 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
                                                             intermediate_nodes=True))  # output of descendant is a list of ids
             else:
                 tree_taxIDs.append(descendants[0])
-
+        rootIDs = translate_nodes(ncbi_taxa)
+        root = ['txid' + str(taxon) + '[ORGN]' for taxon in list(rootIDs)]
+        roots = ' OR '.join(root)
         tree_taxIDs = tree_taxIDs.union(translate_nodes(ncbi_taxa))
 
-    elif ncbi_boolean == '1':
+    elif ncbi_boolean == '1': # own taxonomic phylogeny
         tree = Tree(tree_input, format=1)
         tree_taxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
+        roots = 'txid' + translate_node(tree.name.replace('_', ' '), 0)[1] + '[ORGN]'
 
-    elif ncbi_boolean == '2' and needTaxIDs:
+    elif ncbi_boolean == '2' and needTaxIDs: # phylogeny calculation
         tree = Tree(tree_input)
         tree_taxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
+        roots = 'txid' + translate_node(tree.name.replace('_', ' '), 0)[1] + '[ORGN]'
 
-    elif ncbi_boolean == '2' and not needTaxIDs:
+    elif ncbi_boolean == '2' and not needTaxIDs: #phylogeny data generation
         tree = Tree(tree_input)
         tree_taxIDs = set()
 
     else:
         sys.stderr.write('no tree given')
 
-    return tree, tree_taxIDs
+    return tree, tree_taxIDs, roots
 
 
 '''Translate all nodes to NCBI taxonomy ID
@@ -616,12 +622,11 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     d3_tree = {}
     sequence_dic = {}
     uniqueAccs = {}
-    filtered_blast = None
 
     # read tree
     try:
         print('Start Tree calculation')
-        tree, taxid_tree_set = read_tree_input(tree_data, tree_menu, True)
+        tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
         print('complete')
     except:
         sys.stderr.write('Tree calculation failed')
@@ -630,19 +635,23 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     # run BLAST
     try:
         print('Start Blast run')
-        blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_query_cover, min_hit_identity, min_hit_cover, out_dir)
+        blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_query_cover, min_hit_identity, min_hit_cover, entrez_query, out_dir)
         print('complete')
     except:
         sys.stderr.write('Blast run failed')
         return d3_tree, sequence_dic, uniqueAccs
 
     # filtering
-    try:
-        print('Start filtering')
-        filtered_blast, sequence_dic, uniqueAccs = filter_blast_result(blast_result, taxid_tree_set, min_query_identity)
-        print('complete')
-    except:
-        sys.stderr.write('Filtering failed')
+    if blast_result.size > 0:
+        try:
+            print('Start filtering')
+            filtered_blast, sequence_dic, uniqueAccs = filter_blast_result(blast_result, taxid_tree_set, min_query_identity)
+            print('complete')
+        except:
+            sys.stderr.write('Filtering failed')
+            return d3_tree, sequence_dic, uniqueAccs
+    else:
+        sys.stderr.write('Blast prefiltering lead to no hits')
         return d3_tree, sequence_dic, uniqueAccs
 
     if filtered_blast:
@@ -652,6 +661,9 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         except:
             sys.stderr.write('Transfer in d3 compatible tree/newick failed')
             return d3_tree, sequence_dic, uniqueAccs
+    else:
+        sys.stderr.write('Non of the BLAST hits were present in the tree')
+        return d3_tree, sequence_dic, uniqueAccs
 
 
 ######################################################################################################################## Output/Export files

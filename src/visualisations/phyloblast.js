@@ -219,7 +219,7 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
     root.y0 = 0;
   
     // center the scrolling bar to the root
-    document.getElementById("treeVis").scrollTop = treeHeight/2-window.innerHeight/2;
+    document.getElementById("treeVis").scrollTop = treeHeight/2-(window.innerHeight*0.8)/2;
 
     update(root);
 
@@ -566,8 +566,8 @@ function showClades(taxData, accData, libTree){
                                 if(phylotreePresent && dataInfo[taxaName] !== undefined){
                                 return 'translate(' + (rectSize*2+10)+ ',' + (dataInfo[taxaName].screen_y-(rectSize/2)) + ')';}
                                 else{return 'translate(' + (rectSize*2+10)+ ',' + (d.y-(rectSize/2)) + ')'; }})
-           .attr('stroke', d => d.data.value[0] === 0 || d.children ? 'none' : 'black')
-   	       .attr('fill', function(d){if(d.data.value[0] === 0 || d.children) {
+           .attr('stroke', d => taxData[d.data.value[0]] === undefined || d.children ? 'none' : 'black')
+   	       .attr('fill', function(d){if(taxData[d.data.value[0]] === undefined || d.children) {
 				return 'transparent';}
                                 else{
                                 return colorsParent(d.data.value[0]);}})

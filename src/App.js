@@ -13,6 +13,7 @@ import Phyloblast from './components/Phyloblast.js';
 import Phylogeny from './components/Phylogeny.js';
 import HandlePhylogenyServer from './components/HandlePhylogenyServer.js';
 
+import SubMenu from './components/SubMenu.js';
 
 /*** #################################### IMPORTANT
     1.
@@ -92,14 +93,14 @@ class App extends Component {
    }
    else if (isActualComponent === 'phyloblast'){
      const copy = {...data};
-     actualComponent = <Phyloblast phyloData={copy} changeComp={this.changeComp}/>;
+     actualComponent = <Phyloblast phyloData={copy} changeComp={this.changeComp} />;
 
    }else if (isActualComponent === 'handlePhylogeny'){
      actualComponent = <HandlePhylogenyServer data={data} changeComp={this.changeComp} />;
    }else if (isActualComponent === 'phylogeny'){
      actualComponent = <Phylogeny data={data} changeComp={this.changeComp} />;
    } else {
-     actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp}/>;
+     actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp} />;
    }
    console.log(this.state.isActualComponent)
 

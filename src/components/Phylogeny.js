@@ -110,7 +110,7 @@ class Phylogeny extends Component {
         let labeling;
         if (this.state.extra.length === 2){
             additionalInformation = <input id='clade_info' type='checkbox' onChange={this.showAdditional}/>;
-            labeling = <label>Show additional clade information</label>;
+            labeling = <label>show additional clade information</label>;
         }
 
 
@@ -118,17 +118,10 @@ class Phylogeny extends Component {
         return(
                     <div id="phylogeny">
                         <div id='phylogenyMenu'>
-                            <h2>phylogenetic Analysis</h2>
-                            <ul>
+                            <h2>phylogenetic analysis</h2>
                             <li ><button id="distTree" onClick={this.distTree} >distance focused tree </button></li>
                             <li ><button id="d3Tree" onClick={this.d3Tree}>clade focused tree </button></li>
-                            </ul>
-                            <br></br>
-                            <label>Calculated with:</label>
-                            <select id="seq_menu" name="seq_menu">
-                                <option value="0">aligned seqs</option>
-                                <option value="1">full seqs</option>
-                            </select>
+                            <br></br><br></br>
                            <button id="public_ready" title="Result will be a static tree. Reload the page to start a new interpolation of the basic tree" onClick={publicationReady}>publication ready</button>
                            <ExportTrees />
                            <br></br>
@@ -143,3 +136,4 @@ class Phylogeny extends Component {
 }
 
 export default Phylogeny;
+

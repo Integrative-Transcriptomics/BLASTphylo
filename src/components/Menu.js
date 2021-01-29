@@ -178,15 +178,15 @@ class Menu extends Component {
 	     <input type="number" id="eValue"  name='eValue' step='0.01' min='0' max='100' value={this.state.eValue} size='4' onChange={this.handleChange} /><br></br><br></br>
 	     <strong>Query filter:</strong><br></br>
 	     <label>min. query identity:</label>
-	     <input type="number" id="query_ident" name="query_ident" step="1" min='50' max='100' value={this.state.query_ident} size='4' onChange={this.handleChange} /><br></br>
+	     <input type="number" id="query_ident" name="query_ident" step="1" min='5' max='100' value={this.state.query_ident} size='4' onChange={this.handleChange} /><br></br>
 	     <label>min. query coverage:</label>
-	     <input type="number" id="query_cover" name="query_cover" step="1" min='50' max='100' value={this.state.query_cover} size='4' onChange={this.handleChange} />
+	     <input type="number" id="query_cover" name="query_cover" step="1" min='5' max='100' value={this.state.query_cover} size='4' onChange={this.handleChange} />
          <br></br><br></br>
          <strong>Hit filter:</strong><br></br>
 	     <label>min. hit identity:</label>
-	     <input type="number" id="hit_ident" name="hit_ident" step="1" min='50' max='100' value={this.state.hit_ident} size='4' onChange={this.handleChange} /><br></br>
+	     <input type="number" id="hit_ident" name="hit_ident" step="1" min='5' max='100' value={this.state.hit_ident} size='4' onChange={this.handleChange} /><br></br>
 	     <label>min. hit coverage:</label>
-	     <input type="number" id="hit_cover" name="hit_cover" step="1" min='50' max='100' value={this.state.hit_cover} size='4' onChange={this.handleChange} />
+	     <input type="number" id="hit_cover" name="hit_cover" step="1" min='5' max='100' value={this.state.hit_cover} size='4' onChange={this.handleChange} />
            <br></br>
             </fieldset>
             <br></br>
