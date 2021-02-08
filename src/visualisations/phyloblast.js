@@ -102,7 +102,7 @@ const taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'ph
 var treeData = null;
 var treeHeight = 0;
 var svgWidth = 300;
-var margin = ({top: 20 , right: 30, bottom: 40, left: 60});
+var margin = ({top: 40 , right: 30, bottom: 40, left: 60});
 var leftmostnode = null;
 var rightmostnode = null;
 

@@ -100,7 +100,7 @@ def phyloblast():
             if protein_file_type == '0': # fasta like file
                 protein_data = request.files['fasta_file'].save('flask_tmp/protein.fasta')
                 protein = 'flask_tmp/protein.fasta'
-                print('Seq from file')
+                print('Sequence from file')
             elif protein_file_type == '1': # blast result xml file
                 protein_data = request.files['fasta_file'].save('flask_tmp/blast_result.csv')
                 protein = 'flask_tmp/blast_result.csv'
@@ -169,10 +169,13 @@ def phyloblast():
             try:
                 d3_tree, hit_seqs, accs_seqs = processing_data.run_phyloblast(protein, protein_file_type, tree_data, tree_menu_selection, 'blastp', eValue, min_query_cover, min_query_identity, min_hit_cover, min_hit_identity, 'flask_tmp/')
                 #print(d3_tree)
-                processing_data.generate_phyloblast_output(d3_tree, 'flask_tmp/')  # generate mapping output as csv
+                if len(d3_tree) > 0:
+                    processing_data.generate_phyloblast_output(d3_tree, 'flask_tmp/')  # generate mapping output as csv
 
-                print('Root of the tree: ' + d3_tree['name'])
-                return {'tree': d3_tree, 'error': None}
+                    print('Root of the tree: ' + d3_tree['name'])
+                    return {'tree': d3_tree, 'error': None}
+                else:
+                    return {'tree': None, 'error': None}
             except:
                 return {'tree': None, 'error': None}
     else:

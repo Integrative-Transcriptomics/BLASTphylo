@@ -32,8 +32,8 @@ class Phylogeny extends Component {
             this.state = {tree: treeData, extra: [1], actualTree: null, counter: 0};
         }
         console.log(this.state);
-        // own functions
 
+        // own functions
         this.handleHomeClick = this.handleHomeClick.bind(this);
         this.handleHelpClick = this.handleHelpClick.bind(this);
         this.distTree = this.distTree.bind(this);

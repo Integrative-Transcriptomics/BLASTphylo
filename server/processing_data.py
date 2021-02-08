@@ -65,11 +65,11 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
         else:
             preFilter.columns = header_basic
         #print(preFilter.head())
-        subjectAlignedLength = preFilter['send'] - preFilter['sstart']
+        subjectAlignedLength = abs(preFilter['send'] - preFilter['sstart'])
         #print(subjectAlignedLength)
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
         #print(subjectCoverage)
-        subjectIdent = (preFilter['slen']/subjectAlignedLength) > (int(min_subject_ident)/100)
+        subjectIdent = (preFilter['nident']/subjectAlignedLength) > (int(min_subject_ident)/100)
         #print(subjectIdent)
         result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['pident'] > (int(min_query_cover) / 100)) & subjectCoverage & subjectIdent]
 
@@ -77,7 +77,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
 
     else:
         blast_out_path = out_dir + 'blast_result.csv'
-        blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='refseq_protein', evalue=eValue,
+        blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
                               outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq', out=blast_out_path)
         print(blastp_cline)
@@ -86,7 +86,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
         preFilter = pd.read_csv(blast_out_path, sep='\t', names=header)
 
         #print(preFilter.head())
-        subjectAlignedLength = preFilter['send'] - preFilter['sstart']
+        subjectAlignedLength = abs(preFilter['send'] - preFilter['sstart'])
         #print(subjectAlignedLength)
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
         #print(subjectCoverage)
@@ -624,43 +624,43 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     uniqueAccs = {}
 
     # read tree
-    try:
-        print('Start Tree calculation')
-        tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
-        print('complete')
-    except:
+    #try:
+    print('Start Tree calculation')
+    tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
+    print('complete')
+    '''except:
         sys.stderr.write('Tree calculation failed')
         return d3_tree, sequence_dic, uniqueAccs
-
+    
     # run BLAST
-    try:
-        print('Start Blast run')
-        blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_query_cover, min_hit_identity, min_hit_cover, entrez_query, out_dir)
-        print('complete')
-    except:
+    try:'''
+    print('Start Blast run')
+    blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_query_cover, min_hit_identity, min_hit_cover, entrez_query, out_dir)
+    print('complete')
+    '''except:
         sys.stderr.write('Blast run failed')
         return d3_tree, sequence_dic, uniqueAccs
-
+    '''
     # filtering
     if blast_result.size > 0:
-        try:
-            print('Start filtering')
-            filtered_blast, sequence_dic, uniqueAccs = filter_blast_result(blast_result, taxid_tree_set, min_query_identity)
-            print('complete')
-        except:
+        #try:
+        print('Start filtering')
+        filtered_blast, sequence_dic, uniqueAccs = filter_blast_result(blast_result, taxid_tree_set, min_query_identity)
+        print('complete')
+        '''except:
             sys.stderr.write('Filtering failed')
-            return d3_tree, sequence_dic, uniqueAccs
+            return d3_tree, sequence_dic, uniqueAccs'''
     else:
         sys.stderr.write('Blast prefiltering lead to no hits')
         return d3_tree, sequence_dic, uniqueAccs
 
     if filtered_blast:
-        try:
-            d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu)
-            return d3_tree, sequence_dic, uniqueAccs
-        except:
+        #try:
+        d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu)
+        return d3_tree, sequence_dic, uniqueAccs
+        '''except:
             sys.stderr.write('Transfer in d3 compatible tree/newick failed')
-            return d3_tree, sequence_dic, uniqueAccs
+            return d3_tree, sequence_dic, uniqueAccs'''
     else:
         sys.stderr.write('Non of the BLAST hits were present in the tree')
         return d3_tree, sequence_dic, uniqueAccs

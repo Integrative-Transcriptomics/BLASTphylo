@@ -3,6 +3,8 @@ import React, {Component} from 'react';
 import * as d3v6 from 'd3v6';
 import domtoimage from 'dom-to-image';
 import "bootstrap/dist/css/bootstrap.min.css";
+import {BsBoxArrowUpRight} from "react-icons/bs";
+
 //import "./visualisations/defaultFirefox.css";
 
 // own components and style sheets
@@ -13,7 +15,9 @@ import Phyloblast from './components/Phyloblast.js';
 import Phylogeny from './components/Phylogeny.js';
 import HandlePhylogenyServer from './components/HandlePhylogenyServer.js';
 
-import SubMenu from './components/SubMenu.js';
+import TaxonomicAnalysisMenu from './components/TaxonomicAnalysisMenu.js';
+import PhylogeneticAnalysisMenu from './components/PhylogeneticAnalysisMenu.js';
+import TreeInteraction from './components/TreeInteraction.js';
 
 /*** #################################### IMPORTANT
     1.
@@ -29,22 +33,22 @@ class App extends Component {
 
   constructor(props){
     super(props);
-    //console.log(this.props)
+    console.log(this.props)
 
     // check if new Tab for phylogeny was "opened"
     var actualWebsite = window.location.href.split('/');
-    if(actualWebsite[actualWebsite.length-1].length === 0){
-        this.state = {isActualComponent: 'menu',
-                   data: null,
-                   error: null};
-    }else{
+    if(actualWebsite[actualWebsite.length-1].length != 0){
         this.state = {isActualComponent: 'handlePhylogeny',
                    data: actualWebsite[actualWebsite.length-1],
+                   error: null};
+    }else{
+        this.state = {isActualComponent: null,
+                   data: null,
                    error: null};
     }
 
     this.changeComp = this.changeComp.bind(this);
-    this.handleHomeClick = this.handleHomeClick.bind(this);
+    this.handleMenuClick = this.handleMenuClick.bind(this);
     this.handleHelpClick = this.handleHelpClick.bind(this);
     this.handleAlert = this.handleAlert.bind(this);
   }	
@@ -61,13 +65,19 @@ class App extends Component {
     }
   }
       
-  handleHomeClick(){
-    window.location.href = 'http://localhost:3000/';
+  handleMenuClick(){
+    console.log('Hello')
+    if(window.location.href != 'http://localhost:3000/'){
+        window.location.href = 'http://localhost:3000/';
+    }
     this.setState({isActualComponent: 'menu'});
   }
   
   handleHelpClick(){
-    window.location.href = 'http://localhost:3000/';
+    console.log('Help')
+    if(window.location.href != 'http://localhost:3000/'){
+        window.location.href = 'http://localhost:3000/';
+    }
     this.setState({isActualComponent: 'help'});	
   }
 
@@ -79,30 +89,29 @@ class App extends Component {
    var alerts = null;
    const isActualComponent = this.state.isActualComponent;
    const data = this.state.data;
+   var userMenu = <div />;
 
    //console.log(data)
    let actualComponent;
-   d3v6.select('#treeVis').style('border', 'none');
+   d3v6.select('#visualisation').style('border', 'none');
    d3v6.select('#phyloblastAlert').remove();
 
    if (isActualComponent === 'help'){
      actualComponent = <Help />;
    }
-   else if (isActualComponent === 'wait'){
-     actualComponent = <Wait />;
-   }
    else if (isActualComponent === 'phyloblast'){
      const copy = {...data};
-     actualComponent = <Phyloblast phyloData={copy} changeComp={this.changeComp} />;
-
+     actualComponent = <TaxonomicAnalysisMenu phyloData={copy} changeComp={this.changeComp} />;
+     userMenu = <TreeInteraction phyloData={copy} calculationMethod={'taxa'}/>;
    }else if (isActualComponent === 'handlePhylogeny'){
      actualComponent = <HandlePhylogenyServer data={data} changeComp={this.changeComp} />;
    }else if (isActualComponent === 'phylogeny'){
-     actualComponent = <Phylogeny data={data} changeComp={this.changeComp} />;
+     actualComponent = <PhylogeneticAnalysisMenu data={data} changeComp={this.changeComp} />;
+     userMenu = <TreeInteraction data={data} calculationMethod={'phylo'} />;
    } else {
      actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp} />;
    }
-   console.log(this.state.isActualComponent)
+   //console.log(this.state.isActualComponent)
 
    if(this.state.error !== null){
       alerts = this.state.error.map((alertmessage) =>
@@ -115,7 +124,7 @@ class App extends Component {
           <h1 id='title'>BLASTPhylo</h1>
           <ul>
             <li id='link1'>
-               <button id='menuLink' onClick={this.handleHomeClick} >home </button>
+               <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
             </li>
             <li id='link2'>
               <button id='helpLink' onClick={this.handleHelpClick} >help </button>
@@ -142,39 +151,34 @@ class App extends Component {
   }else{
       return (
     <div className="App">
-      <header className="App-header">
-      <nav>
-	  <h1 id='title'>BLASTPhylo</h1>
- 	  <ul>
-        <li id='link1'>
-	       <button id='menuLink' onClick={this.handleHomeClick} >home </button>
-        </li>
-      	<li id='link2'>
-          <button id='helpLink' onClick={this.handleHelpClick} >help </button>
-        </li>
-	  </ul>
-      </nav>
-      </header>
-     {actualComponent}
-     <div id="treeVis">
-	        <div id="tree">
-	        </div>
-            <div id="additionalInfo"></div>
-     </div>
+          <header className="App-header">
+          <nav>
+          <h1 id='title'>BLASTPhylo</h1>
+          <ul>
+            <li id='link1'>
+               <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
+            </li>
+            <li id='link2'>
+              <button id='helpLink' onClick={this.handleHelpClick} >help </button>
+            </li>
+          </ul>
+          </nav>
+          </header>
+          {actualComponent}
+         <div id="visualisation">
+           <div id='treeInteraction'>
+                {userMenu}
+           </div>
+           <div id='treeVis'>
+               <div id="tree"></div>
+               <div id="additionalInfo"></div>
+           </div>
+         </div>
     </div>
     );
   }
  }
 }
-
-
-function Wait(){
-    return(
-       <h1> Please wait. Data processing can take some minutes dependent on the workload of the Blast server. </h1>
-    );
-
-}
-
 
 
 class ExportTrees extends Component{
@@ -213,7 +217,7 @@ class ExportTrees extends Component{
     }
 
    render(){
-        return(<button id="export_pdf" onClick={this.exportJPEG}>export tree as jpeg</button>);
+        return(<button id="export_pdf" onClick={this.exportJPEG}>export tree as jpeg <BsBoxArrowUpRight size={20}/> </button>);
    }
 }
 
