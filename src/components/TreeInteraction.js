@@ -12,7 +12,8 @@ import {AiOutlineNodeCollapse, AiOutlineBarChart} from 'react-icons/ai';
 
 
 // own components and style sheets
-import './taxonomicAnalysisMenuStyle.css';
+
+
 
 
 // own visualisations
@@ -22,7 +23,6 @@ import { hitBars, collapseTree, chart, startTreevis, showClades} from '../visual
 class TreeInteraction extends Component{
      constructor(props){
         super(props);
-        console.log(this.props)
 
         if(this.props.calculationMethod === 'taxa'){
             this.state = {hitSelect: "2",
@@ -35,18 +35,16 @@ class TreeInteraction extends Component{
 
             var treeData = this.props.data.tree;
             if( Object.keys(this.props.data).length === 3){
-                this.state = {tree: treeData, extra: this.props.data.extraInfo, actualTree: null, counter: 0};
+                this.state = {tree: treeData, extra: this.props.data.extraInfo, actualTree: treeData, counter: 0};
             }else{
-                this.state = {tree: treeData, extra: [1], actualTree: null, counter: 0};
+                this.state = {tree: treeData, extra: [1], actualTree: treeData, counter: 0};
             }
         }
-        console.log(this.state)
         this.handleHits = this.handleHits.bind(this);
         this.handleRanks = this.handleRanks.bind(this);
         this.distTree = this.distTree.bind(this);
         this.d3Tree = this.d3Tree.bind(this);
-
-
+        this.showTooltip = this.showTooltip.bind(this);
     }
 
     // taxonomic analysis: tree interactions
@@ -63,16 +61,19 @@ class TreeInteraction extends Component{
 
     // handle collapse to interaction
     handleRanks(event){
-        console.log(document.getElementById('public_ready'))
         if(document.getElementById('public_ready')){
               this.setState({rankSelect: event});
-              collapseTree(this.props.phyloData, event);
+              var copy = {...this.props.phyloData};
+              collapseTree(copy, event);
         }
     }
 
     // phylogenetic analysis: types of visualisations
     // visualise the distance-focused visualisation
     distTree(){
+
+        // set scroll bar to the top of the visualisation
+        document.getElementById("treeVis").scrollTop = 0;
         d3v6.selectAll('#tree_vis').remove(); // remove old vis & new empty svg
         d3v6.select('#tree').append('svg').attr('id', 'tree_vis');
         var libTree = d3.layout.phylotree()
@@ -80,35 +81,37 @@ class TreeInteraction extends Component{
           .svg(d3.select("#tree_vis"))
           .options({'align-tips': true,
                      'left-offset': 20,
-                     'selectable': true});
+                     'selectable': false,
+                     'collapsible': false,
+                     'transitions': false});
         // render to this SVG element
             libTree(this.props.data.newick)
               // parse the Newick into a d3 hierarchy object with additional fields
               .layout();
+            // layout and render the tree
+            // for syntax highlighting
+           // hljs.initHighlightingOnLoad();
 
         if(document.getElementById('infoSelection')){
-            showClades(this.state.extra[0], this.state.extra[1], libTree, null);
+            showClades(this.state.extra[0], this.state.extra[1], libTree);
         }
     }
 
     // visualise the clade-focused visualisation
     d3Tree(){
-        var tree = startTreevis(this.state.tree);
-        //console.log(tree)
-        if (tree !== 0){
-
-            chart(tree, this.state.extra, null, null, true);
-            if(document.getElementById('infoSelection')){
-                showClades(this.state.extra[0], this.state.extra[1], null, null);
-            }
-
-        }else{
-          d3v6.select('#tree').append('div').text('Found 0 hits. Return to the main page and try another phylogentic tree');
+        const treeVis = {...this.state.actualTree};
+        chart(treeVis, this.state.extra, null, null, true);
+        if(document.getElementById('infoSelection')){
+            showClades(this.state.extra[0], this.state.extra[1], null, null);
         }
     }
 
-    render(){
+    showTooltip(event){
+        setTimeout(function(){d3v6.select('#' + event.id).style("visibility","hidden");}, 5000);
+    }
 
+
+    render(){
         if(this.props.calculationMethod === 'taxa'){
             var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
             var MakeItem = function(X){
@@ -117,7 +120,7 @@ class TreeInteraction extends Component{
 
             const renderCollapseTooltip = (props) => (
                     <Tooltip id="collapse_tooltip" {... props}>
-                         collapse all nodes below selected taxonmic rank
+                         collapse all nodes below selected taxonomic rank
                     </Tooltip>
             );
             const renderBarchartTooltip = (props) => (
@@ -126,16 +129,17 @@ class TreeInteraction extends Component{
                     </Tooltip>
             );
 
+
             return(
                 <div id='treeInteraction'>
                     <ButtonToolbar aria-label='Toolbar with button groups'>
                         <ButtonGroup className='mr-2' aria-label='First group'>
-                            <OverlayTrigger placement='top' delay={{show:150, hide: 100}} overlay={renderCollapseTooltip}>
+                            <OverlayTrigger placement='top'  overlay={renderCollapseTooltip} onEnter={this.showTooltip}>
                             <DropdownButton onSelect={this.handleRanks} as={ButtonGroup} title={<AiOutlineNodeCollapse size={25}/>} id='collapse_menu'>
                                 {taxonomyLevel.map(MakeItem)}
                             </DropdownButton>
                             </OverlayTrigger>
-                            <OverlayTrigger placement='top' delay={{show:150, hide: 100}} overlay={renderBarchartTooltip}>
+                            <OverlayTrigger placement='top' overlay={renderBarchartTooltip} onEnter={this.showTooltip}>
                             <DropdownButton onSelect={this.handleHits} eventKey={this.state.hitSelect}
                             as={ButtonGroup} title={<AiOutlineBarChart size={25}/>} id='tree_menu'>
                                 <Dropdown.Item eventKey='2'>none</Dropdown.Item>
@@ -149,7 +153,14 @@ class TreeInteraction extends Component{
             );
         } else{
             if (this.state.counter === 0){
-                this.d3Tree();
+                const tree = startTreevis(this.state.tree);
+                this.setState({actualTree: tree});
+                if (tree !== 0){
+
+                    this.d3Tree();
+                }else{
+                  d3v6.select('#tree').append('div').text('Found 0 hits. Return to the main page and try another phylogentic tree');
+                }
                 this.setState({counter: 1});
             }
 
@@ -166,11 +177,11 @@ class TreeInteraction extends Component{
             return(
                 <div id='treeInteraction'>
                 <ButtonToolbar aria-label='Toolbar with button groups'>
-                    <OverlayTrigger placement='top' delay={{show:150, hide: 100}} overlay={renderDistanceTooltip}>
-                    <Button onClick={this.distTree}>Vis1</Button>
+                    <OverlayTrigger placement='top' overlay={renderCladeTooltip} onEnter={this.showTooltip}>
+                    <Button onClick={this.d3Tree}>Vis1</Button>
                     </OverlayTrigger>
-                    <OverlayTrigger placement='top' delay={{show:150, hide: 100}} overlay={renderCladeTooltip}>
-                    <Button onClick={this.d3Tree}>Vis2</Button>
+                    <OverlayTrigger placement='top' overlay={renderDistanceTooltip} onEnter={this.showTooltip}>
+                    <Button onClick={this.distTree}>Vis2</Button>
                     </OverlayTrigger>
                 </ButtonToolbar>
                 </div>

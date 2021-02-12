@@ -29,53 +29,69 @@ class Menu extends Component {
    }
 
    handleSubmit(){
-     // send data to flask: https://stackoverflow.com/questions/59126998/how-to-pass-data-from-react-form-flask-backend-react-component-does-it-ha
      const formData = new FormData();
+     var error = [];
      if (this.state.protein === ''){
-        formData.append("fasta_file", this.protFileInput.current.files[0]);
-        formData.append("fasta_filename", this.protFileInput.current.files[0].name);
+        var protFileContent = this.protFileInput.current.files[0];
+        if(typeof protFileContent === 'undefined'){
+            error.push({'message': 'Protein is undefined. Please, define a protein'});
+        }else{
+            formData.append("fasta_file", protFileContent);
+            formData.append("fasta_filename", protFileContent.name);
+        }
      }
     if(this.state.tree_menu_selection === '1'){
-
-        formData.append('newick_file', this.treeFileInput.current.files[0]);
-        formData.append('newick_filename', this.treeFileInput.current.files[0].name);
+        var treeFileContent = this.treeFileInput.current.files[0];
+        if(typeof treeFileContent === 'undefined'){
+            error.push({'message': 'Taxonomy is undefined. Please, define a taxonomy'});
+        }else{
+            formData.append('newick_file', treeFileContent);
+            formData.append('newick_filename', treeFileContent.name);
+        }
     }
-    for (var key in this.state){
-        formData.append(String(key), this.state[key]);
+
+    if(error.length === 0){
+        for (var key in this.state){
+            formData.append(String(key), this.state[key]);
+        }
+       // for(var pair of formData.entries()) {
+       // console.log(pair[0] + ':  ' + pair[1]);
+       // }
+
+       // switch to loading button
+       if ((this.state.protein !== '') || (this.state.protein_file_type === '0') ){
+           document.getElementById('submit').style.display = "none";
+           document.getElementById('loadingButton').style.display = "block";
+       }
+
+
+       var self = this;
+        axios.post("server/phyloblast", formData)
+         .then(function (response) {
+             console.log(response.data);
+             if(response.data.error === null){
+                 if(document.getElementById('alert')){
+                    document.getElementById('alert').remove();
+                 }
+                 self.props.changeComp('data', response.data.tree);
+                 self.props.changeComp('actual', 'phyloblast');
+             }else{
+                 self.props.changeComp('error', response.data.error);
+                 self.props.changeComp('actual', 'menu');
+             }
+        })
+        .catch(error => {
+            console.log(error);
+        })
+    }else{
+        this.props.changeComp('error', error);
+        this.props.changeComp('actual', 'menu');
     }
-   // for(var pair of formData.entries()) {
-   // console.log(pair[0] + ':  ' + pair[1]);
-   // }
-
-   // switch to loading button
-   if ((this.state.portein === '') || (this.state.protein_file_type === '0') ){
-       document.getElementById('submit').style.display = "none";
-       document.getElementById('loadingButton').style.display = "block";
-   }
-
-
-   var self = this;
-    axios.post("server/phyloblast", formData)
-     .then(function (response) {
-         console.log(response.data);
-         if(response.data.error === null){
-             self.props.changeComp('data', response.data.tree);
-             self.props.changeComp('actual', 'phyloblast');
-         }else{
-             self.props.changeComp('error', response.data.error);
-             self.props.changeComp('actual', 'menu');
-         }
-    })
-    .catch(error => {
-        console.log(error);
-    })
-
 
 
    }
 
    handleChange(event) {
-   // handle files: https://medium.com/excited-developers/file-upload-with-react-flask-e115e6f2bf99
 
     if (event.target.name === "fasta_seq"){
       this.setState({protein: event.target.value});
@@ -85,6 +101,7 @@ class Menu extends Component {
     }
     else if (event.target.name === "tree_menu"){
       this.setState({tree_menu_selection: event.target.value});
+      this.taxaChoice(event);
     }
     else if (event.target.name === "taxa"){
       this.setState({tree_data: event.target.value});
@@ -154,7 +171,7 @@ class Menu extends Component {
 	    <fieldset>
 		<legend>Taxonomy</legend>
         <label>Select input type</label>
-		    <select  id="tree_menu" name="tree_menu" onChange={this.taxaChoice}>
+		    <select  id="tree_menu" name="tree_menu" onChange={this.handleChange}>
 			    <option value='0'>NCBI taxonomy</option>
 			    <option value='1'>own taxonomic phylogeny</option>
 		    </select>

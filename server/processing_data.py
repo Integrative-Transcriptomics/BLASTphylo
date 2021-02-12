@@ -251,7 +251,6 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
 
     print('Start Tree calculation and processing data')
     tree, tree_tax_ids, _ = read_tree_input(output_tree, '2', True)
-
     global count_clades
     if uniqueSeqs:
 
@@ -303,7 +302,6 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
 
     pseudo_filtered_blast = {}  # instead of the hit counts the parent taxid is saved
     parentnode_info = {}
-    hitAcc_info = {}
 
     if d3_version:
         for key in list(treeIDs):
@@ -317,17 +315,12 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
                 parentnode_info[parentID] = parentName  # parentnode_info contain parent sci name + taxid for visualisation
             except:
                 pseudo_filtered_blast[key] = defaultvalue
-            try:
-                hitAcc_info[subject_seqs[key][0][0]].append(key)  # subject_seqs[key][0][0] == accession number of the used hit
-            except KeyError:
-                hitAcc_info[subject_seqs[key][0][0]] = [key]
 
-
-        mosthitAcc = [hitAcc_info[key][0] for key in hitAcc_info.keys() if len(hitAcc_info[key]) == 1]
+        uniqueSeqs = [key for key in subject_seqs.keys() if len(subject_seqs[key][0]) == 1]
 
 
         newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10)
-        return newTree, parentnode_info, mosthitAcc
+        return newTree, parentnode_info, uniqueSeqs
 
     else:
         with open(treefile, 'r') as treehandle:

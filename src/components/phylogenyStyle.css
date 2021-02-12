@@ -25,19 +25,13 @@
   background: #5e66b4;
 }
 
-
-#distTree, #d3Tree {
- border: none;
- background: transparent;
- display: block;
- color: white;
- width: 100%;
+#phylogenyMenu button {
+  background: #8e93ca;
+  color: white;
 }
 
-#distTree:hover, #d3Tree:hover{
- color: white;
- width: 100%;
- text-decoration: none;
+#phylogenyMenu button:hover {
+  background: #5e66b4;
 }
 
 

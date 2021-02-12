@@ -17,12 +17,13 @@ class HandlePhylogenyServer extends Component{
         var path = 'server/' + this.props.data;
         axios.post(path, null)
          .then(function (response) {
-             console.log(response.data);
+             //console.log(response.data);
              self.props.changeComp('data', response.data);
              self.props.changeComp('actual', 'phylogeny');
          })
          .catch(error => {
-            console.log(error);
+            console.log('Error occurred')
+            //console.log(error);
          })
    }
    render(){

@@ -11,8 +11,6 @@ import {BsBoxArrowUpRight} from "react-icons/bs";
 import './baseStyle.css';
 import Menu from './components/Menu.js';
 import Help from './components/Help.js';
-import Phyloblast from './components/Phyloblast.js';
-import Phylogeny from './components/Phylogeny.js';
 import HandlePhylogenyServer from './components/HandlePhylogenyServer.js';
 
 import TaxonomicAnalysisMenu from './components/TaxonomicAnalysisMenu.js';
@@ -33,11 +31,10 @@ class App extends Component {
 
   constructor(props){
     super(props);
-    console.log(this.props)
 
     // check if new Tab for phylogeny was "opened"
     var actualWebsite = window.location.href.split('/');
-    if(actualWebsite[actualWebsite.length-1].length != 0){
+    if(actualWebsite[actualWebsite.length-1].length !== 0){
         this.state = {isActualComponent: 'handlePhylogeny',
                    data: actualWebsite[actualWebsite.length-1],
                    error: null};
@@ -66,18 +63,13 @@ class App extends Component {
   }
       
   handleMenuClick(){
-    console.log('Hello')
-    if(window.location.href != 'http://localhost:3000/'){
+    if(window.location.href !== 'http://localhost:3000/'){
         window.location.href = 'http://localhost:3000/';
     }
     this.setState({isActualComponent: 'menu'});
   }
   
   handleHelpClick(){
-    console.log('Help')
-    if(window.location.href != 'http://localhost:3000/'){
-        window.location.href = 'http://localhost:3000/';
-    }
     this.setState({isActualComponent: 'help'});	
   }
 

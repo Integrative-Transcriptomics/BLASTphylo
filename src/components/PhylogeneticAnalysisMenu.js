@@ -6,7 +6,9 @@ import * as $ from "jquery";
 import * as _ from "lodash";
 import "../../node_modules/phylotree/src/main";
 import {Nav, Accordion, Card, Tooltip, OverlayTrigger, Form} from 'react-bootstrap';
-import {BsBoxArrowUpRight} from "react-icons/bs";
+
+// other style sheets
+import '../../node_modules/phylotree/phylotree.css'
 
 // own components and style sheets
 import './phylogenyStyle.css';
@@ -14,13 +16,12 @@ import {ExportTrees} from '../App.js'
 
 
 // own visualisations
-import {chart, showClades, startTreevis, publicationReady} from '../visualisations/phyloblast2.js';
+import {showClades, publicationReady} from '../visualisations/phyloblast2.js';
 
 
 class PhylogeneticAnalysisMenu extends Component{
      constructor(props){
         super(props);
-        console.log(this.props)
 
         var treeData = this.props.data.tree;
         if( Object.keys(this.props.data).length === 3){
@@ -28,30 +29,14 @@ class PhylogeneticAnalysisMenu extends Component{
         }else{
             this.state = {tree: treeData, extra: [1], actualTree: null, counter: 0};
         }
-        console.log(this.state);
 
         // own functions
-        this.handleMenuClick = this.handleMenuClick.bind(this);
-        this.handleHelpClick = this.handleHelpClick.bind(this);
         this.showAdditional = this.showAdditional.bind(this);
     }
 
-    handleMenuClick(){
-        this.props.changeComp('actual', 'menu');
-    }
-
-    handleHelpClick(){
-        this.props.changeComp('actual', 'help');
-    }
-
     showAdditional(event){
-        //console.log(event.target.value)
-        //console.log(this.state.extra);
-        if(event.target.value === '3'){
-            d3v6.select('#clade_vis').remove();
-        }else{
-            showClades(this.state.extra[0], this.state.extra[1], this.state.actualTree, event.target.value);
-        }
+        showClades(this.state.extra[0], this.state.extra[1], this.state.actualTree);
+
     }
 
     render(){
@@ -60,11 +45,9 @@ class PhylogeneticAnalysisMenu extends Component{
 
 
         let additionalInformation;
-        let labeling;
         if (this.state.extra.length === 2){
-            additionalInformation = additionalCladeInformation();
+            additionalInformation = additionalCladeInformation(this.showAdditional);
         }
-        d3v6.selectAll("input").on("change", this.showAdditional);
 
         const renderPublicReadyTooltip = (props) => (
             <Tooltip id='public_ready_tooltip' {... props}>
@@ -104,7 +87,7 @@ class PhylogeneticAnalysisMenu extends Component{
     }
 }
 
-function additionalCladeInformation(){
+function additionalCladeInformation(showAdditional){
     return(
         <Card>
             <Accordion.Toggle as={Card.Header} eventKey='0'>
@@ -113,22 +96,10 @@ function additionalCladeInformation(){
             <Accordion.Collapse eventKey='0'>
                 <Card.Body>
                     <Form id='infoSelection'>
-                        <label>
-                            unique seqs.
-                            <input type='radio' name='valueSel' value='0' />
-                        </label>
-                        <label>
-                            phylum rank
-                            <input type='radio' name='valueSel' value='1' />
-                        </label>
-                        <label>
-                            both
-                            <input type='radio' name='valueSel' value='2' />
-                        </label>
-                        <label>
-                            none
-                            <input type='radio' name='valueSel' value='3' />
-                        </label>
+                        <div key={'inline-checkbox'} className='mb-3'>
+                            <Form.Check inline type={'checkbox'}  id='uniqueCheck' label={'unique seqs.'}  onChange={showAdditional}/>
+                            <Form.Check inline type={'checkbox'}  id='phylumCheck' label={'phylum rank'} onChange={showAdditional}/>
+                        </div>
                     </Form>
                 </Card.Body>
             </Accordion.Collapse>

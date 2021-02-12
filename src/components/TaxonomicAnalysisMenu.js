@@ -6,24 +6,19 @@ import {BsBoxArrowUpRight} from "react-icons/bs";
 
 // own components and style sheets
 import './phyloblastStyle.css';
-import {ExportTrees} from '../App.js'
-import Phylogeny from './Phylogeny.js';
+import {ExportTrees} from '../App.js';
 
 
 // own visualisations
-import {chart, hitBars, startTreevis, collapseTree, publicationReady} from '../visualisations/phyloblast2.js';
+import {chart, startTreevis, publicationReady} from '../visualisations/phyloblast2.js';
 
 
 class TaxonomicAnalysisMenu extends Component{
      constructor(props){
         super(props);
-        console.log(this.props)
 
         this.state = {hitSelect: "2",
                       rankSelect: 'class'};
-
-        d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
-                                .style('border-radius', '5px');
 
         // generation of the tree visualisation
         var tree = startTreevis(this.props.phyloData);
@@ -32,15 +27,17 @@ class TaxonomicAnalysisMenu extends Component{
         }else{
             d3v6.select('#phyloblastAlert').remove();
             d3v6.select('#tree').append('div').attr('id', 'phyloblastAlert')
-                    .text('Found 0 hits. Return to the main page and try another phylogentic tree');
+                    .text('Found 0 hits. Return to the main page and try another taxonomy');
         }
 
     }
 
     render(){
-            var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
+            d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
+                                .style('border-radius', '5px');
+
             const renderPublicReadyTooltip = (props) => (
-                <Tooltip id='button-tooltip' {... props}>
+                <Tooltip id='public_ready_tooltip' {... props}>
                    Result will be a static tree.
                    Reload the page to start a new interpolation of the basic tree
                 </Tooltip>

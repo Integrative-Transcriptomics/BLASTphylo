@@ -9,24 +9,16 @@
  margin-right: 5px;
 }
 
-#phyloblastMenu a{
- text-decoration: none;
- color: white;
- display: inline-block;
- width: 50%;
- margin: 0;
- list-style-type: none;
- text-align: center;
- padding: 5px 0 5px 10px;
- background: #6ea9d0;
- border: solid 1.5px white;
+.mr-auto button:hover {
+  background: #377ba8;
 }
 
-#phyloblastMenu a:hover{
-  text-decoration: none;
-  background: #377ba8;
+.mr-auto button {
+  margin: 5px 0 0 10px;
+  background: #6ea9d0;
   color: white;
 }
+
 
 #taxaPhylo, #uniquePhylo{
  border: none;
