@@ -400,7 +400,7 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
                 if (d.children) {
                     clicked_nodes[d.data.name] = 0;  // node is collapsed
                     d3v6.select('#nodetext' + d.id).attr('fill', 'black')
-                                .attr("x",  6)
+                                .attr("x",  12)
                                 .attr("text-anchor", "start")
                                 .text(d.data.name);
                     d._children = d.children;
@@ -464,7 +464,9 @@ function hitBars(value){
   var nodes = treeData.descendants();
   var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[hitValue];});
   var ticksStep = 0;
-  if(max_hit/10 >= 2){
+  if(max_hit/10 >=  100){
+    ticksStep = max_hit/100;
+  }else if(max_hit/10 >= 2){
     ticksStep = max_hit/10;
   }else{
     ticksStep = max_hit;

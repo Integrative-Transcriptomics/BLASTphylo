@@ -2,10 +2,23 @@
 import React, {Component} from 'react';
 import axios from 'axios';
 import * as d3v6 from 'd3v6';
-import {Spinner, Button} from 'react-bootstrap';
+import {Spinner, Button, Form, Popover, OverlayTrigger} from 'react-bootstrap';
+import {BiHelpCircle} from 'react-icons/bi';
+
 
 // own style sheets
 import './menuStyle.css';
+
+// constant dictionary for help messages
+const helpMessages = {
+    'prot': ['Protein sequence', 'Enter query sequence without white spaces in the text area. No transcription of nucleotide sequences.'],
+    'protFile': ['Protein files', 'Either a protein sequence or already calculated BLAST result with the columns: qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq'],
+    'NCBI': ['NCBI taxonomy', 'Enter comma-separated list of scientific names or taxonomic IDs. Addition of \'|subtree\' will select complete subtree. Check https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi for more information' ],
+    'ownTaxa': ['Newick string', 'Enter a newick string in the text area or upload a text file which contain a newick string.'],
+    'eValue': ['E-value', 'Common filter parameter for BLAST searches'],
+    'query': ['Query filtering', 'Result of the BLAST search will be filtered for the minimal query identity (= matches/alignment length) and the minimal query coverage (= alignment length/query length)'],
+    'hit': ['Hit or Subject filtering', 'Result of the BLAST search will be filtered for the minimal hit identity (= matches/alignment length) and the minimal hit coverage (= alignment length/subject length)']
+};
 
 class Menu extends Component {
 
@@ -27,6 +40,8 @@ class Menu extends Component {
     this.handleChange = this.handleChange.bind(this);
 
    }
+
+
 
    handleSubmit(){
      const formData = new FormData();
@@ -148,67 +163,132 @@ class Menu extends Component {
 
   render() {
     d3v6.select('#tree_vis').remove();
+    var MakeItem = function(X){
+                    return(
+            <Popover id='popover-basic'>
+                <Popover.Title as='h3'><strong>{X[0]}</strong></Popover.Title>
+                <Popover.Content>{X[1]}</Popover.Content>
+            </Popover>);
+    };
 
     return(
 
         <div id="menu" >
-        <fieldset>
-		<legend>BLASTp search</legend>
-        <label>
-        Enter protein sequence:</label>
-        <br></br>
-        <textarea id="fasta_seq" name="fasta_seq" cols="50" rows="5" onChange={this.handleChange}></textarea>
-        <br></br>
-        <label>Or, upload </label>
-        <select id="file_type" name="file_type" onChange={this.handleChange}>
-	         <option value="0">Fasta file</option>
-             <option value="1">BLAST result</option>
-        </select>
-        <input  ref={this.protFileInput}  type="file" id="fasta_file" name="fasta_file" accept=".fasta,.fastq, .csv"/>
-        </fieldset>
-        <br></br>
-        <br></br>
-	    <fieldset>
-		<legend>Taxonomy</legend>
-        <label>Select input type</label>
-		    <select  id="tree_menu" name="tree_menu" onChange={this.handleChange}>
-			    <option value='0'>NCBI taxonomy</option>
-			    <option value='1'>own taxonomic phylogeny</option>
-		    </select>
-        <div id="NCBI taxonomy">
-		  <label>Enter list of taxa as scientific names or taxIDs</label><br></br>
-		  <textarea id="taxa" name="taxa" placeholder="Staphylococcus,Staphylococcus aureus|subtree"
-			cols="50" rows="5" onChange={this.handleChange}></textarea>
-	     </div>
-        <div id="own taxonomy" style={{display: 'none'}}>
-		  <label>Enter newick string:</label><br></br>
-  		  <textarea id="newick_string" name="newick_string" placeholder="(A:0.1,(C:0.3,D:0.4)E:0.5)F;"
-			cols="50" rows="5" onChange={this.handleChange}></textarea><br></br>
-        	   <label>Or, upload dnd file:</label>
-		   <input ref={this.treeFileInput} type="file" id="newick_file" name="newick_file" onChange={this.handleChange} accept=".txt, .dnd" /><br></br>
-	     </div>
-	     </fieldset>
-         <br></br>
-        <fieldset>
-		<legend>Filter conditions</legend>
-         <label>E-value:</label>
-	     <input type="number" id="eValue"  name='eValue' step='0.01' min='0' max='100' value={this.state.eValue} size='4' onChange={this.handleChange} /><br></br><br></br>
-	     <strong>Query filter:</strong><br></br>
-	     <label>min. query identity:</label>
-	     <input type="number" id="query_ident" name="query_ident" step="1" min='5' max='100' value={this.state.query_ident} size='4' onChange={this.handleChange} /><br></br>
-	     <label>min. query coverage:</label>
-	     <input type="number" id="query_cover" name="query_cover" step="1" min='5' max='100' value={this.state.query_cover} size='4' onChange={this.handleChange} />
-         <br></br><br></br>
-         <strong>Hit filter:</strong><br></br>
-	     <label>min. hit identity:</label>
-	     <input type="number" id="hit_ident" name="hit_ident" step="1" min='5' max='100' value={this.state.hit_ident} size='4' onChange={this.handleChange} /><br></br>
-	     <label>min. hit coverage:</label>
-	     <input type="number" id="hit_cover" name="hit_cover" step="1" min='5' max='100' value={this.state.hit_cover} size='4' onChange={this.handleChange} />
-           <br></br>
-            </fieldset>
-            <br></br>
-           <button id='submit' type="submit" value="Submit" onClick={this.handleSubmit}>Submit </button>
-           <div id='loadingButton' style={{display: 'none'}}>
+        <Form as='fieldset' id='BlastpSearch'>
+        <legend>Blastp Search</legend>
+        <Form.Group >
+            <Form inline>
+                <Form.Label>Enter protein sequence:</Form.Label>
+                <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['prot'])}>
+                    <BiHelpCircle style={{color: 'blue'}}/>
+                </OverlayTrigger>
+            </Form>
+            <Form.Control as='textarea' rows={5} cols={50} id='fasta_seq' name='fasta_seq' onChange={this.handleChange} />
+        </Form.Group>
+        <Form.Group>
+            <Form inline>
+                <Form.Label>Or, upload</Form.Label>
+                <Form.Control as='select' id='file_type' name='file_type' onChange={this.handleChange}>
+	                <option value="0">Fasta file</option>
+                    <option value="1">BLAST result</option>
+                </Form.Control>
+                <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['protFile'])}>
+                    <BiHelpCircle style={{color: 'blue', 'margin-left': '10px'}}/>
+                </OverlayTrigger>
+            </Form>
+            <Form.File ref={this.protFileInput} id='fasta_file' name='fasta_file'
+            onChange={this.handleChange} accept='.fasta,.fastq,.csv' />
+        </Form.Group>
+        </Form>
+        <br />
+        <Form as='fieldset' id='Taxonomy'>
+        <legend>Taxonomy</legend>
+        <Form.Group>
+            <Form inline>
+                <Form.Label>Select input type:</Form.Label>
+                <Form.Control as='select' id='tree_menu' name='tree_menu' onChange={this.handleChange}>
+                    <option value='0'>NCBI taxonomy</option>
+			        <option value='1'>own taxonomic phylogeny</option>
+                </Form.Control>
+            </Form>
+        </Form.Group>
+        <Form.Group id='NCBI taxonomy'>
+            <Form inline>
+                <Form.Label>Enter list of taxa as scientific names of taxonomic IDs:</Form.Label>
+                <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['NCBI'])}>
+                    <BiHelpCircle style={{color: 'blue'}}/>
+                </OverlayTrigger>
+            </Form>
+            <Form.Control as='textarea' rows={5} cols={50} id='taxa' name='taxa'
+            placeholder='Staphylococcus,Staphylococcus aureus|subtree' onChange={this.handleChange} />
+        </Form.Group>
+        <Form.Group id='own taxonomy' style={{display: 'none'}}>
+            <Form inline>
+                <Form.Label>Enter taxonomy as newick string:</Form.Label>
+                <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['ownTaxa'])}>
+                    <BiHelpCircle style={{color: 'blue'}}/>
+                </OverlayTrigger>
+            </Form>
+            <Form.Control as='textarea' rows={5} cols={50} id='newick_string' name='newick_string'
+            placeholder='(A:0.1,(C:0.3,D:0.4)E:0.5)F;' onChange={this.handleChange} />
+            <Form inline>
+                    <Form.Label>Or, upload file:</Form.Label>
+                    <Form.File ref={this.treeFileInput} id='newick_file' name='newick_file'
+                    onChange={this.handleChange} accept='.txt,.dnd' />
+            </Form>
+        </Form.Group>
+        </Form>
+        <br />
+        <Form as='fieldset' id='FilterConditions'>
+        <legend>Filter conditions</legend>
+        <Form.Group inline>
+            <Form.Label>E-value:</Form.Label>
+            <input type="number" id="eValue"  name='eValue' step='0.01' min='0' max='100'
+            value={this.state.eValue} size='6' onChange={this.handleChange} />
+            <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['eValue'])}>
+                <BiHelpCircle style={{color: 'blue', 'margin-left': '10px'}}/>
+            </OverlayTrigger>
+        </Form.Group>
+        <Form>
+            <Form inline>
+                <Form.Label style={{'font-weight': 'bold'}}>Query filter:</Form.Label>
+                <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['query'])}>
+                    <BiHelpCircle style={{color: 'blue'}}/>
+                </OverlayTrigger>
+            </Form>
+            <Form.Group inline>
+                <Form.Label>min. query identity:</Form.Label>
+                 <input type="number" id="query_ident" name="query_ident" step="1" min='5' max='100'
+                 value={this.state.query_ident} size='6' onChange={this.handleChange} />
+            </Form.Group>
+            <Form.Group inline>
+                 <Form.Label>min. query coverage:</Form.Label>
+                 <input type="number" id="query_cover" name="query_cover" step="1" min='5' max='100'
+                 value={this.state.query_cover} size='6' onChange={this.handleChange} />
+            </Form.Group>
+        </Form>
+        <Form>
+            <Form inline>
+                <Form.Label style={{'font-weight': 'bold'}}>Hit filter:</Form.Label>
+                <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['hit'])}>
+                    <BiHelpCircle style={{color: 'blue'}}/>
+                </OverlayTrigger>
+            </Form>
+            <Form.Group inline>
+                <Form.Label>min. hit identity:</Form.Label>
+                <input type="number" id="hit_ident" name="hit_ident" step="1" min='5' max='100'
+                value={this.state.hit_ident} size='6' onChange={this.handleChange} /><br></br>
+            </Form.Group>
+            <Form.Group inline>
+                <Form.Label>min. hit coverage:</Form.Label>
+                <input type="number" id="hit_cover" name="hit_cover" step="1" min='5' max='100'
+                value={this.state.hit_cover} size='6' onChange={this.handleChange} />
+            </Form.Group>
+        </Form>
+        </Form>
+        <br />
+        <Button id='submit' type="submit" value="Submit" onClick={this.handleSubmit}>Submit </Button>
+        <div id='loadingButton' style={{display: 'none'}}>
             <Button variant="primary" disabled>
                 <Spinner
                   as="span"
@@ -219,8 +299,7 @@ class Menu extends Component {
                 />
                 Loading...
             </Button>
-            </div>
-           <br></br>
+        </div>
       </div>
     );
   }

@@ -10,6 +10,18 @@
   font-weight: bold;
 }
 
+#menu label {
+  margin-right: 5px;
+}
+
+#menu .form-group{
+  margin: 5px 0px 10px 10px;
+}
+
+#menu .helpIcon {
+  margin-left: 5px;
+}
+
 #menu fieldset{
   border-radius: 5px;
   border: 1px solid grey;
@@ -23,30 +35,19 @@
   margin: 30px 10px;
 }
 
- #menu select, textarea {
+ #menu select{
   padding: 2px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-familiy: sans-serif;
 }
 
-#submit{
- padding: 10px 15px 10px 15px;
- border-radius: 10px;
- border: 1.5px solid black;
- background: linear-gradient(180deg, rgba(108,163,244,1) 0%, rgba(37,73,196,1) 100%);
- color: white;
- text-align: center;
- text-decoration: none;
+#menu textarea{
+  width: 95%;
 }
 
-#submit:hover{
- padding: 10px 15px 10px 15px;
- border-radius: 10px;
- background: rgba(108,163,244,1);
- color: white;
- text-align: center;
- text-decoration: none;
+#menu .form-file{
+  margin-top: 10px;
 }
 
 

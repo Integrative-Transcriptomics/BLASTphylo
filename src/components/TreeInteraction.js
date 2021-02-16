@@ -10,16 +10,11 @@ import {AiOutlineNodeCollapse, AiOutlineBarChart} from 'react-icons/ai';
 //import {FaBezierCurve} from 'react-icons/fa';
 //import {VscListTree} from 'react-icons/vsc';
 
-
-// own components and style sheets
-
-
-
-
 // own visualisations
 import { hitBars, collapseTree, chart, startTreevis, showClades} from '../visualisations/phyloblast2.js';
 
 
+// component for all direct tree interactions and frequently used functions
 class TreeInteraction extends Component{
      constructor(props){
         super(props);
@@ -34,12 +29,14 @@ class TreeInteraction extends Component{
             d3v6.select('#tooltip').remove();
 
             var treeData = this.props.data.tree;
-            if( Object.keys(this.props.data).length === 3){
+            if( Object.keys(this.props.data).length === 3){ // taxa-based phylogeny
                 this.state = {tree: treeData, extra: this.props.data.extraInfo, actualTree: treeData, counter: 0};
-            }else{
+            }else{ // sequence based phylogeny
                 this.state = {tree: treeData, extra: [1], actualTree: treeData, counter: 0};
             }
         }
+
+        // functions to handle the interactions and tooltips
         this.handleHits = this.handleHits.bind(this);
         this.handleRanks = this.handleRanks.bind(this);
         this.distTree = this.distTree.bind(this);
@@ -59,7 +56,7 @@ class TreeInteraction extends Component{
         }
     }
 
-    // handle collapse to interaction
+    // handle 'collapse to' interaction
     handleRanks(event){
         if(document.getElementById('public_ready')){
               this.setState({rankSelect: event});
@@ -106,13 +103,14 @@ class TreeInteraction extends Component{
         }
     }
 
+    // hide the tooltip in 5 seconds
     showTooltip(event){
         setTimeout(function(){d3v6.select('#' + event.id).style("visibility","hidden");}, 5000);
     }
 
 
     render(){
-        if(this.props.calculationMethod === 'taxa'){
+        if(this.props.calculationMethod === 'taxa'){ // tree interaction for taxonomic mapping
             var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
             var MakeItem = function(X){
                     return <Dropdown.Item eventKey={X}>{X}</Dropdown.Item>;
@@ -151,7 +149,7 @@ class TreeInteraction extends Component{
                     </ButtonToolbar>
                 </div>
             );
-        } else{
+        } else{ // tree interaction for phylogenetic analysis
             if (this.state.counter === 0){
                 const tree = startTreevis(this.state.tree);
                 this.setState({actualTree: tree});

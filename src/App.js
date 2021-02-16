@@ -12,7 +12,6 @@ import './baseStyle.css';
 import Menu from './components/Menu.js';
 import Help from './components/Help.js';
 import HandlePhylogenyServer from './components/HandlePhylogenyServer.js';
-
 import TaxonomicAnalysisMenu from './components/TaxonomicAnalysisMenu.js';
 import PhylogeneticAnalysisMenu from './components/PhylogeneticAnalysisMenu.js';
 import TreeInteraction from './components/TreeInteraction.js';
@@ -44,12 +43,14 @@ class App extends Component {
                    error: null};
     }
 
+    // functions to handle view update, reset, help page and alert messages
     this.changeComp = this.changeComp.bind(this);
     this.handleMenuClick = this.handleMenuClick.bind(this);
     this.handleHelpClick = this.handleHelpClick.bind(this);
     this.handleAlert = this.handleAlert.bind(this);
   }	
 
+  // change view independent of component
   changeComp(stateName, stateValue){
     if(stateName === 'actual'){
     	this.setState({isActualComponent: stateValue});
@@ -61,18 +62,21 @@ class App extends Component {
       console.log('Wrong stateName: ' + stateName + 'was given') 
     }
   }
-      
+
+  // reset view to the menu page
   handleMenuClick(){
     if(window.location.href !== 'http://localhost:3000/'){
         window.location.href = 'http://localhost:3000/';
     }
     this.setState({isActualComponent: 'menu'});
   }
-  
+
+  // open help page for actual view
   handleHelpClick(){
     this.setState({isActualComponent: 'help'});	
   }
 
+  // close alert messages
   handleAlert(){
     document.getElementById("alert").style.display='none';
   }
@@ -88,10 +92,10 @@ class App extends Component {
    d3v6.select('#visualisation').style('border', 'none');
    d3v6.select('#phyloblastAlert').remove();
 
+   // switch view dependent of the component state
    if (isActualComponent === 'help'){
      actualComponent = <Help />;
-   }
-   else if (isActualComponent === 'phyloblast'){
+   } else if (isActualComponent === 'phyloblast'){
      const copy = {...data};
      actualComponent = <TaxonomicAnalysisMenu phyloData={copy} changeComp={this.changeComp} />;
      userMenu = <TreeInteraction phyloData={copy} calculationMethod={'taxa'}/>;
@@ -105,7 +109,7 @@ class App extends Component {
    }
    //console.log(this.state.isActualComponent)
 
-   if(this.state.error !== null){
+   if(this.state.error !== null){ // errors occurred during input
       alerts = this.state.error.map((alertmessage) =>
                 <li><strong>Warning: </strong>{alertmessage.message}</li>);
 
@@ -140,7 +144,7 @@ class App extends Component {
          </div>
         </div>
       );
-  }else{
+  }else{ // calculation can run with success
       return (
     <div className="App">
           <header className="App-header">
@@ -172,7 +176,7 @@ class App extends Component {
  }
 }
 
-
+// export the view of the treeVis div (phlogeny or taxonomic mapping) as jpeg
 class ExportTrees extends Component{
     constructor(props) {
         super(props);

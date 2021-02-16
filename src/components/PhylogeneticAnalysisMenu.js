@@ -34,6 +34,7 @@ class PhylogeneticAnalysisMenu extends Component{
         this.showAdditional = this.showAdditional.bind(this);
     }
 
+    // show additional information for the taxa-based phylogeny
     showAdditional(event){
         showClades(this.state.extra[0], this.state.extra[1], this.state.actualTree);
 
@@ -86,6 +87,8 @@ class PhylogeneticAnalysisMenu extends Component{
 
     }
 }
+
+
 
 function additionalCladeInformation(showAdditional){
     return(
