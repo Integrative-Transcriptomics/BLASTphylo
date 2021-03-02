@@ -16,7 +16,7 @@ import {ExportTrees} from '../App.js'
 
 
 // own visualisations
-import {showClades, publicationReady} from '../visualisations/phyloblast2.js';
+import {showClades, publicationReady, chart, updateClickedNodes} from '../visualisations/phyloblast2.js';
 
 
 class PhylogeneticAnalysisMenu extends Component{
@@ -25,25 +25,45 @@ class PhylogeneticAnalysisMenu extends Component{
 
         var treeData = this.props.data.tree;
         if( Object.keys(this.props.data).length === 3){
-            this.state = {tree: treeData, extra: this.props.data.extraInfo, actualTree: null, counter: 0};
+            this.state = {tree: treeData, extra: this.props.data.extraInfo, actualTree: treeData, counter: 0};
         }else{
-            this.state = {tree: treeData, extra: [1], actualTree: null, counter: 0};
+            this.state = {tree: treeData, extra: [1], actualTree: treeData, counter: 0};
         }
 
         // own functions
         this.showAdditional = this.showAdditional.bind(this);
+        this.handlePublicationReady = this.handlePublicationReady.bind(this);
     }
 
     // show additional information for the taxa-based phylogeny
     showAdditional(event){
-        showClades(this.state.extra[0], this.state.extra[1], this.state.actualTree);
-
+        showClades(this.state.extra[0], this.state.extra[1], null);
     }
+
+    handlePublicationReady(){
+        //window.history.pushState({page: 1}, "staticVisualisation", "?=static");
+        var treeCopy = {...this.state.tree};
+        publicationReady(treeCopy);
+        //console.log(actualData.tree)
+        //updateClickedNodes(actualData.clickedNodes);
+        //this.setState({actualTree: actualData.tree});
+    }
+
+
 
     render(){
         d3v6.select('#visualisation').style('border', '2px solid #5e66b4')
                                 .style('border-radius', '5px');
-
+        const tree = {...this.state.actualTree};
+        const self = this;
+        /***window.onpopstate = function(event) {
+            d3v6.select('#tree_vis').remove();
+            const treeVis = {...tree};
+            chart(treeVis, self.state.extra, null, null, true);
+            if(document.getElementById('infoSelection')){
+                showClades(self.state.extra[0], self.state.extra[1], null, null);
+            }
+        }***/
 
         let additionalInformation;
         if (this.state.extra.length === 2){
@@ -71,7 +91,7 @@ class PhylogeneticAnalysisMenu extends Component{
                                 <Card.Body>
                                     <Nav className='mr-auto'>
                                         <OverlayTrigger placement='bottom' delay={{show:150, hide:50}} overlay={renderPublicReadyTooltip}>
-                                        <button id="public_ready"  onClick={publicationReady}>publication ready</button>
+                                        <button id="public_ready" onClick={this.handlePublicationReady}>publication ready</button>
                                         </OverlayTrigger>
                                         <ExportTrees />
                                     </Nav>

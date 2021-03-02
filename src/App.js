@@ -30,19 +30,19 @@ class App extends Component {
 
   constructor(props){
     super(props);
-
     // check if new Tab for phylogeny was "opened"
-    var actualWebsite = window.location.href.split('/');
-    if(actualWebsite[actualWebsite.length-1].length !== 0){
+    var actualWebpage = window.location.href.split('/');
+    this. state ={isActualComponent: null,
+                    data: null, error: null};
+    if(actualWebpage[actualWebpage.length-1].includes('phylogeny')){
         this.state = {isActualComponent: 'handlePhylogeny',
-                   data: actualWebsite[actualWebsite.length-1],
+                   data: actualWebpage[actualWebpage.length-1],
                    error: null};
     }else{
         this.state = {isActualComponent: null,
                    data: null,
                    error: null};
     }
-
     // functions to handle view update, reset, help page and alert messages
     this.changeComp = this.changeComp.bind(this);
     this.handleMenuClick = this.handleMenuClick.bind(this);
@@ -83,12 +83,14 @@ class App extends Component {
 
   render() {
    var alerts = null;
+
    const isActualComponent = this.state.isActualComponent;
    const data = this.state.data;
    var userMenu = <div />;
 
    //console.log(data)
    let actualComponent;
+   // remove all visualisations
    d3v6.select('#visualisation').style('border', 'none');
    d3v6.select('#phyloblastAlert').remove();
 
@@ -99,6 +101,7 @@ class App extends Component {
      const copy = {...data};
      actualComponent = <TaxonomicAnalysisMenu phyloData={copy} changeComp={this.changeComp} />;
      userMenu = <TreeInteraction phyloData={copy} calculationMethod={'taxa'}/>;
+
    }else if (isActualComponent === 'handlePhylogeny'){
      actualComponent = <HandlePhylogenyServer data={data} changeComp={this.changeComp} />;
    }else if (isActualComponent === 'phylogeny'){
@@ -128,21 +131,25 @@ class App extends Component {
           </ul>
           </nav>
           </header>
-          <div id="alert">
-              <span class="closebtn" onClick={this.handleAlert}>&times;</span>
-              <ul>
-                {alerts}
-              </ul>
-          </div>
-         {actualComponent}
-         <br></br>
-         <br></br>
-         <div id="treeVis">
-                <div id="tree">
-                </div>
-                <div id="additionalInfo"></div>
+          <div className='App-body'>
+              <div id="alert">
+                  <span class="closebtn" onClick={this.handleAlert}>&times;</span>
+                  <ul>
+                    {alerts}
+                  </ul>
+              </div>
+              {actualComponent}
+             <div id="visualisation">
+               <div id='treeInteraction'>
+                    {userMenu}
+               </div>
+               <div id='treeVis'>
+                   <div id="tree"></div>
+                   <div id="additionalInfo"></div>
+               </div>
+             </div>
          </div>
-        </div>
+    </div>
       );
   }else{ // calculation can run with success
       return (
@@ -160,15 +167,17 @@ class App extends Component {
           </ul>
           </nav>
           </header>
-          {actualComponent}
-         <div id="visualisation">
-           <div id='treeInteraction'>
-                {userMenu}
-           </div>
-           <div id='treeVis'>
-               <div id="tree"></div>
-               <div id="additionalInfo"></div>
-           </div>
+          <div className='App-body'>
+              {actualComponent}
+             <div id="visualisation">
+               <div id='treeInteraction'>
+                    {userMenu}
+               </div>
+               <div id='treeVis'>
+                   <div id="tree"></div>
+                   <div id="additionalInfo"></div>
+               </div>
+             </div>
          </div>
     </div>
     );
@@ -187,9 +196,9 @@ class ExportTrees extends Component{
 
     exportJPEG(){
         var element = document.getElementById('treeVis');
+        console.log(element)
         var borderStyle = element.style.border;
         element.style.border = 'none';
-
         // labeling of the tree
         var figureName = '';
         if(borderStyle.includes('#69a2c9')){
@@ -208,8 +217,7 @@ class ExportTrees extends Component{
                 link.remove();
                 element.style.border = borderStyle;
         });
-
-
+        element.style.height = '80vh';
     }
 
    render(){

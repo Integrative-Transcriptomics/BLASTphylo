@@ -1,13 +1,17 @@
 html {
   font-family: sans-serif;
   background: white;
-  padding: 5px 10% 40px 10%;
 }
 
 body {
   margin: 0 auto;
   background: white;
 }
+
+.App-body {
+  padding: 0px 10% 40px 10%;
+}
+
 
 .App-header h1, .App-header h2, .App-header h3, .App-header h4, .App-header h5, .App-header h6, #title{
   font-family: serif;
@@ -118,7 +122,7 @@ body {
 
 
 #tree{
-  display: left;
+  display: block;
   overflow: visible;
 }
 

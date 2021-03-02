@@ -58,11 +58,9 @@ class TreeInteraction extends Component{
 
     // handle 'collapse to' interaction
     handleRanks(event){
-        if(document.getElementById('public_ready')){
-              this.setState({rankSelect: event});
-              var copy = {...this.props.phyloData};
-              collapseTree(copy, event);
-        }
+        this.setState({rankSelect: event});
+        var copy = {...this.props.phyloData};
+        collapseTree(copy, event);
     }
 
     // phylogenetic analysis: types of visualisations
@@ -74,20 +72,22 @@ class TreeInteraction extends Component{
         d3v6.selectAll('#tree_vis').remove(); // remove old vis & new empty svg
         d3v6.select('#tree').append('svg').attr('id', 'tree_vis');
         var libTree = d3.layout.phylotree()
-          // create a tree layout object
-          .svg(d3.select("#tree_vis"))
-          .options({'align-tips': true,
-                     'left-offset': 20,
-                     'selectable': false,
-                     'collapsible': false,
-                     'transitions': false});
+            .svg(d3.select("#tree_vis"))
+            .options({
+              brush: false,
+              'align-tips': true,
+              zoom: false,
+              selectable: false,
+              collapsible: true,
+              hide: true,
+              reroot: false,
+              transitions: true,
+              "internal-names": true,
+              "draw-size-bubbles": true,
+        });
         // render to this SVG element
             libTree(this.props.data.newick)
-              // parse the Newick into a d3 hierarchy object with additional fields
               .layout();
-            // layout and render the tree
-            // for syntax highlighting
-           // hljs.initHighlightingOnLoad();
 
         if(document.getElementById('infoSelection')){
             showClades(this.state.extra[0], this.state.extra[1], libTree);
@@ -169,17 +169,17 @@ class TreeInteraction extends Component{
             );
             const renderCladeTooltip = (props) => (
                     <Tooltip id="clade_tooltip" {... props}>
-                         visualise groups
+                         visualise groups in a straight tree
                     </Tooltip>
             );
             return(
                 <div id='treeInteraction'>
                 <ButtonToolbar aria-label='Toolbar with button groups'>
                     <OverlayTrigger placement='top' overlay={renderCladeTooltip} onEnter={this.showTooltip}>
-                    <Button onClick={this.d3Tree}>Vis1</Button>
+                    <Button onClick={this.d3Tree}>Cladogram</Button>
                     </OverlayTrigger>
                     <OverlayTrigger placement='top' overlay={renderDistanceTooltip} onEnter={this.showTooltip}>
-                    <Button onClick={this.distTree}>Vis2</Button>
+                    <Button onClick={this.distTree}>Phylogram</Button>
                     </OverlayTrigger>
                 </ButtonToolbar>
                 </div>

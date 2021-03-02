@@ -21,7 +21,6 @@ import processing_data
 # flask server packages
 from flask import Flask, render_template, redirect, url_for, request, jsonify, make_response
 from werkzeug.utils import secure_filename
-from flask_cors import CORS, cross_origin
 import logging
 
 # create tmp output folder for output file
@@ -35,11 +34,10 @@ UPLOAD_FOLDER = '/server/flask_tmp'
 
 # start server
 app = Flask(__name__)
-app.config['CORS_HEADERS'] = 'Content-Type'
-CORS(app, resources={r"*": {"origins": "*"}})
 
 hit_seqs = {}
 accs_seqs = {}
+d3_tree = {}
 
 @app.route('/server/phylogeny', methods=['POST', 'GET'])
 def phylogeny():
@@ -76,7 +74,7 @@ def phyloblast():
     if request.method == 'POST':
         global hit_seqs
         global accs_seqs
-        d3_tree = None
+        global d3_tree
         tree_data = None
         tree_menu_selection = None
         error = []
@@ -147,12 +145,10 @@ def phyloblast():
         # filter parameter
         eValue = request.form['eValue']
         print('E-value: ' + eValue)
-        min_query_identity = request.form['query_ident']
-        print('min. query identity: ' +  min_query_identity)
+        min_align_identity = request.form['align_ident']
+        print('min. alignment identity: ' +  min_align_identity)
         min_query_cover = request.form['query_cover']
         print('min. query coverage: ' + min_query_cover)
-        min_hit_identity = request.form['hit_ident']
-        print('min. hit identity: ' +  min_hit_identity)
         min_hit_cover = request.form['hit_cover']
         print('min. hit coverage: ' + min_hit_cover)
 
@@ -164,10 +160,9 @@ def phyloblast():
             return {'error': error}
         else:
             # start processing of the data
-            # run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_query_cover, min_identity, protein_length):
             print('\nStart PhyloBlast')
             try:
-                d3_tree, hit_seqs, accs_seqs = processing_data.run_phyloblast(protein, protein_file_type, tree_data, tree_menu_selection, 'blastp', eValue, min_query_cover, min_query_identity, min_hit_cover, min_hit_identity, 'flask_tmp/')
+                d3_tree, hit_seqs, accs_seqs = processing_data.run_phyloblast(protein, protein_file_type, tree_data, tree_menu_selection, 'blastp', eValue, min_align_identity, min_query_cover, min_hit_cover, 'flask_tmp/')
                 #print(d3_tree)
                 if len(d3_tree) > 0:
                     processing_data.generate_phyloblast_output(d3_tree, 'flask_tmp/')  # generate mapping output as csv

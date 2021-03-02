@@ -32,7 +32,7 @@ class HandlePhylogenyServer extends Component{
             <div style={{margin:"20px"}}>
                 <p>Calculation of the phylogeny can take up to <b>10 min </b> dependent
             on the number of hits and size of the taxonomic tree</p>
-                <div class="d-flex justify-content-center">
+                <div className="d-flex justify-content-center">
                     <Spinner animation="border" role="status">
                         <span className="sr-only">Loading...</span>
                     </Spinner>

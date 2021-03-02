@@ -32,15 +32,15 @@ from external_tools import FastTreeCommandline as FastTree
 # global variables 
 count_clades = 0
 
-# functions
+# functions prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir
 ######################################################################################################################## BLAST
 ''' run and parse the blast result dependent on the server input 
     prot                    amino acid sequence or direct Blast result as xml file
     prot_file_type:         0= aa sequence, 1= xml file
     blast_type:             blastp or blastx dependent on the input (by now only blastp)
     eValue:                 significant threshold for the blast search
+    min_align_ident         minimal identity between query and subject sequence in the alignment
     min_query_cover:        minimal coverage with the query
-    min_subject_ident:      minimal identity with the subject (hit)
     min_subject_cover:      minimal coverage with the subject (hit)
     entrez_query:           restrict the blast search to 'roots' of the given taxonomy
     out_dir:                path to output directory
@@ -48,8 +48,8 @@ count_clades = 0
     output: Tabular only WP identifier lesser hits as with XML file ?
     tab sep: # Fields: query acc.ver, subject acc.ver, % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score, % positives
 '''
-def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_subject_ident, min_subject_cover, entrez_query, out_dir):
-    header = ['qacc', 'sacc', 'qstart', 'qend', 'sstart', 'send', 'slen', 'nident', 'evalue', 'pident', 'staxids', 'qcovs', 'sseq']
+def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_subject_cover, entrez_query, out_dir):
+    header = ['qacc', 'sacc', 'qstart', 'qend', 'sstart', 'send', 'slen', 'nident', 'evalue', 'pident', 'staxids', 'qcovhsp', 'sseq']
 
     header_basic = ['qacc', 'sacc', 'pident', 'alen', 'mm', 'g', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bit', 'm']
 
@@ -64,14 +64,14 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
             preFilter.columns = header
         else:
             preFilter.columns = header_basic
-        #print(preFilter.head())
-        subjectAlignedLength = abs(preFilter['send'] - preFilter['sstart'])
+
+        subjectAlignedLength = len(preFilter['sseq'])
         #print(subjectAlignedLength)
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
         #print(subjectCoverage)
-        subjectIdent = (preFilter['nident']/subjectAlignedLength) > (int(min_subject_ident)/100)
-        #print(subjectIdent)
-        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['pident'] > (int(min_query_cover) / 100)) & subjectCoverage & subjectIdent]
+        alignIdent = preFilter['pident'] > (int(min_align_ident)/100)
+
+        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (int(min_query_cover) / 100)) & subjectCoverage & alignIdent]
 
         print(result.shape)
 
@@ -79,20 +79,19 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
         blast_out_path = out_dir + 'blast_result.csv'
         blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
-                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq', out=blast_out_path)
+                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq', out=blast_out_path)
         print(blastp_cline)
         stdout, stderr = blastp_cline()
         print(stderr)
         preFilter = pd.read_csv(blast_out_path, sep='\t', names=header)
 
-        #print(preFilter.head())
-        subjectAlignedLength = abs(preFilter['send'] - preFilter['sstart'])
+        subjectAlignedLength = len(preFilter['sseq'])
         #print(subjectAlignedLength)
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
         #print(subjectCoverage)
-        subjectIdent = (preFilter['slen']/subjectAlignedLength) > (int(min_subject_ident)/100)
-        #print(subjectIdent)
-        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['pident'] > (int(min_query_cover) / 100)) & subjectCoverage & subjectIdent]
+        alignIdent = preFilter['pident'] > (int(min_align_ident)/100)
+
+        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (int(min_query_cover) / 100)) & subjectCoverage & alignIdent]
         print(result.shape)
 
     return result
@@ -102,14 +101,12 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_query_cover, min_sub
 '''Filter blast result for hits similar to the species in the tree
     blast_record:      result of the blast search
     tree_taxIDs:       set of all taxonomic IDs in the given taxonomy
-    min_query_ident:   minimal query ident of the blast result to be counted as hit 
 '''
-def filter_blast_result(blast_record, tree_tax_IDs, min_query_ident):
+def filter_blast_result(blast_record, tree_tax_IDs):
     filtered_result = {}
     sequence_dic = {}  # taxid encoded seq dic
     uniqueAccs = {}  # accession ID encoded seq dic
-    filtered_blast = blast_record[blast_record['pident'] > (int(min_query_ident) / 100)]
-    filtered_blast = filtered_blast[filtered_blast['staxids'].notna()]  # remove all rows with no taxid information
+    filtered_blast = blast_record[blast_record['staxids'].notna()]  # remove all rows with no taxid information
     ncbi = NCBITaxa()
 
     for index, row in filtered_blast.iterrows():  # taxids from the hit table with number of occurrence
@@ -490,10 +487,33 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
 
     subtree_hits = 0
     root_size = 0
+    list_of_child_ids = []  # phylogeny: all child ids to calculate the last common ancestor
+    count_clade_members = 0  # phylogeny: addition to cladeName to distinguish between clades
     for child in root_children:
         subtree_hits += sum(child['value'][:2])
         root_size += child['size'][0]
+        if ncbi_boolean == '2':
+            count_clade_members += child['value'][2]
+            if 'clade' not in child['name']:
+                list_of_child_ids.append(child['value'][1])
+
     if ncbi_boolean == '2':
+        if len(list_of_child_ids) == 1:
+            try:
+                rootName = ncbi.get_taxid_translator(list_of_child_ids)[list_of_child_ids[0]] + '_' + str(count_clade_members) + '.' + str(count_clades)
+                count_clades += 1
+                rootID = list_of_child_ids[0]
+            except:
+                print('No name for:' + str(list_of_child_ids[0]))
+
+        elif len(list_of_child_ids) > 0:
+            try:
+                children_tree = ncbi.get_topology(list_of_child_ids)
+                rootName = children_tree.sci_name + '_' + str(count_clade_members) + '.' + str(count_clades)
+                count_clades += 1
+                rootID = int(children_tree.name)
+            except:
+                print('No topology for :' + ','.join([str(item) for item in list_of_child_ids]))
         root_value.append(rootID)
     else:
         root_value.append(subtree_hits)
@@ -512,19 +532,19 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
     nodeID = None
     nodeName = None
     global count_clades
-
+    ncbi = NCBITaxa()
     if ncbi_boolean == '0':  # input was a ncbi taxonomy
         nodeID = int(tree.name)
         nodeName = tree.sci_name
 
-    else:  # input was own taxonomic phylogeny / seq-based phylogeny
+    else:  # input was own tree
         nodeID, nodeName = translate_node(tree.name.replace('_', ' '), count_clades)
 
 
     if len(tree.get_children()) == 0:  # hit a leaf
         if nodeID in filtered_blast_result.keys():
-            if ncbi_boolean == '2':
-                return {'size': [15, branch_length], 'name': nodeName, 'value': [filtered_blast_result[nodeID], nodeID]}
+            if ncbi_boolean == '2': # taxa-based phylogeny
+                return {'size': [15, branch_length], 'name': nodeName, 'value': [filtered_blast_result[nodeID], nodeID, 1]}
             else:
                 return {'size': [15, branch_length], 'name': nodeName, 'value': [filtered_blast_result[nodeID], 0, treeRanks[nodeID]]}
 
@@ -532,7 +552,6 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
         tree_children = list(
             filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length) for child in tree.get_children()]))
         child_value = []
-
         try:
             child_value.append(filtered_blast_result[nodeID])
         except KeyError:
@@ -540,12 +559,37 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
 
         subtree_hits = 0
         tree_size = 0
-
+        list_of_child_ids = []                       # phylogeny: all child ids to calculate the last common ancestor
+        count_clade_members = 0                      # phylogeny: addition to cladeName to distinguish between clades
         for child in tree_children:
             subtree_hits += sum(child['value'][:2])
             tree_size += child['size'][0]
+
+            if ncbi_boolean == '2':
+                count_clade_members += child['value'][2]
+                if 'clade' not in child['name']:
+                    list_of_child_ids.append(child['value'][1])
+
         if ncbi_boolean == '2':
+            if len(list_of_child_ids) == 1:
+                try:
+                    nodeName = ncbi.get_taxid_translator(list_of_child_ids)[list_of_child_ids[0]] + '_' + str(count_clade_members) + '.' + count_clades
+                    count_clades += 1
+                    nodeID = list_of_child_ids[0]
+                except:
+                    print('No name for:' + str(list_of_child_ids[0]))
+
+            elif len(list_of_child_ids) > 0:
+                try:
+                    children_tree = ncbi.get_topology(list_of_child_ids)
+                    nodeName = children_tree.sci_name + '_' + str(count_clade_members) + '.' + str(count_clades)
+                    count_clades += 1
+                    nodeID = int(children_tree.name)
+                except:
+                    print('No topology for :' + ','.join([str(item)  for item in list_of_child_ids]))
             child_value.append(nodeID)
+            child_value.append(count_clade_members)
+
         else:
             child_value.append(subtree_hits)
             child_value.append(treeRanks[nodeID])
@@ -588,11 +632,13 @@ def translate_node(node_label, count):
     else:
         try:
             if node_label.isnumeric():
-                return int(node_label), ncbi.get_taxid_translator([node_label])[int(node_label)]
+                nodeName = ncbi.get_taxid_translator([node_label])
+                return int(node_label), nodeName[int(node_label)]
             else:
-                return ncbi.get_name_translator([node_label])[node_label][0], node_label
+                nodeId = ncbi.get_name_translator([node_label])
+                return nodeId[node_label][0], node_label
         except KeyError:
-            # print('no valid key')
+            print('no valid key')
             count_clades += 1
             return count, 'clade' + str(count)
 
@@ -605,13 +651,12 @@ tree_data:                  newick string/file (user defined) or list of taxa
 tree_menu:                  0= ncbi taxonomy, 1= user defined taxonomy
 blast_type:                 default = blastp  (possibility to expend to blastx)
 eValue:                     E-value for blast search threshold
+min_align_ident:            minimal match between query and hit (percentage)
 min_query_cover:            minimal query coverage (percentage)
-min_query_identity:         minimal match between query and hit (percentage)
 min_hit_cover:              minimal hit coverage (percentage)
-min_hit_identity:           minimal matches between subject and hit (percentage)
 out_dir:	   
 '''
-def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_query_cover, min_query_identity, min_hit_cover, min_hit_identity, out_dir):
+def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_align_ident, min_query_cover,  min_hit_cover, out_dir):
     d3_tree = {}
     sequence_dic = {}
     uniqueAccs = {}
@@ -628,7 +673,7 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     # run BLAST
     try:'''
     print('Start Blast run')
-    blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_query_cover, min_hit_identity, min_hit_cover, entrez_query, out_dir)
+    blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir)
     print('complete')
     '''except:
         sys.stderr.write('Blast run failed')
@@ -638,7 +683,7 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     if blast_result.size > 0:
         #try:
         print('Start filtering')
-        filtered_blast, sequence_dic, uniqueAccs = filter_blast_result(blast_result, taxid_tree_set, min_query_identity)
+        filtered_blast, sequence_dic, uniqueAccs = filter_blast_result(blast_result, taxid_tree_set)
         print('complete')
         '''except:
             sys.stderr.write('Filtering failed')

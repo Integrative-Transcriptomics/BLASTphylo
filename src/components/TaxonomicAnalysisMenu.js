@@ -17,29 +17,36 @@ class TaxonomicAnalysisMenu extends Component{
      constructor(props){
         super(props);
 
-        this.state = {hitSelect: "2",
-                      rankSelect: 'class'};
 
         // generation of the tree visualisation
-        var tree = startTreevis(this.props.phyloData);
-        if (tree !== 0){
-            chart(tree, null, 6, 6, true);
+        var treeData = startTreevis(this.props.phyloData);
+        this.state = {hitSelect: "2",
+                      rankSelect: 'class',
+                      tree: treeData};
+        if (treeData !== 0){
+            d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
+                                .style('border-radius', '5px');
+            chart(treeData, null, 6, 6, true);
         }else{
             d3v6.select('#phyloblastAlert').remove();
             d3v6.select('#tree').append('div').attr('id', 'phyloblastAlert')
                     .text('Found 0 hits. Return to the main page and try another taxonomy');
         }
 
+        this.handlePublicationReady = this.handlePublicationReady.bind(this);
+
+    }
+
+    handlePublicationReady(){
+        var treeCopy = {...this.state.tree};
+        publicationReady(treeCopy);
     }
 
     render(){
-            d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
-                                .style('border-radius', '5px');
 
             const renderPublicReadyTooltip = (props) => (
                 <Tooltip id='public_ready_tooltip' {... props}>
                    Result will be a static tree.
-                   Reload the page to start a new interpolation of the basic tree
                 </Tooltip>
             )
 
@@ -69,7 +76,7 @@ class TaxonomicAnalysisMenu extends Component{
                                 <Card.Body>
                                     <Nav className='mr-auto'>
                                         <OverlayTrigger placement='bottom' delay={{show:150, hide:50}} overlay={renderPublicReadyTooltip}>
-                                        <button id="public_ready"  onClick={publicationReady}>publication ready</button>
+                                        <button id="public_ready"  onClick={this.handlePublicationReady}>publication ready</button>
                                         </OverlayTrigger>
                                         <ExportTrees />
                                     </Nav>

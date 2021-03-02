@@ -50,5 +50,11 @@
   margin-top: 10px;
 }
 
+.popover-header {
+  color: white;
+  background: #79acce;
+}
 
-
+.popover-body {
+  background: #dae7f1;
+}
