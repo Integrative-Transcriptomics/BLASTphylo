@@ -17,7 +17,6 @@ class TaxonomicAnalysisMenu extends Component{
      constructor(props){
         super(props);
 
-
         // generation of the tree visualisation
         var treeData = startTreevis(this.props.phyloData);
         this.state = {hitSelect: "2",
@@ -33,14 +32,9 @@ class TaxonomicAnalysisMenu extends Component{
                     .text('Found 0 hits. Return to the main page and try another taxonomy');
         }
 
-        this.handlePublicationReady = this.handlePublicationReady.bind(this);
 
     }
 
-    handlePublicationReady(){
-        var treeCopy = {...this.state.tree};
-        publicationReady(treeCopy);
-    }
 
     render(){
 
@@ -76,7 +70,7 @@ class TaxonomicAnalysisMenu extends Component{
                                 <Card.Body>
                                     <Nav className='mr-auto'>
                                         <OverlayTrigger placement='bottom' delay={{show:150, hide:50}} overlay={renderPublicReadyTooltip}>
-                                        <button id="public_ready"  onClick={this.handlePublicationReady}>publication ready</button>
+                                        <button id="public_ready"  onClick={publicationReady}>publication ready</button>
                                         </OverlayTrigger>
                                         <ExportTrees />
                                     </Nav>

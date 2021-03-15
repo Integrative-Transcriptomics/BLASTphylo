@@ -65,7 +65,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         else:
             preFilter.columns = header_basic
 
-        subjectAlignedLength = len(preFilter['sseq'])
+        subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
         #print(subjectAlignedLength)
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
         #print(subjectCoverage)
@@ -85,7 +85,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         print(stderr)
         preFilter = pd.read_csv(blast_out_path, sep='\t', names=header)
 
-        subjectAlignedLength = len(preFilter['sseq'])
+        subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
         #print(subjectAlignedLength)
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
         #print(subjectCoverage)
@@ -252,11 +252,14 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
     if uniqueSeqs:
 
         count_clades = 0
+
         return unique_phylogeny_data(tree, subject_seqs, output_tree)
     else:
         count_clades = 0
         d3Tree, parentnode_info, mosthitAcc = phylogeny_data(tree, subject_seqs, tree_tax_ids, output_tree, True)
-        newickTree = phylogeny_data(tree, subject_seqs, tree_tax_ids, output_tree, False)
+        #newickTree = phylogeny_data(tree, subject_seqs, tree_tax_ids, output_tree, False)
+        newickTree = tree.write(format=3)
+        #print(newickTree)
         return d3Tree, newickTree, parentnode_info, mosthitAcc
 
 '''
@@ -319,12 +322,12 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
         newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10)
         return newTree, parentnode_info, uniqueSeqs
 
-    else:
+    '''else:
         with open(treefile, 'r') as treehandle:
             newickTree = treehandle.read()
         treehandle.close()
         newTree = replace_ID_Name(newickTree, treeIDs)
-        return newTree
+        return newTree'''
 
 
 ''' 2. Phylogeny: unique hit based
@@ -333,11 +336,13 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
 '''
 def unique_phylogeny_data(tree, uniqueAccs, treefile):
     unique_count = {key: uniqueAccs[key][1] for key in uniqueAccs.keys()}
-    with open(treefile, 'r') as treehandle:
+    d3_tree = unique_transfer_tree(tree, unique_count, 20)
+    newickTree = tree.write(format=3)
+    '''with open(treefile, 'r') as treehandle:
         newickTree = treehandle.read()
-    treehandle.close()
+    treehandle.close() '''
 
-    return unique_transfer_tree(tree, unique_count, 20), newickTree
+    return d3_tree, newickTree
 
 ######################################################################################################################## Tree handling
 '''read tree input 
@@ -380,7 +385,7 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
         roots = 'txid' + translate_node(tree.name.replace('_', ' '), 0)[1] + '[ORGN]'
 
     elif ncbi_boolean == '2' and not needTaxIDs: #phylogeny data generation
-        tree = Tree(tree_input)
+        tree = Tree(tree_input, format=3)
         tree_taxIDs = set()
 
     else:
@@ -514,7 +519,9 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
                 rootID = int(children_tree.name)
             except:
                 print('No topology for :' + ','.join([str(item) for item in list_of_child_ids]))
+        tree.name = newick_valid_name(rootName)
         root_value.append(rootID)
+        root_value.append(count_clade_members)
     else:
         root_value.append(subtree_hits)
         root_value.append(treeRanks[rootID])
@@ -544,6 +551,7 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
     if len(tree.get_children()) == 0:  # hit a leaf
         if nodeID in filtered_blast_result.keys():
             if ncbi_boolean == '2': # taxa-based phylogeny
+                tree.name = newick_valid_name(nodeName)
                 return {'size': [15, branch_length], 'name': nodeName, 'value': [filtered_blast_result[nodeID], nodeID, 1]}
             else:
                 return {'size': [15, branch_length], 'name': nodeName, 'value': [filtered_blast_result[nodeID], 0, treeRanks[nodeID]]}
@@ -587,6 +595,7 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
                     nodeID = int(children_tree.name)
                 except:
                     print('No topology for :' + ','.join([str(item)  for item in list_of_child_ids]))
+            tree.name = newick_valid_name(nodeName)
             child_value.append(nodeID)
             child_value.append(count_clade_members)
 
@@ -706,7 +715,7 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
 
 ######################################################################################################################## Output/Export files
 '''Generate Table like output of the d3 tree 
-   d3_tree:         tree in d3 compatible format
+   d3_tree: tree in d3 compatible format
 '''
 def generate_tree_output(d3_tree):
     try:
@@ -719,3 +728,13 @@ def generate_phyloblast_output(tree, outdir):
     tree_out = outdir + 'taxonomicMapping.csv'
     with open(tree_out, 'w') as w:
         w.write(table_tree)
+
+''' Generate newick string from dictionary
+    d3_tree:    tree in d3 compatible format
+'''
+def generate_newick_from_dic(d3_tree):
+    if 'children' in d3_tree.keys():
+        return (','.join([generate_newick_from_dic(child) for child in de_tree['children']])) + d3_tree['name']
+    else:
+        return d3_tree['name']
+

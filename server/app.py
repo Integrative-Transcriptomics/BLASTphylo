@@ -24,11 +24,36 @@ from werkzeug.utils import secure_filename
 import logging
 
 # create tmp output folder for output file
-
 actual_dir = os.getcwd()
 flask_tmp_dir = actual_dir + '/flask_tmp'
 shutil.rmtree(flask_tmp_dir, ignore_errors=True)
-os.mkdir(flask_tmp_dir)
+try:
+    os.mkdir(flask_tmp_dir)
+except:
+    print('flask_tmp folder is already generated')
+
+ #   [best_seqs.append(SeqRecord(Seq(seqs[taxID][1][0]), id=str(taxID), description='')) for taxID in seqs.keys()]
+  #  SeqIO.write(best_seqs, output_file, "fasta")
+
+# generate fasta file from textfield input and check for amino acid sequence
+def generate_fasta_from_input(textfieldinput, outdir):
+    fastas = []
+    valid_pro_seq = True
+    regAA = "^[ACDEFGHIKLMNPQRSTVWY]*$"
+    split_input = textfieldinput.split('>')
+
+    for fasta in split_input:
+        if len(fasta) > 0:
+            split_fasta = fasta.split('\n')
+            seq = ''.join(split_fasta[1:]).replace('\r', '')
+            valid_pro_seq = re.search(regAA, seq)
+            if valid_pro_seq:
+                fastas.append(SeqRecord(Seq(seq), id='>'+split_fasta[0]))
+            else:
+                return valid_pro_seq
+    SeqIO.write(fastas, outdir, "fasta")
+    return valid_pro_seq
+
 
 UPLOAD_FOLDER = '/server/flask_tmp'
 
@@ -79,17 +104,14 @@ def phyloblast():
         tree_menu_selection = None
         error = []
         print('Parameter of this run:')
-        regAA = "^[ACDEFGHIKLMNPQRSTVWY]*$"
 
         # Blast Search
         protein_seq = request.form['protein']
-        valid_pro_seq = re.search(regAA, protein_seq)
+        valid_pro_seq = generate_fasta_from_input(protein_seq, "flask_tmp/protein.fasta")
         if valid_pro_seq:
-            protein_data = SeqRecord(Seq(protein_seq), id='query 1', description='protein sequence')
-            SeqIO.write(protein_data, "flask_tmp/protein.fasta", "fasta")  # generate fasta file
             protein = 'flask_tmp/protein.fasta'
         else:
-            error.append({'message': 'Protein sequence contain irregular amino acids'})
+            error.append({'message': 'Protein sequence(s) contain irregular amino acids'})
             protein = None
 
         protein_file_type = ''

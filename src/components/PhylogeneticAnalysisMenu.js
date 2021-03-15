@@ -16,11 +16,11 @@ import {ExportTrees} from '../App.js'
 
 
 // own visualisations
-import {showClades, publicationReady, chart, updateClickedNodes} from '../visualisations/phyloblast2.js';
+import {showClades, publicationReady, chart} from '../visualisations/phyloblast2.js';
 
 
 class PhylogeneticAnalysisMenu extends Component{
-     constructor(props){
+    constructor(props){
         super(props);
 
         var treeData = this.props.data.tree;
@@ -32,7 +32,6 @@ class PhylogeneticAnalysisMenu extends Component{
 
         // own functions
         this.showAdditional = this.showAdditional.bind(this);
-        this.handlePublicationReady = this.handlePublicationReady.bind(this);
     }
 
     // show additional information for the taxa-based phylogeny
@@ -40,30 +39,12 @@ class PhylogeneticAnalysisMenu extends Component{
         showClades(this.state.extra[0], this.state.extra[1], null);
     }
 
-    handlePublicationReady(){
-        //window.history.pushState({page: 1}, "staticVisualisation", "?=static");
-        var treeCopy = {...this.state.tree};
-        publicationReady(treeCopy);
-        //console.log(actualData.tree)
-        //updateClickedNodes(actualData.clickedNodes);
-        //this.setState({actualTree: actualData.tree});
-    }
 
 
 
     render(){
         d3v6.select('#visualisation').style('border', '2px solid #5e66b4')
                                 .style('border-radius', '5px');
-        const tree = {...this.state.actualTree};
-        const self = this;
-        /***window.onpopstate = function(event) {
-            d3v6.select('#tree_vis').remove();
-            const treeVis = {...tree};
-            chart(treeVis, self.state.extra, null, null, true);
-            if(document.getElementById('infoSelection')){
-                showClades(self.state.extra[0], self.state.extra[1], null, null);
-            }
-        }***/
 
         let additionalInformation;
         if (this.state.extra.length === 2){
@@ -91,7 +72,7 @@ class PhylogeneticAnalysisMenu extends Component{
                                 <Card.Body>
                                     <Nav className='mr-auto'>
                                         <OverlayTrigger placement='bottom' delay={{show:150, hide:50}} overlay={renderPublicReadyTooltip}>
-                                        <button id="public_ready" onClick={this.handlePublicationReady}>publication ready</button>
+                                        <button id="public_ready" onClick={publicationReady}>publication ready</button>
                                         </OverlayTrigger>
                                         <ExportTrees />
                                     </Nav>

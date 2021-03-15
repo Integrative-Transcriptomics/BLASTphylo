@@ -28,161 +28,162 @@ import TreeInteraction from './components/TreeInteraction.js';
 
 class App extends Component {
 
-  constructor(props){
-    super(props);
-    // check if new Tab for phylogeny was "opened"
-    var actualWebpage = window.location.href.split('/');
-    this. state ={isActualComponent: null,
+    constructor(props){
+        super(props);
+        // check if new Tab for phylogeny was "opened"
+        var actualWebpage = window.location.href.split('/');
+        this. state ={isActualComponent: null,
                     data: null, error: null};
-    if(actualWebpage[actualWebpage.length-1].includes('phylogeny')){
-        this.state = {isActualComponent: 'handlePhylogeny',
+        if(actualWebpage[actualWebpage.length-1].includes('phylogeny')){
+            this.state = {isActualComponent: 'handlePhylogeny',
                    data: actualWebpage[actualWebpage.length-1],
                    error: null};
-    }else{
-        this.state = {isActualComponent: null,
+        }else{
+            this.state = {isActualComponent: null,
                    data: null,
                    error: null};
+        }
+
+        // functions to handle view update, reset, help page and alert messages
+        this.changeComp = this.changeComp.bind(this);
+        this.handleMenuClick = this.handleMenuClick.bind(this);
+        this.handleHelpClick = this.handleHelpClick.bind(this);
+        this.handleAlert = this.handleAlert.bind(this);
     }
-    // functions to handle view update, reset, help page and alert messages
-    this.changeComp = this.changeComp.bind(this);
-    this.handleMenuClick = this.handleMenuClick.bind(this);
-    this.handleHelpClick = this.handleHelpClick.bind(this);
-    this.handleAlert = this.handleAlert.bind(this);
-  }	
 
-  // change view independent of component
-  changeComp(stateName, stateValue){
-    if(stateName === 'actual'){
-    	this.setState({isActualComponent: stateValue});
-    } else if (stateName === 'data'){
-        this.setState({data: stateValue});
-    } else if (stateName === 'error'){
-        this.setState({error: stateValue});
-    } else {
-      console.log('Wrong stateName: ' + stateName + 'was given') 
+    // change view independent of component
+    changeComp(stateName, stateValue){
+        if(stateName === 'actual'){
+            this.setState({isActualComponent: stateValue});
+        } else if (stateName === 'data'){
+            this.setState({data: stateValue});
+        } else if (stateName === 'error'){
+            this.setState({error: stateValue});
+        } else {
+          console.log('Wrong stateName: ' + stateName + 'was given')
+        }
     }
-  }
 
-  // reset view to the menu page
-  handleMenuClick(){
-    if(window.location.href !== 'http://localhost:3000/'){
-        window.location.href = 'http://localhost:3000/';
+    // reset view to the menu page
+    handleMenuClick(){
+        if(window.location.href !== 'http://localhost:3000/'){
+            window.location.href = 'http://localhost:3000/';
+        }
+        this.setState({isActualComponent: 'menu'});
     }
-    this.setState({isActualComponent: 'menu'});
-  }
 
-  // open help page for actual view
-  handleHelpClick(){
-    this.setState({isActualComponent: 'help'});	
-  }
+    // open help page for actual view
+    handleHelpClick(){
+        this.setState({isActualComponent: 'help'});
+    }
 
-  // close alert messages
-  handleAlert(){
-    document.getElementById("alert").style.display='none';
-  }
+    // close alert messages
+    handleAlert(){
+        document.getElementById("alert").style.display='none';
+    }
 
-  render() {
-   var alerts = null;
+    render() {
+        var alerts = null;
 
-   const isActualComponent = this.state.isActualComponent;
-   const data = this.state.data;
-   var userMenu = <div />;
+        const isActualComponent = this.state.isActualComponent;
+        const data = this.state.data;
+        var userMenu = <div />;
 
-   //console.log(data)
-   let actualComponent;
-   // remove all visualisations
-   d3v6.select('#visualisation').style('border', 'none');
-   d3v6.select('#phyloblastAlert').remove();
+        //console.log(data)
+        let actualComponent;
+        // remove all visualisations
+        d3v6.select('#visualisation').style('border', 'none');
+        d3v6.select('#phyloblastAlert').remove();
 
-   // switch view dependent of the component state
-   if (isActualComponent === 'help'){
-     actualComponent = <Help />;
-   } else if (isActualComponent === 'phyloblast'){
-     const copy = {...data};
-     actualComponent = <TaxonomicAnalysisMenu phyloData={copy} changeComp={this.changeComp} />;
-     userMenu = <TreeInteraction phyloData={copy} calculationMethod={'taxa'}/>;
+        // switch view dependent of the component state
+        if (isActualComponent === 'help'){
+            actualComponent = <Help />;
+        } else if (isActualComponent === 'phyloblast'){
+            const copy = {...data};
+            actualComponent = <TaxonomicAnalysisMenu phyloData={copy} changeComp={this.changeComp} />;
+            userMenu = <TreeInteraction phyloData={copy} calculationMethod={'taxa'}/>;
 
-   }else if (isActualComponent === 'handlePhylogeny'){
-     actualComponent = <HandlePhylogenyServer data={data} changeComp={this.changeComp} />;
-   }else if (isActualComponent === 'phylogeny'){
-     actualComponent = <PhylogeneticAnalysisMenu data={data} changeComp={this.changeComp} />;
-     userMenu = <TreeInteraction data={data} calculationMethod={'phylo'} />;
-   } else {
-     actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp} />;
-   }
-   //console.log(this.state.isActualComponent)
+        }else if (isActualComponent === 'handlePhylogeny'){
+            actualComponent = <HandlePhylogenyServer data={data} changeComp={this.changeComp} />;
+        }else if (isActualComponent === 'phylogeny'){
+            actualComponent = <PhylogeneticAnalysisMenu data={data} changeComp={this.changeComp} />;
+            userMenu = <TreeInteraction data={data} calculationMethod={'phylo'} />;
+        } else {
+            actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp} />;
+        }
+        //console.log(this.state.isActualComponent)
 
-   if(this.state.error !== null){ // errors occurred during input
-      alerts = this.state.error.map((alertmessage) =>
+        if(this.state.error !== null){ // errors occurred during input
+            alerts = this.state.error.map((alertmessage) =>
                 <li><strong>Warning: </strong>{alertmessage.message}</li>);
 
-      return (
-        <div className="App">
-          <header className="App-header">
-          <nav>
-          <h1 id='title'>BLASTPhylo</h1>
-          <ul>
-            <li id='link1'>
-               <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
-            </li>
-            <li id='link2'>
-              <button id='helpLink' onClick={this.handleHelpClick} >help </button>
-            </li>
-          </ul>
-          </nav>
-          </header>
-          <div className='App-body'>
-              <div id="alert">
-                  <span class="closebtn" onClick={this.handleAlert}>&times;</span>
-                  <ul>
-                    {alerts}
-                  </ul>
-              </div>
-              {actualComponent}
-             <div id="visualisation">
-               <div id='treeInteraction'>
-                    {userMenu}
-               </div>
-               <div id='treeVis'>
-                   <div id="tree"></div>
-                   <div id="additionalInfo"></div>
-               </div>
-             </div>
-         </div>
-    </div>
-      );
-  }else{ // calculation can run with success
-      return (
-    <div className="App">
-          <header className="App-header">
-          <nav>
-          <h1 id='title'>BLASTPhylo</h1>
-          <ul>
-            <li id='link1'>
-               <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
-            </li>
-            <li id='link2'>
-              <button id='helpLink' onClick={this.handleHelpClick} >help </button>
-            </li>
-          </ul>
-          </nav>
-          </header>
-          <div className='App-body'>
-              {actualComponent}
-             <div id="visualisation">
-               <div id='treeInteraction'>
-                    {userMenu}
-               </div>
-               <div id='treeVis'>
-                   <div id="tree"></div>
-                   <div id="additionalInfo"></div>
-               </div>
-             </div>
-         </div>
-    </div>
-    );
-  }
- }
+            return (
+                <div className="App">
+                    <header className="App-header">
+                    <nav>
+                    <h1 id='title'>BLASTPhylo</h1>
+                    <ul>
+                        <li id='link1'>
+                            <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
+                        </li>
+                        <li id='link2'>
+                            <button id='helpLink' onClick={this.handleHelpClick} >help </button>
+                        </li>
+                    </ul>
+                    </nav>
+                    </header>
+                    <div className='App-body'>
+                        <div id="alert">
+                            <span class="closebtn" onClick={this.handleAlert}>&times;</span>
+                            <ul>
+                                {alerts}
+                            </ul>
+                        </div>
+                        {actualComponent}
+                        <div id="visualisation">
+                            <div id='treeInteraction'>
+                            {userMenu}
+                            </div>
+                            <div id='treeVis'>
+                                <div id="tree"></div>
+                                <div id="additionalInfo"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }else{ // calculation can run with success
+            return (
+                <div className="App">
+                    <header className="App-header">
+                    <nav>
+                    <h1 id='title'>BLASTPhylo</h1>
+                    <ul>
+                        <li id='link1'>
+                            <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
+                        </li>
+                        <li id='link2'>
+                            <button id='helpLink' onClick={this.handleHelpClick} >help </button>
+                        </li>
+                    </ul>
+                    </nav>
+                    </header>
+                    <div className='App-body'>
+                        {actualComponent}
+                        <div id="visualisation">
+                            <div id='treeInteraction'>
+                            {userMenu}
+                            </div>
+                            <div id='treeVis'>
+                                <div id="tree"></div>
+                                <div id="additionalInfo"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+    }
 }
 
 // export the view of the treeVis div (phlogeny or taxonomic mapping) as jpeg
