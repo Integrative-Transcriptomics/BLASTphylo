@@ -2,9 +2,10 @@
 import React, {Component} from 'react';
 import * as d3v6 from 'd3v6';
 import domtoimage from 'dom-to-image';
+import axios from 'axios';
 import "bootstrap/dist/css/bootstrap.min.css";
 import {BsBoxArrowUpRight} from "react-icons/bs";
-
+import {Nav} from 'react-bootstrap';
 //import "./visualisations/defaultFirefox.css";
 
 // own components and style sheets
@@ -30,16 +31,19 @@ class App extends Component {
 
     constructor(props){
         super(props);
+
         // check if new Tab for phylogeny was "opened"
         var actualWebpage = window.location.href.split('/');
-        this. state ={isActualComponent: null,
-                    data: null, error: null};
         if(actualWebpage[actualWebpage.length-1].includes('phylogeny')){
             this.state = {isActualComponent: 'handlePhylogeny',
                    data: actualWebpage[actualWebpage.length-1],
                    error: null};
+        }else if(actualWebpage[actualWebpage.length-1] === 'help'){
+            this.state = {isActualComponent: 'help',
+                   data: null,
+                   error: null};
         }else{
-            this.state = {isActualComponent: null,
+            this.state = {isActualComponent: 'menu',
                    data: null,
                    error: null};
         }
@@ -47,15 +51,16 @@ class App extends Component {
         // functions to handle view update, reset, help page and alert messages
         this.changeComp = this.changeComp.bind(this);
         this.handleMenuClick = this.handleMenuClick.bind(this);
-        this.handleHelpClick = this.handleHelpClick.bind(this);
+        //this.handleHelpClick = this.handleHelpClick.bind(this);
         this.handleAlert = this.handleAlert.bind(this);
+        //this.getTaxonomicMapping = this.getTaxonomicMapping.bind(this);
     }
 
     // change view independent of component
     changeComp(stateName, stateValue){
         if(stateName === 'actual'){
             this.setState({isActualComponent: stateValue});
-        } else if (stateName === 'data'){
+        }else if (stateName === 'data'){
             this.setState({data: stateValue});
         } else if (stateName === 'error'){
             this.setState({error: stateValue});
@@ -73,32 +78,42 @@ class App extends Component {
     }
 
     // open help page for actual view
-    handleHelpClick(){
+    /***handleHelpClick(){
         this.setState({isActualComponent: 'help'});
-    }
+    }***/
 
     // close alert messages
     handleAlert(){
         document.getElementById("alert").style.display='none';
     }
 
+    // get taxonomic mapping data from back end
+    /***getTaxonomicMapping(){
+        const self = this
+        axios.get('/server/taxonomicMap').then(function(response){
+            console.log(response.data);
+            self.setState({data: response.data.tree});
+        })
+    }***/
+
     render() {
         var alerts = null;
 
         const isActualComponent = this.state.isActualComponent;
+        const previousComponent = this.state.previousComponent;
         const data = this.state.data;
         var userMenu = <div />;
 
         //console.log(data)
         let actualComponent;
-        // remove all visualisations
-        d3v6.select('#visualisation').style('border', 'none');
         d3v6.select('#phyloblastAlert').remove();
 
         // switch view dependent of the component state
         if (isActualComponent === 'help'){
+            d3v6.select('#visualisation').style('border', 'hidden');
             actualComponent = <Help />;
         } else if (isActualComponent === 'phyloblast'){
+            //this.getTaxonomicMapping();
             const copy = {...data};
             actualComponent = <TaxonomicAnalysisMenu phyloData={copy} changeComp={this.changeComp} />;
             userMenu = <TreeInteraction phyloData={copy} calculationMethod={'taxa'}/>;
@@ -109,9 +124,10 @@ class App extends Component {
             actualComponent = <PhylogeneticAnalysisMenu data={data} changeComp={this.changeComp} />;
             userMenu = <TreeInteraction data={data} calculationMethod={'phylo'} />;
         } else {
+            d3v6.select('#visualisation').style('border', 'hidden');
             actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp} />;
         }
-        //console.log(this.state.isActualComponent)
+        console.log(this.state)
 
         if(this.state.error !== null){ // errors occurred during input
             alerts = this.state.error.map((alertmessage) =>
@@ -127,7 +143,7 @@ class App extends Component {
                             <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
                         </li>
                         <li id='link2'>
-                            <button id='helpLink' onClick={this.handleHelpClick} >help </button>
+                            <a id='helpLink' href='/help' target='_blank' >help </a>
                         </li>
                     </ul>
                     </nav>
@@ -163,7 +179,7 @@ class App extends Component {
                             <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
                         </li>
                         <li id='link2'>
-                            <button id='helpLink' onClick={this.handleHelpClick} >help </button>
+                            <a id='helpLink' href='/help' target='_blank' >help </a>
                         </li>
                     </ul>
                     </nav>
