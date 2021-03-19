@@ -16,30 +16,68 @@ import {ExportTrees} from '../App.js'
 
 
 // own visualisations
-import {showClades, publicationReady, chart} from '../visualisations/phyloblast2.js';
+import {showClades, publicationReady} from '../visualisations/phyloblast2.js';
 
 
 class PhylogeneticAnalysisMenu extends Component{
     constructor(props){
         super(props);
 
+
+        // set state for visualisations
         var treeData = this.props.data.tree;
         if( Object.keys(this.props.data).length === 3){
-            this.state = {tree: treeData, extra: this.props.data.extraInfo, actualTree: treeData, counter: 0};
+            this.state = {tree: treeData, extra: this.props.data.extraInfo, ownInfo: null, actualTree: treeData, counter: 0};
         }else{
             this.state = {tree: treeData, extra: [1], actualTree: treeData, counter: 0};
         }
 
         // own functions
         this.showAdditional = this.showAdditional.bind(this);
+        this.handleUploadAdditional = this.handleUploadAdditional.bind(this);
+        this.convertCSVtoJson = this.convertCSVtoJson.bind(this);
+
     }
 
     // show additional information for the taxa-based phylogeny
     showAdditional(event){
-        showClades(this.state.extra[0], this.state.extra[1], null);
+        showClades(this.state.extra[0], this.state.extra[1], this.state.ownInfo, null);
     }
 
+    // based on: https://stackoverflow.com/questions/27979002/convert-csv-data-into-json-format-using-javascript
+    convertCSVtoJson(csv){
+        var result = {};
+        const self = this;
+        csv.onload = function(){
+            //console.log(this.result);
 
+            var lines = this.result.split('\n');
+            //console.log(lines)
+            const headers = lines[0].split(',');
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i])
+                    continue
+                const obj = {};
+                const currentline = lines[i].split(',');
+
+                for (let j = 1; j < headers.length; j++) {
+                    obj[headers[j]] = currentline[j];
+                }
+                result[currentline[0]] = obj;
+            }
+            //console.log(result)
+            self.setState({ownInfo: result});
+        }
+    }
+
+    handleUploadAdditional(event){
+        const reader = new FileReader();
+        reader.readAsText(event.target.files[0])
+        this.convertCSVtoJson(reader);
+        document.getElementById('uploadOwnAdditional').style.display = "none";
+        document.getElementById('ownCheckbox').style.display = "block";
+    }
 
 
     render(){
@@ -48,7 +86,7 @@ class PhylogeneticAnalysisMenu extends Component{
 
         let additionalInformation;
         if (this.state.extra.length === 2){
-            additionalInformation = additionalCladeInformation(this.showAdditional);
+            additionalInformation = additionalCladeInformation(this.showAdditional, this.handleUploadAdditional);
         }
 
         const renderPublicReadyTooltip = (props) => (
@@ -91,7 +129,7 @@ class PhylogeneticAnalysisMenu extends Component{
 
 
 
-function additionalCladeInformation(showAdditional){
+function additionalCladeInformation(showAdditional, handleUploadAdditional){
     return(
         <Card>
             <Accordion.Toggle as={Card.Header} eventKey='0'>
@@ -101,8 +139,17 @@ function additionalCladeInformation(showAdditional){
                 <Card.Body>
                     <Form id='infoSelection'>
                         <div key={'inline-checkbox'} className='mb-3'>
+                            <Form.Group inline id='ownCheckbox' style={{display: 'none'}}>
+                                    <Form.Check inline type={'checkbox'} id='ownAdditional' label={'own information'} onChange={showAdditional} />
+                            </Form.Group>
                             <Form.Check inline type={'checkbox'}  id='uniqueCheck' label={'unique seqs.'}  onChange={showAdditional}/>
                             <Form.Check inline type={'checkbox'}  id='phylumCheck' label={'phylum rank'} onChange={showAdditional}/>
+                            <br /><br />
+                            <Form inline id='uploadOwnAdditional'>
+                                <Form.Label>upload additional information</Form.Label>
+                                <Form.File id='additional_file' name='additional_file'
+                onChange={handleUploadAdditional} accept='.csv' />
+                            </Form>
                         </div>
                     </Form>
                 </Card.Body>
@@ -111,5 +158,7 @@ function additionalCladeInformation(showAdditional){
     );
 
 }
+
+
 
 export default PhylogeneticAnalysisMenu;

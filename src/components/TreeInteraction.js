@@ -18,10 +18,11 @@ class TreeInteraction extends Component{
         super(props);
 
         if(this.props.calculationMethod === 'taxa'){
-            this.state = {tree: this.props.phyloData,
+            this.state = {tree:  this.props.phyloData,
                       extra: null,
                       hitSelect: "2",
-                      rankSelect: 'class'};
+                      rankSelect: 'class',
+                      actualTree: this.props.phyloData};
         }else{
             // remove old vis and tooltips
             d3v6.select('#tree_vis').remove();
@@ -45,6 +46,7 @@ class TreeInteraction extends Component{
         this.handleReturn = this.handleReturn.bind(this);
     }
 
+
     // taxonomic analysis: tree interactions
     // handle hit barchart
     handleHits(event){
@@ -59,8 +61,9 @@ class TreeInteraction extends Component{
 
     // handle 'collapse to' interaction
     handleRanks(event){
+        console.log(event)
+        this.setState({rankSelect: event});
         if(document.getElementById('returnButton').style.display === 'none'){
-            this.setState({rankSelect: event});
             var copy = {...this.state.tree};
             if(copy['_size']){
                 copy['size'] = copy['_size'].slice();
@@ -99,9 +102,9 @@ class TreeInteraction extends Component{
 
         if(document.getElementById('infoSelection')){
             //console.log('run showClades')
-            //showClades(this.state.extra[0], this.state.extra[1], libTree);
+            showClades(this.state.extra[0], this.state.extra[1], null, libTree);
             // Select the node that will be observed for mutations
-            const targetNode = document.getElementById('tree_vis');
+            const targetNode = document.getElementById('tree');
 
             // Options for the observer (which mutations to observe)
             const config = { attributes: true };
@@ -111,7 +114,7 @@ class TreeInteraction extends Component{
                 // Use traditional 'for loops' for IE 11
                 for(const mutation of mutationsList) {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'height') {
-                        showClades(self.state.extra[0], self.state.extra[1], libTree);
+                        showClades(self.state.extra[0], self.state.extra[1], null, null);
                     }
                 }
             };
@@ -146,13 +149,14 @@ class TreeInteraction extends Component{
 
     // restore old tree state if publication ready was clicked
     handleReturn(event){
+        var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
         document.getElementById('returnButton').style.display = 'none';
-        const rank = this.state.rankSelect;
-
+        const rank = taxonomyLevel.indexOf(this.state.rankSelect);
+        console.log(['Return button', this.state.rankSelect])
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.state.tree};
-        console.log(treeCopy)
-        chart(treeCopy, this.state.extra, rank, rank, true, true);
+        //console.log(treeCopy)
+        chart({'size': treeCopy['size']}, this.state.extra, rank, rank, true, true);
         if(document.getElementById('infoSelection')){
             showClades(this.state.extra[0], this.state.extra[1], null, null);
         }
@@ -208,7 +212,7 @@ class TreeInteraction extends Component{
                             </DropdownButton>
                             </OverlayTrigger>
                             <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
-                            <Button variant='outline-primary' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>{<AiOutlineArrowLeft size={25} />}</Button>
+                            <Button eventKey='returnButton' variant='outline-primary' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>{<AiOutlineArrowLeft size={25} />}</Button>
                             </OverlayTrigger>
                         </ButtonGroup>
                     </ButtonToolbar>
@@ -219,7 +223,6 @@ class TreeInteraction extends Component{
                 const tree = startTreevis(this.state.tree);
                 this.setState({actualTree: tree});
                 if (tree !== 0){
-
                     this.d3Tree();
                 }else{
                   d3v6.select('#tree').append('div').text('Found 0 hits. Return to the main page and try another phylogentic tree');
@@ -241,13 +244,13 @@ class TreeInteraction extends Component{
                 <div id='treeInteraction'>
                 <ButtonToolbar aria-label='Toolbar with button groups'>
                     <OverlayTrigger placement='top' overlay={renderCladeTooltip} onEnter={this.showTooltip}>
-                    <Button id='cladogram' onClick={this.d3Tree}>Cladogram</Button>
+                    <Button id='cladogram' eventKey='cladogramButton' onClick={this.d3Tree}>Cladogram</Button>
                     </OverlayTrigger>
                     <OverlayTrigger placement='top' overlay={renderDistanceTooltip} onEnter={this.showTooltip}>
-                    <Button id='phylogram' onClick={this.distTree}>Phylogram</Button>
+                    <Button id='phylogram' eventKey='phylogramButton' onClick={this.distTree}>Phylogram</Button>
                     </OverlayTrigger>
                     <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
-                    <Button variant='outline-primary' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>{<AiOutlineArrowLeft size={25} />}</Button>
+                    <Button eventKey='returnButton' variant='outline-primary' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>{<AiOutlineArrowLeft size={25} />}</Button>
                     </OverlayTrigger>
                 </ButtonToolbar>
                 </div>

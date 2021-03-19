@@ -162,6 +162,7 @@ def extract_best_hit(seqs, output_file):
     best_seqs = []
     [best_seqs.append(SeqRecord(Seq(seqs[taxID][1][0]), id=str(taxID), description='')) for taxID in seqs.keys()]
     SeqIO.write(best_seqs, output_file, "fasta")
+    print('Taxa-based phylogeny number of seqs. ' + str(len(best_seqs)))
 
 '''
     generate Fasta from dict
@@ -172,6 +173,7 @@ def generate_fasta(seqs, output_file):
     fasta = []
     [fasta.append(SeqRecord(Seq(seqs[key][0]), id=key, description='')) for key in seqs.keys()]
     SeqIO.write(fasta, output_file, "fasta")
+    print('unique sequence-based phylogeny number of seqs. ' + str(len(fasta)))
 
 
 '''
@@ -385,7 +387,7 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
         roots = 'txid' + translate_node(tree.name.replace('_', ' '), 0)[1] + '[ORGN]'
 
     elif ncbi_boolean == '2' and not needTaxIDs: #phylogeny data generation
-        tree = Tree(tree_input, format=3)
+        tree = Tree(tree_input)
         tree_taxIDs = set()
 
     else:
