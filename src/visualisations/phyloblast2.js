@@ -579,6 +579,7 @@ function hitBars(value){
            .attr("width", svgWidth+margin.left+margin.right)
            .attr("height", treeHeight)
            .style("font", "10px sans-serif")
+           .style("overflow","visible")
            .style("user-select", "none");
       
       hitbars.append('g')
@@ -685,13 +686,13 @@ function showClades(taxData, accData, ownAddData, libTree){
             actualTreeHeight = offset.f;
             //console.log(dataInfo)
         }
-
         var clades = d3v6.select('#additionalInfo')
                .append('svg')
                .attr('id', 'clade_vis')
-               .attr("width", svgWidth+margin.left+margin.right)
+               .attr("width", ((numberOfAdditionalFeatures+2)*(rectSize*2+10))+100+margin.right)
                .attr("height", treeHeight)
                .style("font", "10px sans-serif")
+               .style("overflow","visible")
                .style("user-select", "none");
 
         var counter = 0;
@@ -703,12 +704,12 @@ function showClades(taxData, accData, ownAddData, libTree){
             var colorCounter = 0;
             for(var key in ownAddData[firstKey]){
                 if(counter === 0){
-                    firstElementSpace = 10;
-                }else{
                     firstElementSpace = 0;
+                }else{
+                    firstElementSpace = counter*(rectSize*2+10);
                 }
                 clades.append('g')
-                        .attr('transform', 'translate(' + margin.left + ',' + actualTreeHeight + ')')
+                        .attr('transform', 'translate(' + 0 + ',' + actualTreeHeight + ')')
                         .selectAll('.ownInfo')
                         .data(nodes)
                         .enter()
@@ -716,8 +717,8 @@ function showClades(taxData, accData, ownAddData, libTree){
                         .attr('class', 'ownInfo' + key)
                         .attr('transform',function(d,i) { var taxaName = validNodename(d.data.name);
                                         if(phylotreePresent && dataInfo[taxaName] !== undefined && !(dataInfo[taxaName].hidden)){
-                                        return 'translate(' + (counter*rectSize*2+10-firstElementSpace)+ ','  + (dataInfo[taxaName].screen_y-(rectSize/2)) + ')';}
-                                        else{return 'translate(' + (counter*rectSize*2+10-firstElementSpace)+ ',' + (d.y-(rectSize/2)) + ')'; }})
+                                        return 'translate(' + (firstElementSpace)+ ','  + (dataInfo[taxaName].screen_y-(rectSize/2)) + ')';}
+                                        else{return 'translate(' + (firstElementSpace)+ ',' + (d.y-(rectSize/2)) + ')'; }})
                         .attr('stroke', function(d){var taxaName = validNodename(d.data.name);
                                 if((taxaName in ownAddData) && !(d.children) && (ownAddData[taxaName][key] !== '0')){
                                     if(phylotreePresent && dataInfo[taxaName].hidden){
@@ -736,7 +737,7 @@ function showClades(taxData, accData, ownAddData, libTree){
                         .attr("height", rectSize);
                 counter = counter + 1;
                 colorCounter = colorCounter + 1;
-                if(colorCounter >= 10){
+                if(colorCounter === 8){
                     colorCounter = 0;
                 }
             }
@@ -745,13 +746,13 @@ function showClades(taxData, accData, ownAddData, libTree){
 
         if(uniqueCheck){
             if(ownAdditional){
-                firstElementSpace = (numberOfAdditionalFeatures*rectSize*2+20);
-            }else{
+                firstElementSpace = firstElementSpace + rectSize*2+10;
+            }/***else{
                 firstElementSpace = 0;
-            }
+            }***/
 
             clades.append('g')
-                   .attr('transform', 'translate(' + margin.left + ',' + actualTreeHeight + ')')
+                   .attr('transform', 'translate(' + 0 + ',' + actualTreeHeight + ')')
                    .selectAll('.accession')
                    .data(nodes)
                    .enter()
@@ -779,13 +780,13 @@ function showClades(taxData, accData, ownAddData, libTree){
         }
 
         if(phylumCheck){
-            if(ownAdditional){
-                firstElementSpace = (numberOfAdditionalFeatures*rectSize*2+20);
-            }else{
+            if(ownAdditional && !(uniqueCheck)){
+                firstElementSpace = firstElementSpace + rectSize*2+10;
+            }/***else{
                 firstElementSpace = 0;
-            }
+            }***/
             clades.append('g')
-                   .attr('transform', 'translate(' + margin.left + ',' + actualTreeHeight + ')')
+                   .attr('transform', 'translate(' + 0 + ',' + actualTreeHeight + ')')
                    .selectAll('.clades')
                    .data(nodes)
                    .enter()
@@ -804,10 +805,11 @@ function showClades(taxData, accData, ownAddData, libTree){
                    .attr("height", rectSize);
         }
 
+        var spaceTillLegend = 0;
         if(numberOfAdditionalFeatures === 0){
-            var spaceTillLegend = rectSize*8;
+            spaceTillLegend = rectSize*8;
         }else{
-            var spaceTillLegend =(numberOfAdditionalFeatures+2)*rectSize*2+30;
+            spaceTillLegend =(numberOfAdditionalFeatures+2)*(rectSize*2+10)+10;
         }
 
         if(phylumCheck){
@@ -819,14 +821,14 @@ function showClades(taxData, accData, ownAddData, libTree){
                                     .attr('transform', 'translate(' + (spaceTillLegend) + ','+(treeHeight/2+leftmostnode.y) + ')');
 
             legend.append('rect')
-                    .attr('transform', function(d,i){return 'translate('+ (spaceTillLegend) + ',' + i*(rectSize+15) + ')';})
+                    .attr('transform', function(d,i){return 'translate(0,' + i*(rectSize+15) + ')';})
                     .attr('fill', function(d){return colorsParent(d);})
                     .attr('stroke', 'black')
                     .attr('width', rectSize*1.5)
                     .attr('height', rectSize*1.5)
 
             legend.append('text')
-                    .attr('transform', function(d,i){return 'translate('+ (spaceTillLegend) + ',' + i*(rectSize+15) + ')';})
+                    .attr('transform', function(d,i){return 'translate(0,' + i*(rectSize+15) + ')';})
                     .attr('x',rectSize*1.5+3)
                     .attr('y', rectSize*1.5/2)
                     .attr('dy', '0.31em')
@@ -835,10 +837,9 @@ function showClades(taxData, accData, ownAddData, libTree){
                     .text(d => taxData[d]);
         }
 
+        var addLabels = [];
         if(ownAdditional){
-            var addLabels = Object.keys(ownAddData[firstKey]);
-        }else{
-            var addLabels = [];
+            addLabels = Object.keys(ownAddData[firstKey]);
         }
         var labels = [];
         if(uniqueCheck && phylumCheck){
@@ -852,7 +853,7 @@ function showClades(taxData, accData, ownAddData, libTree){
         }
 
         clades.append('g')
-                .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2-rectSize*3+leftmostnode.y) + ')')
+                .attr('transform', 'translate(' + 0 + ',' + (treeHeight/2-rectSize*3+leftmostnode.y) + ')')
                 .selectAll('.labels')
                 .data(labels)
                 .enter()
@@ -861,9 +862,9 @@ function showClades(taxData, accData, ownAddData, libTree){
                 .attr('dy', '0.31em')
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "central")
-                .attr('transform', function(d,i){return 'rotate(-45,' + i*(rectSize+15) + ', 0 )';})
+                .attr('transform', function(d,i){return 'rotate(-45,' + i*(rectSize+20) + ', 0 )';})
                 .attr('x', function(d,i){ return i*(rectSize+20);})
-                .attr('y', 0)
+                .attr('y', -5)
                 .text(function(d){return d;});
 
     }else{

@@ -5,7 +5,8 @@ import * as d3 from 'd3';
 import * as $ from "jquery";
 import * as _ from "lodash";
 import "../../node_modules/phylotree/src/main";
-import {Nav, Accordion, Card, Tooltip, OverlayTrigger, Form} from 'react-bootstrap';
+import {Nav, Accordion, Card, Tooltip, OverlayTrigger, Form, Popover} from 'react-bootstrap';
+import {BiHelpCircle} from 'react-icons/bi';
 
 // other style sheets
 import '../../node_modules/phylotree/phylotree.css'
@@ -146,7 +147,16 @@ function additionalCladeInformation(showAdditional, handleUploadAdditional){
                             <Form.Check inline type={'checkbox'}  id='phylumCheck' label={'phylum rank'} onChange={showAdditional}/>
                             <br /><br />
                             <Form inline id='uploadOwnAdditional'>
-                                <Form.Label>upload additional information</Form.Label>
+                                <Form.Label>upload additional information as csv</Form.Label>
+                                <OverlayTrigger trigger='click' placement='right' overlay={
+                                    <Popover id='popover-basic' >
+                                        <Popover.Title as='h3'><strong>Additional information</strong></Popover.Title>
+                                        <Popover.Content>Upload csv file with additional information about the taxa.
+                                            Each column will treated as <b>boolean attribute</b>, whereby 0 indicates false and any value greater than 0 as true.
+                                            The first line will be treated as header and the naming convention has to be consistent with the tree labels.</Popover.Content>
+                                    </Popover>}>
+                                    <BiHelpCircle style={{color: 'blue', 'margin': '0px 10px 0px 5px'}}/>
+                                </OverlayTrigger>
                                 <Form.File id='additional_file' name='additional_file'
                 onChange={handleUploadAdditional} accept='.csv' />
                             </Form>
