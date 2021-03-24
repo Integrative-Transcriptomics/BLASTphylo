@@ -3,7 +3,7 @@
   margin: 0px 0px 10px 0px;
 }
 
-#phylogenyMenu label, #phylogenyMenu select{
+#phylogenyMenu label, #phylogenyMenu select,  #additional_file {
   margin: 0 0 0 5px;
 }
 
@@ -44,8 +44,9 @@
  border: solid 1.5px white;
 }
 
-.labels {
+#additionalInfo .labels {
   overflow: visible;
 }
+
 
 

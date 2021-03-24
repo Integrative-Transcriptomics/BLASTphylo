@@ -1,7 +1,7 @@
 // used libraries
 import React, {Component} from 'react';
 import axios from 'axios';
-import Spinner from 'react-bootstrap/Spinner';
+import {Spinner, Table} from 'react-bootstrap';
 
 
 class HandlePhylogenyServer extends Component{
@@ -19,6 +19,7 @@ class HandlePhylogenyServer extends Component{
          .then(function (response) {
              //console.log(response.data);
              self.props.changeComp('data', response.data);
+             self.props.changeComp('previous', 'handlePhylogeny'); // set state for help page content
              self.props.changeComp('actual', 'phylogeny');
          })
          .catch(error => {
@@ -31,7 +32,28 @@ class HandlePhylogenyServer extends Component{
         return(
             <div style={{margin:"20px"}}>
                 <p>Calculation of the phylogeny can take up to <b>10 min </b> dependent
-            on the number of hits and size of the taxonomic tree</p>
+            on the number of hits, size of the taxonomic tree and GC content</p><br/>
+                <Table>
+                 <thead>
+                    <tr>
+                        <th># sequences</th><th>run time</th>
+                    </tr>
+                 </thead>
+                 <tbody>
+                    <tr>
+                        <td>&lt; 50</td><td>&lt; 1 sec</td>
+                    </tr>
+                    <tr>
+                        <td>50-250</td><td>&lt; 1 min</td>
+                    </tr>
+                    <tr>
+                        <td>250-500</td><td>&lt; 2 min</td>
+                    </tr>
+                    <tr>
+                        <td>&gt; 500</td><td>&gt; 3 min</td>
+                    </tr>
+                 </tbody>
+                </Table>
                 <div className="d-flex justify-content-center">
                     <Spinner animation="border" role="status">
                         <span className="sr-only">Loading...</span>

@@ -10,6 +10,7 @@
 # packages
 import sys
 import pandas as pd
+import numpy as np
 
 
 # packages for Blast + Taxonomy mapping
@@ -109,6 +110,9 @@ def filter_blast_result(blast_record, tree_tax_IDs):
     filtered_blast = blast_record[blast_record['staxids'].notna()]  # remove all rows with no taxid information
     ncbi = NCBITaxa()
 
+    number_of_queries_np = filtered_blast['qacc'].unique()
+    number_of_queries = number_of_queries_np.tolist()
+
     for index, row in filtered_blast.iterrows():  # taxids from the hit table with number of occurrence
 
         if isinstance(row['staxids'], float):  # column only contain one element
@@ -123,11 +127,12 @@ def filter_blast_result(blast_record, tree_tax_IDs):
                 uniqueAccs[row['sacc']] = [row['sseq'], len(taxIDlist)]
 
                 try:
-                    filtered_result[int(start_taxa)] += 1
+                    filtered_result[int(start_taxa)][number_of_queries.index(row['qacc'])] += 1
                     sequence_dic[int(start_taxa)][1].append(row['sseq'])
                     sequence_dic[int(start_taxa)][0].append(row['sacc'])
                 except KeyError:
-                    filtered_result[int(start_taxa)] = 1
+                    filtered_result[int(start_taxa)] = [0]*len(number_of_queries)
+                    filtered_result[int(start_taxa)][number_of_queries.index(row['qacc'])] = 1
                     sequence_dic[int(start_taxa)] = [[row['sacc']], [row['sseq']]]
 
             else:
@@ -140,15 +145,17 @@ def filter_blast_result(blast_record, tree_tax_IDs):
                     if line_taxa in tree_tax_IDs:
                         uniqueAccs[row['sacc']][1] += 1
                         try:
-                            filtered_result[line_taxa] += 1
+                            filtered_result[line_taxa][number_of_queries.index(row['qacc'])] += 1
                             sequence_dic[line_taxa][1].append(row['sseq'])
                             sequence_dic[line_taxa][0].append(row['sacc'])
                         except KeyError:
-                            filtered_result[line_taxa] = 1
+                            filtered_result[line_taxa] = [0] * len(number_of_queries)
+                            filtered_result[line_taxa][number_of_queries.index(row['qacc'])] = 1
                             sequence_dic[line_taxa] = [[row['sacc']], [row['sseq']]]
                 if uniqueAccs[row['sacc']][1] == 0:
                     uniqueAccs.pop(row['sacc'])
-    return filtered_result, sequence_dic, uniqueAccs
+
+    return filtered_result, sequence_dic, uniqueAccs, number_of_queries
 
 
 
@@ -321,7 +328,7 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
         uniqueSeqs = [key for key in subject_seqs.keys() if len(subject_seqs[key][0]) == 1]
 
 
-        newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10)
+        newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10, 1)
         return newTree, parentnode_info, uniqueSeqs
 
     '''else:
@@ -423,14 +430,15 @@ def translate_nodes(tree_nodes):
     filtered_blast_result:  filtered blast results with found hits 
     ncbi_boolean:           dependent on the input tree the nodes could have a mixed labeling 
 '''
-def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean):
+def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean, number_of_queries):
     d3_tree = {}
     if ncbi_boolean == '0':
-        d3_tree = wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, 30)
+        d3_tree = wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, 30, number_of_queries)
     elif ncbi_boolean == '1':
-        d3_tree = wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, 30)
+        d3_tree = wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, 30, number_of_queries)
     else:
         sys.stderr.write('check the input again')
+    #print(d3_tree)
     return d3_tree
 
 
@@ -438,32 +446,35 @@ def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean):
     filtered_blast_result:  result of the blast filtering is used to generate the minimal tree to connact the nodes
     ncbi_boolean:           see transfer_tree_in_d3       
 '''
-def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_length):
+def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_length, number_of_queries):
 
     ncbi = NCBITaxa()  # setup NCBI database
-    tree = ncbi.get_topology(filtered_blast_result.keys())
+    taxa_keys = filtered_blast_result.keys()
+    tree = ncbi.get_topology(taxa_keys)
     treeTaxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
     treeRanks = ncbi.get_rank(list(treeTaxIDs))
 
     root_children = list(
-        filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length) for child in tree.get_children()]))
+        filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
 
-    root_value = []  # contain the hits for the root and the sum of all children hits
+    root_value = [[] for i in range(number_of_queries)]  # contain the hits for the root and the sum of all children hits
     try:
-        root_value.append(filtered_blast_result[int(tree.name)])
+        [root_value[i].append(filtered_blast_result[int(tree.name)][i]) for i in range(number_of_queries)]
     except KeyError:
-        root_value.append(0)
+        [root_value[i].append(0) for i in range(number_of_queries)]
 
-    subtree_hits = 0
+    subtree_hits = [0]*number_of_queries
     root_size = 0
     for child in root_children:
-        subtree_hits += sum(child['value'][:2])
+        for i in range(number_of_queries):
+            subtree_hits[i] += sum(child['value'][i][:2])
         root_size += child['size'][0]
+
 
     if ncbi_boolean == '2':
         root_value.append(int(tree.name))
     else:
-        root_value.append(subtree_hits)
+        [root_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
         root_value.append(treeRanks[int(tree.name)])
 
     return {'size': [root_size, branch_length], 'name': tree.sci_name, 'children': root_children,
@@ -475,29 +486,30 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
     filtered_blast_result: dictionary of hits  
     ncbi_boolean:           see transfer_tree_in_d3
 '''
-def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_length):
+def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_length, number_of_queries):
     global count_clades
     ncbi = NCBITaxa()
     treeRanks = ncbi.get_rank(filtered_blast_result.keys())
     rootID, rootName = translate_node(tree.name.replace('_', ' '), count_clades)
 
     root_children = list(
-        filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length) for child in tree.get_children()]))
+        filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
 
-    root_value = []  # contain the hits for the root and the sum of all children hits
-
+    root_value = [[] for i in range(number_of_queries)]  # contain the hits for the root and the sum of all children hits
     try:
-        root_value.append(filtered_blast_result[rootID])
+        [root_value[i].append(filtered_blast_result[rootID][i]) for i in range(number_of_queries)]
     except KeyError:
-        root_value.append(0)
+        [root_value[i].append(0) for i in range(number_of_queries)]
 
 
-    subtree_hits = 0
+    subtree_hits = [0]*number_of_queries
     root_size = 0
     list_of_child_ids = []  # phylogeny: all child ids to calculate the last common ancestor
     count_clade_members = 0  # phylogeny: addition to cladeName to distinguish between clades
     for child in root_children:
-        subtree_hits += sum(child['value'][:2])
+        if ncbi_boolean != '2':
+            for i in range(number_of_queries):
+                subtree_hits[i] += sum(child['value'][i][:2])
         root_size += child['size'][0]
         if ncbi_boolean == '2':
             count_clade_members += child['value'][2]
@@ -505,6 +517,7 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
                 list_of_child_ids.append(child['value'][1])
 
     if ncbi_boolean == '2':
+        root_value = root_value[0]
         if len(list_of_child_ids) == 1:
             try:
                 rootName = ncbi.get_taxid_translator(list_of_child_ids)[list_of_child_ids[0]] + '_' + str(count_clade_members) + '.' + str(count_clades)
@@ -525,9 +538,8 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
         root_value.append(rootID)
         root_value.append(count_clade_members)
     else:
-        root_value.append(subtree_hits)
+        [root_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
         root_value.append(treeRanks[rootID])
-
     return {'size': [root_size, branch_length], 'name': rootName, 'children': root_children,
             'value': root_value}
 
@@ -537,7 +549,7 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
     filtered_blast_result:  dictionary of hits
     ncbi_boolean:           dependent on the tree format the node information is different
 '''
-def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_length):
+def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries):
     nodeID = None
     nodeName = None
     global count_clades
@@ -556,23 +568,29 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
                 tree.name = newick_valid_name(nodeName)
                 return {'size': [15, branch_length], 'name': nodeName, 'value': [filtered_blast_result[nodeID], nodeID, 1]}
             else:
-                return {'size': [15, branch_length], 'name': nodeName, 'value': [filtered_blast_result[nodeID], 0, treeRanks[nodeID]]}
+                value = [[filtered_blast_result[nodeID][i], 0] for i in range(number_of_queries)]
+                value.append(treeRanks[nodeID])
+                return {'size': [15, branch_length], 'name': nodeName, 'value': value}
 
     else:  # inner node
         tree_children = list(
-            filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length) for child in tree.get_children()]))
-        child_value = []
-        try:
-            child_value.append(filtered_blast_result[nodeID])
-        except KeyError:
-            child_value.append(0)
+            filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
 
-        subtree_hits = 0
+        child_value = [[] for i in range(number_of_queries)]
+
+        try:
+            [child_value[i].append(filtered_blast_result[nodeID][i]) for i in range(number_of_queries)]
+        except KeyError:
+            [child_value[i].append(0) for i in range(number_of_queries)]
+
+        subtree_hits = [0]*number_of_queries
         tree_size = 0
         list_of_child_ids = []                       # phylogeny: all child ids to calculate the last common ancestor
         count_clade_members = 0                      # phylogeny: addition to cladeName to distinguish between clades
         for child in tree_children:
-            subtree_hits += sum(child['value'][:2])
+            if ncbi_boolean != '2':
+                for i in range(number_of_queries):
+                    subtree_hits[i] += sum(child['value'][i][:2])
             tree_size += child['size'][0]
 
             if ncbi_boolean == '2':
@@ -581,6 +599,7 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
                     list_of_child_ids.append(child['value'][1])
 
         if ncbi_boolean == '2':
+            child_value = child_value[0]
             if len(list_of_child_ids) == 1:
                 try:
                     nodeName = ncbi.get_taxid_translator(list_of_child_ids)[list_of_child_ids[0]] + '_' + str(count_clade_members) + '.' + count_clades
@@ -601,12 +620,16 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
             child_value.append(nodeID)
             child_value.append(count_clade_members)
 
+            if sum(child_value[:2]) != 0:
+                return {'size': [tree_size + 10, branch_length], 'name': nodeName, 'children': tree_children,
+                        'value': child_value}
+
         else:
-            child_value.append(subtree_hits)
+            [child_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
             child_value.append(treeRanks[nodeID])
 
-        if sum(child_value[:2]) != 0:
-            return {'size': [tree_size+10, branch_length], 'name': nodeName, 'children': tree_children,
+            if sum([sum(child_value[i][:2]) for i in range(number_of_queries)]) != 0:
+                return {'size': [tree_size+10, branch_length], 'name': nodeName, 'children': tree_children,
                     'value': child_value}
 
 
@@ -673,43 +696,44 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     uniqueAccs = {}
 
     # read tree
-    #try:
-    print('Start Tree calculation')
-    tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
-    print('complete')
-    '''except:
+    try:
+        print('Start Tree calculation')
+        tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
+        print('complete')
+    except:
         sys.stderr.write('Tree calculation failed')
         return d3_tree, sequence_dic, uniqueAccs
     
     # run BLAST
-    try:'''
-    print('Start Blast run')
-    blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir)
-    print('complete')
-    '''except:
+    try:
+        print('Start Blast run')
+        blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir)
+        print('complete')
+    except:
         sys.stderr.write('Blast run failed')
         return d3_tree, sequence_dic, uniqueAccs
-    '''
+
     # filtering
     if blast_result.size > 0:
-        #try:
-        print('Start filtering')
-        filtered_blast, sequence_dic, uniqueAccs = filter_blast_result(blast_result, taxid_tree_set)
-        print('complete')
-        '''except:
+        try:
+            print('Start filtering')
+            filtered_blast, sequence_dic, uniqueAccs, number_of_queries = filter_blast_result(blast_result, taxid_tree_set)
+            print('complete')
+        except:
             sys.stderr.write('Filtering failed')
-            return d3_tree, sequence_dic, uniqueAccs'''
+            return d3_tree, sequence_dic, uniqueAccs
     else:
         sys.stderr.write('Blast prefiltering lead to no hits')
         return d3_tree, sequence_dic, uniqueAccs
 
     if filtered_blast:
-        #try:
-        d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu)
-        return d3_tree, sequence_dic, uniqueAccs
-        '''except:
+        try:
+            d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
+            generate_phyloblast_output(d3_tree, out_dir, len(number_of_queries))
+            return d3_tree, sequence_dic, uniqueAccs
+        except:
             sys.stderr.write('Transfer in d3 compatible tree/newick failed')
-            return d3_tree, sequence_dic, uniqueAccs'''
+            return d3_tree, sequence_dic, uniqueAccs
     else:
         sys.stderr.write('Non of the BLAST hits were present in the tree')
         return d3_tree, sequence_dic, uniqueAccs
@@ -719,14 +743,30 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
 '''Generate Table like output of the d3 tree 
    d3_tree: tree in d3 compatible format
 '''
-def generate_tree_output(d3_tree):
-    try:
-        return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][2].replace(' ', '_') + ',' +','.join([str(val) for val in d3_tree['value'][:2]]) + '\n' + '\n'.join([generate_tree_output(child) for child in d3_tree['children']])
-    except KeyError:
-        return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][2].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][:2]])
+def generate_tree_output(d3_tree, number_of_queries):
 
-def generate_phyloblast_output(tree, outdir):
-    table_tree = 'Sci_Name,rank,#hits,#subtree_hits\n' + generate_tree_output(tree)
+    if number_of_queries == 1:
+        try:
+            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][1].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][0][:2]]) + '\n' + '\n'.join([generate_tree_output(child, number_of_queries) for child in d3_tree['children']])
+        except KeyError:
+            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][1].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][0][:2]])
+    else:
+        try:
+            child_string = ','.join([str(val) for row in d3_tree['value'][:number_of_queries] for val in row])
+            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][number_of_queries].replace(' ', '_') + ',' + child_string + '\n' + '\n'.join([generate_tree_output(child, number_of_queries) for child in d3_tree['children']])
+        except KeyError:
+            child_string = ','.join([str(val) for row in d3_tree['value'][:number_of_queries] for val in row])
+            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][number_of_queries].replace(' ', '_') + ',' + child_string
+
+
+def generate_phyloblast_output(tree, outdir, number_of_queries):
+    if number_of_queries == 1:
+        query_string = '#hits,#subtree_hits'
+    else:
+        query_header = ['q'+str(i)+'#hits,q'+str(i)+'#subtree' for i in range(number_of_queries)]
+        query_string = ','.join(query_header)
+
+    table_tree = 'Sci_Name,rank,' + query_string + '\n' + generate_tree_output(tree, number_of_queries)
     tree_out = outdir + 'taxonomicMapping.csv'
     with open(tree_out, 'w') as w:
         w.write(table_tree)

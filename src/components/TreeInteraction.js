@@ -9,7 +9,7 @@ import {ButtonToolbar, ButtonGroup, Button, DropdownButton, Dropdown, Tooltip, O
 import {AiOutlineNodeCollapse, AiOutlineBarChart, AiOutlineArrowLeft} from 'react-icons/ai';
 
 // own visualisations
-import { hitBars, collapseTree, chart, startTreevis, showClades} from '../visualisations/phyloblast2.js';
+import { hitBars, collapseTree, chart, startTreevis, showClades, stackBars} from '../visualisations/phyloblast2.js';
 
 
 // component for all direct tree interactions and frequently used functions
@@ -50,9 +50,14 @@ class TreeInteraction extends Component{
     // taxonomic analysis: tree interactions
     // handle hit barchart
     handleHits(event){
+        var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
         this.setState({hitSelect: event});
         if(event !== '2'){
-            hitBars(event);
+            if(!(taxonomyLevel.includes(this.state.tree['value'][2]))){
+                hitBars(event);
+            }else{
+                stackBars(event);
+            }
         }else{
             d3v6.select('#hitbars')
                 .remove();
@@ -61,15 +66,10 @@ class TreeInteraction extends Component{
 
     // handle 'collapse to' interaction
     handleRanks(event){
-        console.log(event)
         this.setState({rankSelect: event});
         if(document.getElementById('returnButton').style.display === 'none'){
-            var copy = {...this.state.tree};
-            if(copy['_size']){
-                copy['size'] = copy['_size'].slice();
-                delete copy['_size'];
-            }
-            collapseTree(copy, event);
+            collapseTree(event);
+            console.log(event)
         }
     }
 
@@ -104,7 +104,7 @@ class TreeInteraction extends Component{
             //console.log('run showClades')
             showClades(this.state.extra[0], this.state.extra[1], null, libTree);
             // Select the node that will be observed for mutations
-            const targetNode = document.getElementById('tree');
+            const targetNode = document.getElementById('tree_vis');
 
             // Options for the observer (which mutations to observe)
             const config = { attributes: true };
@@ -133,9 +133,13 @@ class TreeInteraction extends Component{
     // visualise the clade-focused visualisation
     d3Tree(){
         const rank = this.state.rankSelect;
-        const treeVis = {...this.state.actualTree};
-
-        chart(treeVis, this.state.extra, rank, rank, true, false);
+        const treeCopy = {...this.state.actualTree};
+        console.log(treeCopy)
+        if(this.state.counter === 0){
+            chart(treeCopy, this.state.extra, rank, rank, true, false);
+        }else{
+            chart({'size': treeCopy['size']}, this.state.extra, rank, rank, true, false);
+        }
         if(document.getElementById('infoSelection')){
             showClades(this.state.extra[0], this.state.extra[1], null, null);
         }
@@ -155,10 +159,16 @@ class TreeInteraction extends Component{
         console.log(['Return button', this.state.rankSelect])
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.state.tree};
-        //console.log(treeCopy)
+        console.log(treeCopy)
         chart({'size': treeCopy['size']}, this.state.extra, rank, rank, true, true);
         if(document.getElementById('infoSelection')){
             showClades(this.state.extra[0], this.state.extra[1], null, null);
+        }else{
+            if(!(taxonomyLevel.includes(treeCopy['value'][2]))){
+                hitBars(this.state.hitSelect);
+            }else{
+                stackBars(this.state.hitSelect);
+            }
         }
         document.getElementById('treeVis').style.height = '80vh';
     }
@@ -221,11 +231,11 @@ class TreeInteraction extends Component{
         } else{ // tree interaction for phylogenetic analysis
             if (this.state.counter === 0){
                 const tree = startTreevis(this.state.tree);
-                this.setState({actualTree: tree});
+                this.setState({actualTree: {...tree}});
                 if (tree !== 0){
                     this.d3Tree();
                 }else{
-                  d3v6.select('#tree').append('div').text('Found 0 hits. Return to the main page and try another phylogentic tree');
+                    d3v6.select('#tree').append('div').text('Found 0 hits. Return to the main page and try another phylogentic tree');
                 }
                 this.setState({counter: 1});
             }

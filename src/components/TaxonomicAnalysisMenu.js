@@ -32,7 +32,6 @@ class TaxonomicAnalysisMenu extends Component{
                     .text('Found 0 hits. Return to the main page and try another taxonomy');
         }
 
-
     }
 
 

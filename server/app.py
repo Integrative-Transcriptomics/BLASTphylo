@@ -22,7 +22,7 @@ import processing_data
 from flask import Flask, render_template, redirect, url_for, request, jsonify, make_response
 from werkzeug.utils import secure_filename
 import logging
-
+import time
 # create tmp output folder for output file
 actual_dir = os.getcwd()
 flask_tmp_dir = actual_dir + '/flask_tmp'
@@ -64,6 +64,7 @@ hit_seqs = {}
 accs_seqs = {}
 d3_tree = {}
 
+# taxa-based phylogeny
 @app.route('/server/phylogeny', methods=['POST', 'GET'])
 def phylogeny():
     global hit_seqs
@@ -71,13 +72,15 @@ def phylogeny():
     if os.path.isfile(output_tree):
         tree, tree_tax_ids,_ = processing_data.read_tree_input(output_tree, '2', True)
         d3Tree, phylum_info, acc_info = processing_data.phylogeny_data(tree, hit_seqs,tree_tax_ids, output_tree, True)
-        newick_phylogeny = processing_data.phylogeny_data(tree, hit_seqs, tree_tax_ids, output_tree, False)
+        newick_phylogeny = tree.write(format=3)
     else:
         print('Start Phylogeny calculation')
+        start_time = time.time()
         d3Tree, newick_phylogeny, phylum_info, acc_info = processing_data.calculate_phylogeny(hit_seqs, None, 'flask_tmp/', 'True',  False)
-
+        print("taxa--- %s seconds ---" % (time.time() - start_time))
     return {'tree': d3Tree, 'newick': newick_phylogeny[:-1], 'extraInfo': [phylum_info, acc_info]}
 
+# unique sequence-based phylogeny
 @app.route('/server/phylogenyUnique', methods=['POST', 'GET'])
 def phylogenyUnique():
     global accs_seqs
@@ -87,12 +90,22 @@ def phylogenyUnique():
         d3_phylogeny, newick_phylogeny = processing_data.unique_phylogeny_data(tree, accs_seqs, output_tree)
     else:
         print('Start Phylogeny calculation')
+        start_time = time.time()
         d3_phylogeny, newick_phylogeny = processing_data.calculate_phylogeny(accs_seqs, None, 'flask_tmp/', 'True',  True)
+        print("unique--- %s seconds ---" % (time.time() - start_time))
 
     return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1]}
 
-@app.route('/server/phyloblast', methods=['POST', 'GET'])
-def phyloblast():
+# return d3_tree to front end (taxonomic mapping)
+'''@app.route('/server/taxonomicMap', methods=['GET'])
+def taxonomicMap():
+    global d3_tree
+    return {'tree': d3_tree, 'error': None}
+    '''
+
+# data generation for taxonomic mapping
+@app.route('/server/menu', methods=['POST', 'GET'])
+def menu():
     # remove all old files
     [os.remove(os.path.join('flask_tmp/', f)) for f in os.listdir('flask_tmp')]
 
@@ -187,7 +200,7 @@ def phyloblast():
                 d3_tree, hit_seqs, accs_seqs = processing_data.run_phyloblast(protein, protein_file_type, tree_data, tree_menu_selection, 'blastp', eValue, min_align_identity, min_query_cover, min_hit_cover, 'flask_tmp/')
                 #print(d3_tree)
                 if len(d3_tree) > 0:
-                    processing_data.generate_phyloblast_output(d3_tree, 'flask_tmp/')  # generate mapping output as csv
+                    #processing_data.generate_phyloblast_output(d3_tree, 'flask_tmp/')  # generate mapping output as csv
 
                     print('Root of the tree: ' + d3_tree['name'])
                     return {'tree': d3_tree, 'error': None}

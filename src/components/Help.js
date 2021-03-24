@@ -1,6 +1,6 @@
 // used libraries
 import React, {Component} from 'react';
-import * as d3v6 from 'd3v6';
+import * as d3 from 'd3';
 import phylogeny from '../visualisations/phylogeny_label.png';
 import taxonomy from '../visualisations/taxonomic_map_label.png';
 

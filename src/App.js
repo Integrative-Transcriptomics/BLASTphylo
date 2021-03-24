@@ -2,10 +2,8 @@
 import React, {Component} from 'react';
 import * as d3v6 from 'd3v6';
 import domtoimage from 'dom-to-image';
-import axios from 'axios';
 import "bootstrap/dist/css/bootstrap.min.css";
 import {BsBoxArrowUpRight} from "react-icons/bs";
-import {Nav} from 'react-bootstrap';
 //import "./visualisations/defaultFirefox.css";
 
 // own components and style sheets
@@ -51,9 +49,7 @@ class App extends Component {
         // functions to handle view update, reset, help page and alert messages
         this.changeComp = this.changeComp.bind(this);
         this.handleMenuClick = this.handleMenuClick.bind(this);
-        //this.handleHelpClick = this.handleHelpClick.bind(this);
         this.handleAlert = this.handleAlert.bind(this);
-        //this.getTaxonomicMapping = this.getTaxonomicMapping.bind(this);
     }
 
     // change view independent of component
@@ -77,30 +73,19 @@ class App extends Component {
         this.setState({isActualComponent: 'menu'});
     }
 
-    // open help page for actual view
-    /***handleHelpClick(){
-        this.setState({isActualComponent: 'help'});
-    }***/
+
 
     // close alert messages
     handleAlert(){
         document.getElementById("alert").style.display='none';
     }
 
-    // get taxonomic mapping data from back end
-    /***getTaxonomicMapping(){
-        const self = this
-        axios.get('/server/taxonomicMap').then(function(response){
-            console.log(response.data);
-            self.setState({data: response.data.tree});
-        })
-    }***/
+
 
     render() {
         var alerts = null;
 
         const isActualComponent = this.state.isActualComponent;
-        const previousComponent = this.state.previousComponent;
         const data = this.state.data;
         var userMenu = <div />;
 
@@ -127,7 +112,7 @@ class App extends Component {
             d3v6.select('#visualisation').style('border', 'hidden');
             actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp} />;
         }
-        console.log(this.state)
+        console.log(this.state.isActualComponent)
 
         if(this.state.error !== null){ // errors occurred during input
             alerts = this.state.error.map((alertmessage) =>
