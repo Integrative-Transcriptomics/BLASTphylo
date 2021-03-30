@@ -48,6 +48,15 @@
  border: solid 1.5px white;
 }
 
+.selectedValues {
+  margin: 0 10px 0 10px;
+}
+
+#selectedValues {
+  background: lightgray;
+  padding: 0 5px 0 5px;
+}
+
 
 /***
 #phyloLink {

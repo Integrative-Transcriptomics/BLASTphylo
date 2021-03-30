@@ -168,9 +168,7 @@ def menu():
                 tree_file = request.files['newick_file'].read().decode('utf-8')
                 tree_data = tree_file.replace("\n", "")
             try:
-                print(tree_data)
-                tree = Tree(tree_data)
-                print(tree)
+                tree = Tree(tree_data, format=8)
             except:
                 error.append({'message': 'Uploaded tree file contain a no valid newick string'})
                 tree_data = None

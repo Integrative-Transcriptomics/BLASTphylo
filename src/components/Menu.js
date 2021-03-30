@@ -81,7 +81,7 @@ class Menu extends Component {
 
 
        var self = this;
-        axios.post("server/phyloblast", formData)
+        axios.post("server/menu", formData)
          .then(function (response) {
              console.log(response.data);
              if(response.data.error === null){
@@ -89,6 +89,7 @@ class Menu extends Component {
                     document.getElementById('alert').remove();
                  }
                  self.props.changeComp('data', response.data.tree);
+                 //self.props.changeComp('previous', 'menu');         // set state for help page content
                  self.props.changeComp('actual', 'phyloblast');
              }else{
                  self.props.changeComp('error', response.data.error);
@@ -98,9 +99,8 @@ class Menu extends Component {
         .catch(error => {
             console.log(error);
         })
-    }else{
-        this.props.changeComp('error', error);
-        this.props.changeComp('actual', 'menu');
+        //var actualWebpage = window.location.href;
+        //window.location.href = actualWebpage.concat('taxonomicMapping');
     }
 
 

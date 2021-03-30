@@ -319,15 +319,16 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
                 key_lineage = ncbi.get_rank(ncbi.get_lineage(key))
                 parent_of_key = [key for key in key_lineage if
                                  key_lineage[key] == 'phylum']
-                pseudo_filtered_blast[key] = parent_of_key[0]
+                pseudo_filtered_blast[key] = [parent_of_key[0]]
                 parentID, parentName = translate_node(str(parent_of_key[0]), 0)
                 parentnode_info[parentID] = parentName  # parentnode_info contain parent sci name + taxid for visualisation
             except:
-                pseudo_filtered_blast[key] = defaultvalue
+                pseudo_filtered_blast[key] = [defaultvalue]
 
-        uniqueSeqs = [key for key in subject_seqs.keys() if len(subject_seqs[key][0]) == 1]
+        accvalues = [subject_seqs[key][0][0] for key in subject_seqs.keys()]
+        #uniqueSeqs = [key for key in subject_seqs.keys() if len(subject_seqs[key][0]) == 1]
 
-
+        uniqueSeqs = [key for key in subject_seqs.keys() if accvalues.count(subject_seqs[key][0][0]) == 1]
         newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10, 1)
         return newTree, parentnode_info, uniqueSeqs
 
@@ -384,7 +385,7 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
         tree_taxIDs = tree_taxIDs.union(translate_nodes(ncbi_taxa))
 
     elif ncbi_boolean == '1': # own taxonomic phylogeny
-        tree = Tree(tree_input, format=1)
+        tree = Tree(tree_input, format=8)
         tree_taxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
         roots = 'txid' + translate_node(tree.name.replace('_', ' '), 0)[1] + '[ORGN]'
 
@@ -438,7 +439,6 @@ def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean, number_of_que
         d3_tree = wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, 30, number_of_queries)
     else:
         sys.stderr.write('check the input again')
-    #print(d3_tree)
     return d3_tree
 
 
@@ -540,6 +540,7 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
     else:
         [root_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
         root_value.append(treeRanks[rootID])
+
     return {'size': [root_size, branch_length], 'name': rootName, 'children': root_children,
             'value': root_value}
 
@@ -561,7 +562,6 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
     else:  # input was own tree
         nodeID, nodeName = translate_node(tree.name.replace('_', ' '), count_clades)
 
-
     if len(tree.get_children()) == 0:  # hit a leaf
         if nodeID in filtered_blast_result.keys():
             if ncbi_boolean == '2': # taxa-based phylogeny
@@ -570,6 +570,7 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
             else:
                 value = [[filtered_blast_result[nodeID][i], 0] for i in range(number_of_queries)]
                 value.append(treeRanks[nodeID])
+
                 return {'size': [15, branch_length], 'name': nodeName, 'value': value}
 
     else:  # inner node
@@ -727,13 +728,14 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         return d3_tree, sequence_dic, uniqueAccs
 
     if filtered_blast:
-        try:
-            d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
-            generate_phyloblast_output(d3_tree, out_dir, len(number_of_queries))
-            return d3_tree, sequence_dic, uniqueAccs
-        except:
-            sys.stderr.write('Transfer in d3 compatible tree/newick failed')
-            return d3_tree, sequence_dic, uniqueAccs
+        #try:
+        print('Start conversion')
+        d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
+        generate_phyloblast_output(d3_tree, out_dir, len(number_of_queries))
+        return d3_tree, sequence_dic, uniqueAccs
+        ##except:
+         #   sys.stderr.write('Transfer in d3 compatible tree/newick failed')
+         #   return d3_tree, sequence_dic, uniqueAccs
     else:
         sys.stderr.write('Non of the BLAST hits were present in the tree')
         return d3_tree, sequence_dic, uniqueAccs
