@@ -133,7 +133,7 @@ body {
 }
 
 #tree_vis{
-  width: auto !important;
+  margin: 0 20px 0 5px;
   overflow: visible;
 }
 

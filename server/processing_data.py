@@ -369,16 +369,17 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
     if ncbi_boolean == '0': # NCBI taxonomy
         ncbi_taxa = []
         subtrees = tree_input.split(',')
-
+        print(subtrees)
         for node in subtrees:  # user could select the complete subtree
             ncbi = NCBITaxa()
             descendants = node.split('|')
+            print(len(descendants))
             if len(descendants) > 1:
                 ncbi_taxa.append(descendants[0])
                 tree_taxIDs.update(ncbi.get_descendant_taxa(descendants[0],
                                                             intermediate_nodes=True))  # output of descendant is a list of ids
             else:
-                tree_taxIDs.append(descendants[0])
+                ncbi_taxa.append(descendants[0])
         rootIDs = translate_nodes(ncbi_taxa)
         root = ['txid' + str(taxon) + '[ORGN]' for taxon in list(rootIDs)]
         roots = ' OR '.join(root)
@@ -454,31 +455,37 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
     treeTaxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
     treeRanks = ncbi.get_rank(list(treeTaxIDs))
 
-    root_children = list(
-        filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
-
-    root_value = [[] for i in range(number_of_queries)]  # contain the hits for the root and the sum of all children hits
-    try:
-        [root_value[i].append(filtered_blast_result[int(tree.name)][i]) for i in range(number_of_queries)]
-    except KeyError:
-        [root_value[i].append(0) for i in range(number_of_queries)]
-
-    subtree_hits = [0]*number_of_queries
-    root_size = 0
-    for child in root_children:
-        for i in range(number_of_queries):
-            subtree_hits[i] += sum(child['value'][i][:2])
-        root_size += child['size'][0]
-
-
-    if ncbi_boolean == '2':
-        root_value.append(int(tree.name))
-    else:
-        [root_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
+    if len(taxa_keys) == 1:
+        root_value = [[filtered_blast_result[int(tree.name)][i], 0] for i in range(number_of_queries)]
         root_value.append(treeRanks[int(tree.name)])
+        return {'size': [15, branch_length], 'name': tree.sci_name, 'value': root_value}
 
-    return {'size': [root_size, branch_length], 'name': tree.sci_name, 'children': root_children,
-            'value': root_value}
+    else:
+        root_children = list(
+            filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
+
+        root_value = [[] for i in range(number_of_queries)]  # contain the hits for the root and the sum of all children hits
+        try:
+            [root_value[i].append(filtered_blast_result[int(tree.name)][i]) for i in range(number_of_queries)]
+        except KeyError:
+            [root_value[i].append(0) for i in range(number_of_queries)]
+
+        subtree_hits = [0]*number_of_queries
+        root_size = 0
+        for child in root_children:
+            for i in range(number_of_queries):
+                subtree_hits[i] += sum(child['value'][i][:2])
+            root_size += child['size'][0]
+
+
+        if ncbi_boolean == '2':
+            root_value.append(int(tree.name))
+        else:
+            [root_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
+            root_value.append(treeRanks[int(tree.name)])
+
+        return {'size': [root_size, branch_length], 'name': tree.sci_name, 'children': root_children,
+                'value': root_value}
 
 
 ''' transfer own tree with possible mixed labeling in d3 format
@@ -489,60 +496,67 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
 def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_length, number_of_queries):
     global count_clades
     ncbi = NCBITaxa()
-    treeRanks = ncbi.get_rank(filtered_blast_result.keys())
+    taxa_keys = filtered_blast_result.keys()
+    treeRanks = ncbi.get_rank(taxa_keys)
     rootID, rootName = translate_node(tree.name.replace('_', ' '), count_clades)
 
-    root_children = list(
-        filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
-
-    root_value = [[] for i in range(number_of_queries)]  # contain the hits for the root and the sum of all children hits
-    try:
-        [root_value[i].append(filtered_blast_result[rootID][i]) for i in range(number_of_queries)]
-    except KeyError:
-        [root_value[i].append(0) for i in range(number_of_queries)]
-
-
-    subtree_hits = [0]*number_of_queries
-    root_size = 0
-    list_of_child_ids = []  # phylogeny: all child ids to calculate the last common ancestor
-    count_clade_members = 0  # phylogeny: addition to cladeName to distinguish between clades
-    for child in root_children:
-        if ncbi_boolean != '2':
-            for i in range(number_of_queries):
-                subtree_hits[i] += sum(child['value'][i][:2])
-        root_size += child['size'][0]
-        if ncbi_boolean == '2':
-            count_clade_members += child['value'][2]
-            if 'clade' not in child['name']:
-                list_of_child_ids.append(child['value'][1])
-
-    if ncbi_boolean == '2':
-        root_value = root_value[0]
-        if len(list_of_child_ids) == 1:
-            try:
-                rootName = ncbi.get_taxid_translator(list_of_child_ids)[list_of_child_ids[0]] + '_' + str(count_clade_members) + '.' + str(count_clades)
-                count_clades += 1
-                rootID = list_of_child_ids[0]
-            except:
-                print('No name for:' + str(list_of_child_ids[0]))
-
-        elif len(list_of_child_ids) > 0:
-            try:
-                children_tree = ncbi.get_topology(list_of_child_ids)
-                rootName = children_tree.sci_name + '_' + str(count_clade_members) + '.' + str(count_clades)
-                count_clades += 1
-                rootID = int(children_tree.name)
-            except:
-                print('No topology for :' + ','.join([str(item) for item in list_of_child_ids]))
-        tree.name = newick_valid_name(rootName)
-        root_value.append(rootID)
-        root_value.append(count_clade_members)
-    else:
-        [root_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
+    if len(taxa_keys) == 1:
+        root_value = [[filtered_blast_result[rootID][i], 0] for i in range(number_of_queries)]
         root_value.append(treeRanks[rootID])
+        return {'size': [15, branch_length], 'name': tree.sci_name, 'value': root_value}
 
-    return {'size': [root_size, branch_length], 'name': rootName, 'children': root_children,
-            'value': root_value}
+    else:
+        root_children = list(
+            filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
+
+        root_value = [[] for i in range(number_of_queries)]  # contain the hits for the root and the sum of all children hits
+        try:
+            [root_value[i].append(filtered_blast_result[rootID][i]) for i in range(number_of_queries)]
+        except KeyError:
+            [root_value[i].append(0) for i in range(number_of_queries)]
+
+
+        subtree_hits = [0]*number_of_queries
+        root_size = 0
+        list_of_child_ids = []  # phylogeny: all child ids to calculate the last common ancestor
+        count_clade_members = 0  # phylogeny: addition to cladeName to distinguish between clades
+        for child in root_children:
+            if ncbi_boolean != '2':
+                for i in range(number_of_queries):
+                    subtree_hits[i] += sum(child['value'][i][:2])
+            root_size += child['size'][0]
+            if ncbi_boolean == '2':
+                count_clade_members += child['value'][2]
+                if 'clade' not in child['name']:
+                    list_of_child_ids.append(child['value'][1])
+
+        if ncbi_boolean == '2':
+            root_value = root_value[0]
+            if len(list_of_child_ids) == 1:
+                try:
+                    rootName = ncbi.get_taxid_translator(list_of_child_ids)[list_of_child_ids[0]] + '_' + str(count_clade_members) + '.' + str(count_clades)
+                    count_clades += 1
+                    rootID = list_of_child_ids[0]
+                except:
+                    print('No name for:' + str(list_of_child_ids[0]))
+
+            elif len(list_of_child_ids) > 0:
+                try:
+                    children_tree = ncbi.get_topology(list_of_child_ids)
+                    rootName = children_tree.sci_name + '_' + str(count_clade_members) + '.' + str(count_clades)
+                    count_clades += 1
+                    rootID = int(children_tree.name)
+                except:
+                    print('No topology for :' + ','.join([str(item) for item in list_of_child_ids]))
+            tree.name = newick_valid_name(rootName)
+            root_value.append(rootID)
+            root_value.append(count_clade_members)
+        else:
+            [root_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
+            root_value.append(treeRanks[rootID])
+
+        return {'size': [root_size, branch_length], 'name': rootName, 'children': root_children,
+                'value': root_value}
 
 
 ''' recursively transfer the subtrees
@@ -697,13 +711,13 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     uniqueAccs = {}
 
     # read tree
-    try:
-        print('Start Tree calculation')
-        tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
-        print('complete')
-    except:
+    #try:
+    print('Start Tree calculation')
+    tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
+    print('complete')
+    '''except:
         sys.stderr.write('Tree calculation failed')
-        return d3_tree, sequence_dic, uniqueAccs
+        return d3_tree, sequence_dic, uniqueAccs'''
     
     # run BLAST
     try:

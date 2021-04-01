@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import * as $ from "jquery";
 import * as _ from "lodash";
 import "../../node_modules/phylotree/src/main";
-import {ButtonToolbar, ButtonGroup, Button, DropdownButton, Dropdown, Tooltip, OverlayTrigger} from 'react-bootstrap';
+import {ButtonToolbar, ButtonGroup, Button, DropdownButton, Dropdown, Tooltip, OverlayTrigger, Form} from 'react-bootstrap';
 import {AiOutlineNodeCollapse, AiOutlineBarChart, AiOutlineArrowLeft} from 'react-icons/ai';
 
 // own visualisations
@@ -20,7 +20,7 @@ class TreeInteraction extends Component{
         if(this.props.calculationMethod === 'taxa'){
             this.state = {tree:  this.props.phyloData,
                       extra: null,
-                      hitSelect: "2",
+                      hitSelect: "-",
                       rankSelect: 'class',
                       actualTree: this.props.phyloData};
         }else{
@@ -52,15 +52,11 @@ class TreeInteraction extends Component{
     handleHits(event){
         var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
         this.setState({hitSelect: event});
-        if(event !== '2'){
-            if(!(taxonomyLevel.includes(this.state.tree['value'][2]))){
-                hitBars(event);
-            }else{
-                stackBars(event);
-            }
+
+        if(!(taxonomyLevel.includes(this.state.tree['value'][2]))){
+            hitBars(event);
         }else{
-            d3v6.select('#hitbars')
-                .remove();
+            stackBars(event);
         }
     }
 
@@ -93,7 +89,7 @@ class TreeInteraction extends Component{
               reroot: false,
               transitions: true,
               "internal-names": true,
-              "draw-size-bubbles": true,
+              "draw-size-bubbles": true
         });
 
         // render to this SVG element
@@ -193,6 +189,7 @@ class TreeInteraction extends Component{
                     return <Dropdown.Item eventKey={X}>{X}</Dropdown.Item>;
             };
 
+
             const renderCollapseTooltip = (props) => (
                 <Tooltip id="collapse_tooltip" {... props}>
                     collapse all nodes below selected taxonomic rank
@@ -216,16 +213,21 @@ class TreeInteraction extends Component{
                             <OverlayTrigger placement='top' overlay={renderBarchartTooltip} onEnter={this.showTooltip}>
                             <DropdownButton onSelect={this.handleHits} eventKey={this.state.hitSelect}
                             as={ButtonGroup} title={<AiOutlineBarChart size={25}/>} id='tree_menu'>
-                                <Dropdown.Item eventKey='2'>none</Dropdown.Item>
-                                <Dropdown.Item eventKey='0'>node hits</Dropdown.Item>
-                                <Dropdown.Item eventKey='1'>subtree hits</Dropdown.Item>
+                                <Dropdown.Item eventKey='-'>none</Dropdown.Item>
+                                <Dropdown.Item eventKey='node hits'>node hits</Dropdown.Item>
+                                <Dropdown.Item eventKey='subtree hits'>subtree hits</Dropdown.Item>
                             </DropdownButton>
                             </OverlayTrigger>
                             <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
                             <Button eventKey='returnButton' variant='outline-primary' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>{<AiOutlineArrowLeft size={25} />}</Button>
                             </OverlayTrigger>
+                            <Form id='selectedValues' inline>
+                                <Form className='selectedValues'><i>taxonomic Rank: {this.state.rankSelect}</i></Form>
+                                <Form className='selectedValues'><i>bar chart: {this.state.hitSelect}</i></Form>
+                            </Form>
                         </ButtonGroup>
                     </ButtonToolbar>
+
                 </div>
             );
         } else{ // tree interaction for phylogenetic analysis
