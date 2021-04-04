@@ -27,11 +27,9 @@ import time
 actual_dir = os.getcwd()
 flask_tmp_dir = actual_dir + '/flask_tmp'
 shutil.rmtree(flask_tmp_dir, ignore_errors=True)
+
 try:
     os.mkdir(flask_tmp_dir)
-    from ete3 import NCBITaxa  # NCBI taxonomy (localy stored, require ~300MB)
-    ncbi = NCBITaxa()
-    ncbi.update_taxonomy_database() # update actual NCBI taxonomy version
 except:
     print('flask_tmp folder is already generated')
 

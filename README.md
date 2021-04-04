@@ -5,7 +5,7 @@ BLASTphylo is an interactive web-tool, which applies a BLASTp search for a given
 
 ## Required Tools
 
-BLASTphylo calculations require local installations of [BLAST](https://www.ncbi.nlm.nih.gov/books/NBK279690/) (suggest: v2.60+), [MAFFT](https://mafft.cbrc.jp/alignment/software/index.html) PartTree (suggest: v7.310) and [FastTree](http://www.microbesonline.org/fasttree/) Double-precision (suggest: v2.1.10) . <br>
+BLASTphylo calculations require local installations of [BLAST](https://www.ncbi.nlm.nih.gov/books/NBK279690/) (suggest: v2.60+), [MAFFT](https://mafft.cbrc.jp/alignment/software/index.html) (suggest: v7.310) and [FastTree](http://www.microbesonline.org/fasttree/) (suggest: v2.1.10) . <br>
 Check your FastTree installation with `fasttree -help` if the command is not found check the installation again <br>
 with `FastTree -help`. Depending on your FastTree installation open the **/server/external_tools.py** file and <br>
 change the **cmd="fasttree"** parameter of `def __init__(self, cmd="fasttree", **kwargs):` into your FastTree <br>

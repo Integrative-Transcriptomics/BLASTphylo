@@ -623,14 +623,10 @@ function stackBars(value){
 
     // define ticks of the axis
     var ticksStep = 0;
-    if(max_hit/10 >=  100){
-        ticksStep = max_hit/100;
-    }else if(max_hit/10 >= 10){
-        ticksStep = max_hit/(max_hit/4);
-    }else if(max_hit/10 >= 2){
-        ticksStep = max_hit/10;
-    }else{
-        ticksStep = max_hit;
+    if((max_hit >=  1000) || (max_hit <= 10)){
+        ticksStep = 5;
+    }else {
+        ticksStep = 10;
     }
 
     var scaleX = d3v6.scaleLinear().domain([0, max_hit]).range([0, svgWidth-50]);
@@ -1012,9 +1008,9 @@ function publicationReady(){
         chart(treeVis, extraInfo, previousTaxonomicLevel, previousTaxonomicLevel, false, false);
         if (extraInfo === null){
             if(taxonomyLevel.includes(treeVis.value[1])){
-                stackBars(hitSelection);
-            }else{
                 hitBars(hitSelection);
+            }else{
+                stackBars(hitSelection);
             }
         } else if (document.getElementById('clade_vis')){
             showClades(extraInfo[0], extraInfo[1], ownAddInfo, null);
