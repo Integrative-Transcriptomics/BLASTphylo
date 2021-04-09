@@ -30,11 +30,11 @@ shutil.rmtree(flask_tmp_dir, ignore_errors=True)
 
 try:
     os.mkdir(flask_tmp_dir)
+    from ete2 import NCBITaxa
+    ncbi = NCBITaxa()
+
 except:
     print('flask_tmp folder is already generated')
-
- #   [best_seqs.append(SeqRecord(Seq(seqs[taxID][1][0]), id=str(taxID), description='')) for taxID in seqs.keys()]
-  #  SeqIO.write(best_seqs, output_file, "fasta")
 
 # generate fasta file from textfield input and check for amino acid sequence
 def generate_fasta_from_input(textfieldinput, outdir):
@@ -109,6 +109,9 @@ def taxonomicMap():
 def menu():
     # remove all old files
     [os.remove(os.path.join('flask_tmp/', f)) for f in os.listdir('flask_tmp')]
+    #from ete3 import NCBITaxa  # NCBI taxonomy (localy stored, require ~300MB)
+    #ncbi = NCBITaxa()
+    #ncbi.update_taxonomy_database()  # update actual NCBI taxonomy version
 
     if request.method == 'POST':
         global hit_seqs

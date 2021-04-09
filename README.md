@@ -5,7 +5,7 @@ BLASTphylo is an interactive web-tool, which applies a BLASTp search for a given
 
 ## Required Tools
 
-BLASTphylo calculations require local installations of [BLAST](https://www.ncbi.nlm.nih.gov/books/NBK279690/) (suggest: v2.60+), [MAFFT](https://mafft.cbrc.jp/alignment/software/index.html) (suggest: v7.310) and [FastTree](http://www.microbesonline.org/fasttree/) (suggest: v2.1.10) . <br>
+BLASTphylo calculations require local installations of [BLAST](https://www.ncbi.nlm.nih.gov/books/NBK279690/) (suggest: v2.60+), [MAFFT](https://mafft.cbrc.jp/alignment/software/index.html) (suggest: v7.310) and [FastTree](http://www.microbesonline.org/fasttree/) (suggest: v2.1.10, linux recommand installation with `sudo apt-get install fasttree`) . <br>
 Check your FastTree installation with `fasttree -help` if the command is not found check the installation again <br>
 with `FastTree -help`. Depending on your FastTree installation open the **/server/external_tools.py** file and <br>
 change the **cmd="fasttree"** parameter of `def __init__(self, cmd="fasttree", **kwargs):` into your FastTree <br>
@@ -19,7 +19,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 ### Step 1: Installation of the required back-end python packages
 
 Change in the `server` directory and run 
-#### `pip install requirements.txt`  
+#### `pip3 install -r requirements.txt`  
 
 
 ### Step 2: Installation of the front-end
@@ -30,7 +30,7 @@ Change in the project directory and run
 ### Step 3: Start BLASTphylo
 
 Change in the project directory and run
-#### `npm run dev`
+#### `npm run blastphylo`
 Make sure that all needed modules are installed before running the app.
 Runs the app and the server in the background.
 Open [http://localhost:3000](http://localhost:3000) to view BLASTphylos 
