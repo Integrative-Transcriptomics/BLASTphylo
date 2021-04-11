@@ -16,7 +16,7 @@ import numpy as np
 # packages for Blast + Taxonomy mapping
 from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
 from ete3 import NCBITaxa  # NCBI taxonomy (localy stored, require ~300MB)
-# ncbi.update_taxonomy_database() # update actual NCBI taxonomy version
+#ncbi.update_taxonomy_database() # update actual NCBI taxonomy version
 
 from ete3 import Tree  # handle trees
 
@@ -53,7 +53,6 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
     header = ['qacc', 'sacc', 'qstart', 'qend', 'sstart', 'send', 'slen', 'nident', 'evalue', 'pident', 'staxids', 'qcovhsp', 'sseq']
 
     header_basic = ['qacc', 'sacc', 'pident', 'alen', 'mm', 'g', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bit', 'm']
-
 
     if prot_file_type == "1":
         try:
@@ -369,11 +368,9 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
     if ncbi_boolean == '0': # NCBI taxonomy
         ncbi_taxa = []
         subtrees = tree_input.split(',')
-        print(subtrees)
         for node in subtrees:  # user could select the complete subtree
             ncbi = NCBITaxa()
             descendants = node.split('|')
-            print(len(descendants))
             if len(descendants) > 1:
                 ncbi_taxa.append(descendants[0])
                 tree_taxIDs.update(ncbi.get_descendant_taxa(descendants[0],
@@ -720,13 +717,13 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         return d3_tree, sequence_dic, uniqueAccs'''
     
     # run BLAST
-    try:
-        print('Start Blast run')
-        blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir)
-        print('complete')
-    except:
+    #try:
+    print('Start Blast run')
+    blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir)
+    print('complete')
+    '''except:
         sys.stderr.write('Blast run failed')
-        return d3_tree, sequence_dic, uniqueAccs
+        return d3_tree, sequence_dic, uniqueAccs '''
 
     # filtering
     if blast_result.size > 0:

@@ -192,6 +192,7 @@ class ExportTrees extends Component{
     constructor(props) {
         super(props);
         this.exportJPEG = this.exportJPEG.bind(this);
+        this.exportSVG = this.exportSVG.bind(this);
     }
 
 
@@ -203,13 +204,39 @@ class ExportTrees extends Component{
         element.style.border = 'none';
         // labeling of the tree
         var figureName = '';
-        if(borderStyle.includes('#69a2c9')){
-            figureName = 'taxamapping.jpeg';
+        if(window.location.href.includes('phylogeny')){
+            figureName = 'phylogeny';
         }else{
-            figureName = 'phylogeny.jpeg';
+            figureName = 'taxonomicmapping';
         }
 
-        domtoimage.toJpeg(element, { quality: 0.95, bgcolor: 'white',
+        domtoimage.toJpeg(element, { quality: 1, bgcolor: 'white',
+                                            style:{overflow:'visible'} })
+            .then(function (dataUrl) {
+                var link = document.createElement('a');
+                link.download = figureName;
+                link.href = dataUrl;
+                link.click();
+                link.remove();
+                element.style.border = borderStyle;
+        });
+        element.style.height = '80vh';
+    }
+
+        exportSVG(){
+        var element = document.getElementById('treeVis');
+        console.log(element)
+        var borderStyle = element.style.border;
+        element.style.border = 'none';
+        // labeling of the tree
+        var figureName = '';
+        if(window.location.href.includes('phylogeny')){
+            figureName = 'phylogeny';
+        }else{
+            figureName = 'taxonomicmapping';
+        }
+
+        domtoimage.toSvg(element, { quality: 1, bgcolor: 'white',
                                             style:{overflow:'visible'} })
             .then(function (dataUrl) {
                 var link = document.createElement('a');
@@ -223,7 +250,10 @@ class ExportTrees extends Component{
     }
 
    render(){
-        return(<button id="export_pdf" onClick={this.exportJPEG}>export tree as jpeg <BsBoxArrowUpRight size={20}/> </button>);
+        return(<div>
+               <button id="export_svg" onClick={this.exportSVG}>export tree as svg <BsBoxArrowUpRight size={20}/> </button>
+               <button id="export_pdf" onClick={this.exportJPEG}>export tree as jpeg <BsBoxArrowUpRight size={20}/> </button>
+               </div>);
    }
 }
 

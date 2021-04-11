@@ -548,14 +548,10 @@ function hitBars(value){
     var nodes = treeData.descendants();
     var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue];});
     var ticksStep = 0;
-    if(max_hit/10 >=  100){
-        ticksStep = max_hit/100;
-    }else if(max_hit/10 >= 10){
-        ticksStep = max_hit/(max_hit/4);
-    }else if(max_hit/10 >= 2){
-        ticksStep = max_hit/10;
-    }else{
-        ticksStep = max_hit;
+    if((max_hit >=  1000) || (max_hit <= 10)){
+        ticksStep = 5;
+    }else {
+        ticksStep = 10;
     }
     var scaleX = d3v6.scaleLinear().domain([0, max_hit]).range([0, svgWidth]);
 

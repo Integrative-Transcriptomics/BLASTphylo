@@ -40,7 +40,10 @@ Enable the pop-up-window function for this app.
 ## Available Examples
 
 In the project directory folder **test examples** contain a example BLAST
-result, which was used to implement BLASTphylo.
+result and FASTA files, which was used to implement BLASTphylo. <br>
+
+1. mapping_example <br>
+2. comparison_example <br>
 
 
 
