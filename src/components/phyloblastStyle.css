@@ -9,11 +9,11 @@
  margin-right: 5px;
 }
 
-.mr-auto button:hover {
+.mr-auto button:hover, #public_ready_taxa:hover {
   background: #377ba8;
 }
 
-.mr-auto button {
+.mr-auto button, #public_ready_taxa {
   margin: 5px 0 0 10px;
   background: #6ea9d0;
   color: white;
@@ -57,6 +57,13 @@
   padding: 0 5px 0 5px;
 }
 
+#public_ready_taxa:disabled:hover {
+  background: #cadfed;
+}
+
+#public_ready_taxa:disabled {
+  background: #cadfed;
+}
 
 /***
 #phyloLink {

@@ -42,8 +42,6 @@ class TreeInteraction extends Component{
         this.handleRanks = this.handleRanks.bind(this);
         this.distTree = this.distTree.bind(this);
         this.d3Tree = this.d3Tree.bind(this);
-        this.showTooltip = this.showTooltip.bind(this);
-        this.handleReturn = this.handleReturn.bind(this);
     }
 
 
@@ -62,15 +60,23 @@ class TreeInteraction extends Component{
 
     // handle 'collapse to' interaction
     handleRanks(event){
-        this.setState({rankSelect: event});
-        if(document.getElementById('returnButton').style.display === 'none'){
+        if(!(document.getElementById('public_ready_taxa').disabled)){
+            document.getElementById('collapse_menu').disabled = false;
+            this.setState({rankSelect: event});
             collapseTree(event);
-            console.log(event)
+            console.log(event);
+
+            // no white space on the strain level --> disable publication ready
+            if(event === 'strain'){
+                document.getElementById('public_ready_taxa').disabled = true;
+            }else{
+                document.getElementById('public_ready_taxa').disabled = false;
+            }
         }
     }
 
     // phylogenetic analysis: types of visualisations
-    // visualise the distance-focused visualisation
+    // visualise the distance-focused visualisation (phylogram)
     distTree(){
 
         // set scroll bar to the top of the visualisation
@@ -96,6 +102,7 @@ class TreeInteraction extends Component{
             libTree(this.props.data.newick)
               .layout();
 
+        // update additional information if nodes will be collapsed
         if(document.getElementById('infoSelection')){
             //console.log('run showClades')
             showClades(this.state.extra[0], this.state.extra[1], null, libTree);
@@ -121,12 +128,14 @@ class TreeInteraction extends Component{
             // Start observing the target node for configured mutations
             observer.observe(targetNode, config);
         }
-        document.getElementById('treeVis').style.height = '80vh';
 
+        // change settings for phylogram
+        document.getElementById('treeVis').style.height = '80vh';
+        document.getElementById('public_ready_phylo').disabled = true;
 
     }
 
-    // visualise the clade-focused visualisation
+    // visualise the clade-focused visualisation (cladogram)
     d3Tree(){
         const rank = this.state.rankSelect;
         const treeCopy = {...this.state.actualTree};
@@ -139,7 +148,12 @@ class TreeInteraction extends Component{
         if(document.getElementById('infoSelection')){
             showClades(this.state.extra[0], this.state.extra[1], null, null);
         }
+
+        // change settings for cladogram
         document.getElementById('treeVis').style.height = '80vh'
+        if(this.state.counter > 0){
+            document.getElementById('public_ready_phylo').disabled = false;
+        }
     }
 
     // hide the tooltip in 5 seconds
@@ -147,41 +161,7 @@ class TreeInteraction extends Component{
         setTimeout(function(){d3v6.select('#' + event.id).style("visibility","hidden");}, 5000);
     }
 
-    // restore old tree state if publication ready was clicked
-    handleReturn(event){
-        var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
-        document.getElementById('returnButton').style.display = 'none';
-        const rank = taxonomyLevel.indexOf(this.state.rankSelect);
-        console.log(['Return button', this.state.rankSelect])
-        d3v6.select('#tree_vis').remove();
-        const treeCopy = {...this.state.tree};
-        console.log(treeCopy)
-        chart({'size': treeCopy['size']}, this.state.extra, rank, rank, true, true);
-        if(document.getElementById('infoSelection')){
-            showClades(this.state.extra[0], this.state.extra[1], null, null);
-        }else{
-            if(!(taxonomyLevel.includes(treeCopy['value'][2]))){
-                hitBars(this.state.hitSelect);
-            }else{
-                stackBars(this.state.hitSelect);
-            }
-        }
-        document.getElementById('treeVis').style.height = '80vh';
-    }
-
-
     render(){
-        const renderReturnTooltip = (props) => (
-            <Tooltip id="return_tooltip" {... props}>
-                return to dynamic visualisation
-            </Tooltip>
-        );
-
-        const returnButton = () => (
-                                <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
-                    <Button id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>{<AiOutlineArrowLeft size={25} />}</Button>
-                    </OverlayTrigger>
-        );
 
         if(this.props.calculationMethod === 'taxa'){ // tree interaction for taxonomic mapping
             var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
@@ -218,12 +198,9 @@ class TreeInteraction extends Component{
                                 <Dropdown.Item eventKey='subtree hits'>subtree hits</Dropdown.Item>
                             </DropdownButton>
                             </OverlayTrigger>
-                            <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
-                            <Button eventKey='returnButton' variant='outline-primary' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>{<AiOutlineArrowLeft size={25} />}</Button>
-                            </OverlayTrigger>
                             <Form id='selectedValues' inline>
-                                <Form className='selectedValues'><i>taxonomic Rank: {this.state.rankSelect}</i></Form>
-                                <Form className='selectedValues'><i>bar chart: {this.state.hitSelect}</i></Form>
+                                <Form className='selectedValues' id='taxoRank' eventKey={this.state.rankSelect}><i>taxonomic Rank: {this.state.rankSelect}</i></Form>
+                                <Form className='selectedValues' id='barChart' eventKey={this.state.hitSelect}><i>bar chart: {this.state.hitSelect}</i></Form>
                             </Form>
                         </ButtonGroup>
                     </ButtonToolbar>
@@ -260,9 +237,6 @@ class TreeInteraction extends Component{
                     </OverlayTrigger>
                     <OverlayTrigger placement='top' overlay={renderDistanceTooltip} onEnter={this.showTooltip}>
                     <Button id='phylogram' eventKey='phylogramButton' onClick={this.distTree}>Phylogram</Button>
-                    </OverlayTrigger>
-                    <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
-                    <Button eventKey='returnButton' variant='outline-primary' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>{<AiOutlineArrowLeft size={25} />}</Button>
                     </OverlayTrigger>
                 </ButtonToolbar>
                 </div>

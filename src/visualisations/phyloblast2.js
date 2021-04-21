@@ -286,7 +286,7 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
         document.getElementById('treeVis').style.height = String(treeHeight).concat('px');
 
     }else if(returnFromStatic && !(extraInfo)){
-        root.data.size[0] = d3v6.sum(root.children, function(child){return child.data.size[0];});
+        root.data.size[0] = d3v6.sum(root.data.children, function(child){return child.size[0];});
         rootHeight = root.data.size[0]
         treeHeight = rootHeight + margin.top + margin.bottom ;
     }else{
@@ -484,6 +484,13 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
                     d.children = null;
                     //d.data._size = d.data.size;
                     //d.data.size = [15, branchLength];
+
+                    // if nodes is going to be collapsed --> enable publication ready
+                    if(window.location.href.includes('phylo')){
+                        document.getElementById('public_ready_phylo').disabled = false;
+                    }else{
+                        document.getElementById('public_ready_taxa').disabled = false;
+                    }
 
                 }else if(!(d.children) && !(d._children) && extraData != null && Object.keys(extraData).length === 1){
                     window.open('https://www.ncbi.nlm.nih.gov/protein/'.concat(d.data.name), '_blank');
@@ -997,8 +1004,8 @@ function collapseTree(rank){
 
 // remove all white spaces between nodes of the actual tree
 function publicationReady(){
-    if(previousTaxonomicLevel !== taxonomyLevel.length -1){
-        document.getElementById('returnButton').style.display = 'block';
+    if((previousTaxonomicLevel !== taxonomyLevel.length -1) || (Object.keys(clicked_nodes).length > 0)){
+        document.getElementById('returnButton').style.display = 'block'; // enable reset to dynamic visualisation
         d3v6.select('#tree_vis').remove();
         console.log(treeVis)
         chart(treeVis, extraInfo, previousTaxonomicLevel, previousTaxonomicLevel, false, false);
@@ -1011,7 +1018,17 @@ function publicationReady(){
         } else if (document.getElementById('clade_vis')){
             showClades(extraInfo[0], extraInfo[1], ownAddInfo, null);
         }
+
+        // prevent double-click on publication ready
+        if(window.location.href.includes('phylo')){
+            document.getElementById('public_ready_phylo').disabled = true;
+        }else{
+            document.getElementById('public_ready_taxa').disabled = true;
+            document.getElementById('collapse_menu').disabled = true; // disable rank selection
+        }
     }
+
+
 }
 
 

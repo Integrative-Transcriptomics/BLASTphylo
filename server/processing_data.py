@@ -69,9 +69,10 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         #print(subjectAlignedLength)
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
         #print(subjectCoverage)
-        alignIdent = preFilter['pident'] > (int(min_align_ident)/100)
-
-        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (int(min_query_cover) / 100)) & subjectCoverage & alignIdent]
+        alignIdent = preFilter['pident'] > (float(min_align_ident))
+        #print(alignIdent)
+        #print(preFilter['pident'])
+        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (float(min_query_cover))) & subjectCoverage & alignIdent]
 
         print(result.shape)
 
@@ -87,11 +88,11 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 
         subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
         #print(subjectAlignedLength)
-        subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
+        subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (float(min_subject_cover))
         #print(subjectCoverage)
         alignIdent = preFilter['pident'] > (int(min_align_ident)/100)
 
-        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (int(min_query_cover) / 100)) & subjectCoverage & alignIdent]
+        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (float(min_query_cover))) & subjectCoverage & alignIdent]
         print(result.shape)
 
     return result

@@ -17,7 +17,7 @@ import {ExportTrees} from '../App.js'
 
 
 // own visualisations
-import {showClades, publicationReady} from '../visualisations/phyloblast2.js';
+import {showClades, publicationReady, chart} from '../visualisations/phyloblast2.js';
 
 
 class PhylogeneticAnalysisMenu extends Component{
@@ -37,6 +37,8 @@ class PhylogeneticAnalysisMenu extends Component{
         this.showAdditional = this.showAdditional.bind(this);
         this.handleUploadAdditional = this.handleUploadAdditional.bind(this);
         this.convertCSVtoJson = this.convertCSVtoJson.bind(this);
+        this.showTooltip = this.showTooltip.bind(this);
+        this.handleReturn = this.handleReturn.bind(this);
 
     }
 
@@ -80,6 +82,29 @@ class PhylogeneticAnalysisMenu extends Component{
         document.getElementById('ownCheckbox').style.display = "block";
     }
 
+        // hide the tooltip in 5 seconds
+    showTooltip(event){
+        setTimeout(function(){d3v6.select('#' + event.id).style("visibility","hidden");}, 5000);
+    }
+
+    // restore old tree state if publication ready was clicked
+    handleReturn(event){
+        var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
+        document.getElementById('returnButton').style.display = 'none';
+        const rank = taxonomyLevel.indexOf(this.state.rankSelect);
+        console.log(['Return button', this.state.rankSelect])
+        d3v6.select('#tree_vis').remove();
+        const treeCopy = {...this.state.tree};
+        console.log(treeCopy)
+        chart({'size': treeCopy['size']}, this.state.extra, rank, rank, true, true);
+        if(document.getElementById('infoSelection')){
+            showClades(this.state.extra[0], this.state.extra[1], null, null);
+        }
+
+        // change visualisation settings
+        document.getElementById('treeVis').style.height = '80vh';
+        document.getElementById('public_ready_phylo').disabled = false;
+    }
 
     render(){
         d3v6.select('#visualisation').style('border', '2px solid #5e66b4')
@@ -95,12 +120,31 @@ class PhylogeneticAnalysisMenu extends Component{
                 Result will be a static tree.
                 Reload the page to start a new interpolation of the basic tree
             </Tooltip>
-        )
+        );
+
+        const renderReturnTooltip = (props) => (
+            <Tooltip id="return_tooltip" {... props}>
+                return to dynamic visualisation
+            </Tooltip>
+        );
+
+        const returnButton = () => (
+                    <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
+                                        <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
+                    </OverlayTrigger>
+        );
+
+        let phylogenyType;
+        if(window.location.href.includes('Unique')){
+            phylogenyType = 'unique sequence based';
+        }else{
+            phylogenyType = 'taxa based';
+        }
 
         return(
             <div id='phylogeny'>
                 <div id='phylogenyMenu'>
-                    <h2>phylogenetic analysis</h2>
+                    <h2>phylogenetic analysis - <i>{phylogenyType}</i></h2>
                     <Accordion >
                         {additionalInformation}
                         <Card>
@@ -111,9 +155,12 @@ class PhylogeneticAnalysisMenu extends Component{
                                 <Card.Body>
                                     <Nav className='mr-auto'>
                                         <OverlayTrigger placement='bottom' delay={{show:150, hide:50}} overlay={renderPublicReadyTooltip}>
-                                        <button id="public_ready" onClick={publicationReady}>publication ready</button>
+                                        <button id="public_ready_phylo" onClick={publicationReady}>publication ready</button>
                                         </OverlayTrigger>
                                         <ExportTrees />
+                                        <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
+                                        <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
+                                        </OverlayTrigger>
                                     </Nav>
                                 </Card.Body>
                             </Accordion.Collapse>
@@ -122,10 +169,9 @@ class PhylogeneticAnalysisMenu extends Component{
                     <br></br>
                 </div>
             </div>
-
         );
-
     }
+
 }
 
 

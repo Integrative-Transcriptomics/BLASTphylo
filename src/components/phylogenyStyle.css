@@ -25,12 +25,12 @@
   background: #5e66b4;
 }
 
-#phylogenyMenu button {
+#phylogenyMenu button, #public_ready_phylo {
   background: #8e93ca;
   color: white;
 }
 
-#phylogenyMenu button:hover {
+#phylogenyMenu button:hover, #public_ready_phylo:hover {
   background: #5e66b4;
 }
 
@@ -48,5 +48,7 @@
   overflow: visible;
 }
 
-
+#public_ready_phylo:disabled, #public_ready_phylo:disabled:hover {
+  background: #dbdcf1;
+}
 
