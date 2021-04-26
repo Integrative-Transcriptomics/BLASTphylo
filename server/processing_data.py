@@ -268,7 +268,6 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
         d3Tree, parentnode_info, mosthitAcc = phylogeny_data(tree, subject_seqs, tree_tax_ids, output_tree, True)
         #newickTree = phylogeny_data(tree, subject_seqs, tree_tax_ids, output_tree, False)
         newickTree = tree.write(format=3)
-        #print(newickTree)
         return d3Tree, newickTree, parentnode_info, mosthitAcc
 
 '''
@@ -495,7 +494,8 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
     global count_clades
     ncbi = NCBITaxa()
     taxa_keys = filtered_blast_result.keys()
-    treeRanks = ncbi.get_rank(taxa_keys)
+    treeTaxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
+    treeRanks = ncbi.get_rank(list(treeTaxIDs))
     rootID, rootName = translate_node(tree.name.replace('_', ' '), count_clades)
 
     if len(taxa_keys) == 1:
@@ -665,7 +665,7 @@ def unique_transfer_tree(tree, unique_count, branch_length):
 
 
 ''' Translate taxid and return sci_name and taxid
-    node_label: given label of sthe node (taxid or sci_name)
+    node_label: given label of the node (taxid or sci_name)
     count:      for the phylogeny calculation count the number of unlabeled clades
 
 '''
@@ -743,7 +743,8 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         #try:
         print('Start conversion')
         d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
-        generate_phyloblast_output(d3_tree, out_dir, len(number_of_queries))
+        #generate_phyloblast_output(d3_tree, out_dir, len(number_of_queries))
+        print('complete')
         return d3_tree, sequence_dic, uniqueAccs
         ##except:
          #   sys.stderr.write('Transfer in d3 compatible tree/newick failed')

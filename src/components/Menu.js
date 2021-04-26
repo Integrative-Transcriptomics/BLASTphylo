@@ -57,9 +57,10 @@ class Menu extends Component {
      }
     if(this.state.tree_menu_selection === '1'){
         var treeFileContent = this.treeFileInput.current.files[0];
-        if(typeof treeFileContent === 'undefined'){
+        console.log(treeFileContent)
+        if((typeof treeFileContent === 'undefined') && (this.state.tree_data.length === 0)){
             error.push({'message': 'Taxonomy is undefined. Please, define a taxonomy'});
-        }else{
+        }else if(this.state.tree_data.length === 0){
             formData.append('newick_file', treeFileContent);
             formData.append('newick_filename', treeFileContent.name);
         }
@@ -67,11 +68,12 @@ class Menu extends Component {
 
     if(error.length === 0){
         for (var key in this.state){
+            console.log([key, this.state[key]]);
             formData.append(String(key), this.state[key]);
         }
-       // for(var pair of formData.entries()) {
-       // console.log(pair[0] + ':  ' + pair[1]);
-       // }
+       for(var pair of formData.entries()) {
+       console.log(pair[0] + ':  ' + pair[1]);
+       }
 
        // switch to loading button
        if ((this.state.protein !== '') || (this.state.protein_file_type === '0') ){
@@ -146,6 +148,7 @@ class Menu extends Component {
     else {
       console.log('no matching state present')
     }
+    //console.log([event.target.name, event.target.value]);
    }
 
 
@@ -234,7 +237,7 @@ class Menu extends Component {
                 </OverlayTrigger>
             </Form>
             <Form.Control as='textarea' rows={5} cols={50} id='newick_string' name='newick_string'
-            placeholder='(A:0.1,(C:0.3,D:0.4)E:0.5)F;' onChange={this.handleChange} />
+            placeholder='(A,(C,D)E)F;' onChange={this.handleChange} />
             <Form inline>
                     <Form.Label>Or, upload file:</Form.Label>
                     <Form.File ref={this.treeFileInput} id='newick_file' name='newick_file'

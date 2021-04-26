@@ -173,6 +173,8 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
         treeVis = data;
     }
     extraInfo = extraData;
+
+    // determine if 1 or 2 proteins were used
     var taxaIndex = 1;
     if(taxonomyLevel.includes(treeVis['value'][2])){
         taxaIndex = 2;
@@ -192,6 +194,7 @@ function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickI
     }
     var rootHeight = root.data.size[0];
 
+    // rest original size of root
     if(returnFromStatic && root.data._size){
         console.log('resize root')
         root.data.size = root.data._size.slice();
@@ -554,6 +557,10 @@ function hitBars(value){
 
     var nodes = treeData.descendants();
     var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue];});
+    if(max_hit === 0){
+        return
+    }
+
     var ticksStep = 0;
     if((max_hit >=  1000) || (max_hit <= 10)){
         ticksStep = 5;
@@ -619,6 +626,11 @@ function stackBars(value){
     var nodes = treeData.descendants();
     var stacks = [];
     var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue] + d.data.value[1][hitValue];});
+
+    if(max_hit === 0){
+        return
+    }
+
     nodes.forEach(function(d){
         stacks.push({'node': d, 'query1': d.data.value[0][hitValue], 'query2': d.data.value[1][hitValue]});
     });
@@ -769,6 +781,8 @@ function showClades(taxData, accData, ownAddData, libTree){
         var dataInfo = null;
         var actualTreeHeight = treeHeight/2;
         var phylotreePresent = actualVisualisation === 'phylo' ? true : false;
+
+        // data based on the phylogram
         if(phylotreePresent){
             var libTreenodes = phyloTreetree.get_nodes();
             dataInfo = {};                       // position of the nodes in distance tree
@@ -783,14 +797,14 @@ function showClades(taxData, accData, ownAddData, libTree){
         var clades = d3v6.select('#additionalInfo')
                .append('svg')
                .attr('id', 'clade_vis')
-               .attr("width", ((numberOfAdditionalFeatures+2)*(rectSize*2+10))+105+margin.right)
+               .attr("width", ((numberOfAdditionalFeatures+2)*(rectSize*2+10))+120+margin.right)
                .attr("height", treeHeight)
                .style("font", "10px sans-serif")
                .style("overflow","visible")
                .style('background', '#F0F0F0')
                .style("user-select", "none");
 
-        var counter = 0;
+        var counter = 0; // counter for number of columns in csv
         var firstElementSpace = 0;   // first element should be as close as possible to the tree
 
         // additional information was uploaded iterate over the columns of the input csv
@@ -832,7 +846,7 @@ function showClades(taxData, accData, ownAddData, libTree){
                         .attr("height", rectSize);
                 counter = counter + 1;
                 colorCounter = colorCounter + 1;
-                if(colorCounter === 8){
+                if(colorCounter === 8){ // more columns than colors --> restart colors
                     colorCounter = 0;
                 }
             }

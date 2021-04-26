@@ -173,8 +173,9 @@ def menu():
                 tree_data = tree_file.replace("\n", "")
             try:
                 tree = Tree(tree_data, format=8)
+                #print(tree)
             except:
-                error.append({'message': 'Uploaded tree file contain a no valid newick string'})
+                error.append({'message': 'Uploaded tree file contain a BLASTphylo incompatible format. Newick string need labels for all nodes.'})
                 tree_data = None
 
         print(tree_data)
