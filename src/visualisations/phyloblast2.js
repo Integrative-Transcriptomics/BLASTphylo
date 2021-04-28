@@ -163,8 +163,14 @@ function expand(d, b){
 
 
 // main visualisation of the tree
-function chart(data, extraData, taxonomicLevel, previousTaxonomicLevel, onclickInteraction, returnFromStatic) {
+function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclickInteraction, returnFromStatic) {
     //console.log(clicked_nodes)
+
+    // reset global variables if new taxonomic Mapping should be visualized
+    if(firstVisualisationOfTree){
+        hitSelection = '-';
+        clicked_nodes = {};
+    }
 
     var branchLength = data['size'][1];
     const duration = 750;
@@ -557,9 +563,6 @@ function hitBars(value){
 
     var nodes = treeData.descendants();
     var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue];});
-    if(max_hit === 0){
-        return
-    }
 
     var ticksStep = 0;
     if((max_hit >=  1000) || (max_hit <= 10)){
@@ -582,6 +585,11 @@ function hitBars(value){
              .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
              .call(d3v6.axisTop(scaleX)
                     .ticks(ticksStep, 'f'));
+
+    // visualize no bars if the max. hit value is 0
+    if(max_hit === 0){
+        return
+    }
 
     hitbars.append('g')
             .attr('transform', `translate(` + margin.left + `,${treeHeight/2})`)
@@ -627,10 +635,6 @@ function stackBars(value){
     var stacks = [];
     var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue] + d.data.value[1][hitValue];});
 
-    if(max_hit === 0){
-        return
-    }
-
     nodes.forEach(function(d){
         stacks.push({'node': d, 'query1': d.data.value[0][hitValue], 'query2': d.data.value[1][hitValue]});
     });
@@ -660,6 +664,12 @@ function stackBars(value){
              .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
              .call(d3v6.axisTop(scaleX)
                     .ticks(ticksStep, 'f'));
+
+    // visualize no bars if the max. hit value is 0
+    if(max_hit === 0){
+        return
+    }
+
 
     // colors of the segment, domain parameter need to be adapted for more than 2 queries
     var colors = d3v6.scaleOrdinal().domain(['query1', 'query2']).range(d3v6.schemeTableau10);
@@ -797,7 +807,7 @@ function showClades(taxData, accData, ownAddData, libTree){
         var clades = d3v6.select('#additionalInfo')
                .append('svg')
                .attr('id', 'clade_vis')
-               .attr("width", ((numberOfAdditionalFeatures+2)*(rectSize*2+10))+120+margin.right)
+               .attr("width", ((numberOfAdditionalFeatures+2)*(rectSize*2+10))+140+margin.right)
                .attr("height", treeHeight)
                .style("font", "10px sans-serif")
                .style("overflow","visible")
@@ -1004,7 +1014,7 @@ function collapseTree(rank){
     console.log('run collapse')
     var taxonLevel = taxonomyLevel.indexOf(rank);
     d3v6.select('#tree_vis').remove();
-    chart(treeVis, null, taxonLevel, previousTaxonomicLevel, true, false);
+    chart(treeVis, null, taxonLevel, false, true, false);
     if(taxonomyLevel.includes(treeVis['value'][1]) || (treeVis['value'][1] === 'no rank')){
         hitBars(hitSelection);
     }else{
@@ -1022,7 +1032,7 @@ function publicationReady(){
         document.getElementById('returnButton').style.display = 'block'; // enable reset to dynamic visualisation
         d3v6.select('#tree_vis').remove();
         console.log(treeVis)
-        chart(treeVis, extraInfo, previousTaxonomicLevel, previousTaxonomicLevel, false, false);
+        chart(treeVis, extraInfo, previousTaxonomicLevel, false, false, false);
         if (extraInfo === null){
             if(taxonomyLevel.includes(treeVis.value[1])){
                 hitBars(hitSelection);
