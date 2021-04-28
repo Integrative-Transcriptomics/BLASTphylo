@@ -21,7 +21,7 @@ import processing_data
 # flask server packages
 from flask import Flask, render_template, redirect, url_for, request, jsonify, make_response
 from werkzeug.utils import secure_filename
-import logging
+import logging, click
 import time
 # create tmp output folder for output file
 actual_dir = os.getcwd()
@@ -32,7 +32,7 @@ try:
     os.mkdir(flask_tmp_dir)
     from ete2 import NCBITaxa
     ncbi = NCBITaxa()
-
+    print('Download NCBI database')
 except:
     print('flask_tmp folder is already generated')
 
@@ -97,21 +97,12 @@ def phylogenyUnique():
 
     return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1]}
 
-# return d3_tree to front end (taxonomic mapping)
-'''@app.route('/server/taxonomicMap', methods=['GET'])
-def taxonomicMap():
-    global d3_tree
-    return {'tree': d3_tree, 'error': None}
-    '''
 
 # data generation for taxonomic mapping
 @app.route('/server/menu', methods=['POST', 'GET'])
 def menu():
     # remove all old files
     [os.remove(os.path.join('flask_tmp/', f)) for f in os.listdir('flask_tmp')]
-    #from ete3 import NCBITaxa  # NCBI taxonomy (localy stored, require ~300MB)
-    #ncbi = NCBITaxa()
-    #ncbi.update_taxonomy_database()  # update actual NCBI taxonomy version
 
     if request.method == 'POST':
         global hit_seqs

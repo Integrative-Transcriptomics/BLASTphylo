@@ -141,9 +141,9 @@ class TreeInteraction extends Component{
         const treeCopy = {...this.state.actualTree};
         console.log(treeCopy)
         if(this.state.counter === 0){
-            chart(treeCopy, this.state.extra, rank, rank, true, false);
+            chart(treeCopy, this.state.extra, rank, false, true, false);
         }else{
-            chart({'size': treeCopy['size']}, this.state.extra, rank, rank, true, false);
+            chart({'size': treeCopy['size']}, this.state.extra, rank, false, true, false);
         }
         if(document.getElementById('infoSelection')){
             showClades(this.state.extra[0], this.state.extra[1], null, null);
@@ -177,7 +177,7 @@ class TreeInteraction extends Component{
             );
             const renderBarchartTooltip = (props) => (
                 <Tooltip id="barchart_tooltip" {... props}>
-                    visualise node/subtree hits for actual state of the tree
+                    visualize node/subtree hits for actual state of the tree
                 </Tooltip>
             );
 
@@ -221,12 +221,12 @@ class TreeInteraction extends Component{
 
             const renderDistanceTooltip = (props) => (
                     <Tooltip id="distance_tooltip" {... props}>
-                         visualise sequence distances
+                         visualize sequence distances
                     </Tooltip>
             );
             const renderCladeTooltip = (props) => (
                     <Tooltip id="clade_tooltip" {... props}>
-                         visualise groups in a straight tree
+                         visualize groups in a straight tree
                     </Tooltip>
             );
             return(

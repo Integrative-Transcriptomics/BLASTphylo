@@ -1,7 +1,7 @@
 // used libraries
 import React, {Component} from 'react';
 import * as d3v6 from 'd3v6';
-import {Nav, Accordion, Card, Tooltip, OverlayTrigger, Button} from 'react-bootstrap';
+import {Nav, Accordion, Card, Tooltip, OverlayTrigger, Button, Form} from 'react-bootstrap';
 import {BsBoxArrowUpRight} from "react-icons/bs";
 import {AiOutlineArrowLeft} from 'react-icons/ai';
 
@@ -26,7 +26,8 @@ class TaxonomicAnalysisMenu extends Component{
         if (treeData !== 0){
             d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
                                 .style('border-radius', '5px');
-            chart(treeData, null, 6, 6, true);
+            document.getElementById('treeVis').style.height = '80vh';
+            chart(treeData, null, 6, true, true);
         }else{
             d3v6.select('#phyloblastAlert').remove();
             d3v6.select('#tree').append('div').attr('id', 'phyloblastAlert')
@@ -53,7 +54,7 @@ class TaxonomicAnalysisMenu extends Component{
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.state.tree};
         console.log(treeCopy)
-        chart({'size': treeCopy['size']}, null, rank, rank, true, true);
+        chart({'size': treeCopy['size']}, null, rank, false, true, true);
         if(!(taxonomyLevel.includes(treeCopy['value'][2]))){
                 hitBars(document.getElementById('barChart').attributes.eventkey.value);
         }else{
@@ -68,23 +69,7 @@ class TaxonomicAnalysisMenu extends Component{
 
 
     render(){
-        const renderReturnTooltip = (props) => (
-            <Tooltip id="return_tooltip" {... props}>
-                return to dynamic visualisation
-            </Tooltip>
-        );
 
-        const returnButton = () => (
-                                <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
-                                <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
-                    </OverlayTrigger>
-        );
-
-        const renderPublicReadyTooltip = (props) => (
-                <Tooltip id='public_ready_tooltip' {... props}>
-                   Result will be a static tree.
-                </Tooltip>
-        );
 
         return(
             <div id='phyloblast'>
@@ -97,6 +82,11 @@ class TaxonomicAnalysisMenu extends Component{
                             </Accordion.Toggle>
                             <Accordion.Collapse eventKey='0'>
                                 <Card.Body>
+                                    <Form inline>
+                                        Links will start the phylogeny calculation in a new tab. A detailed description of the difference between the two phylogenies
+                                        can be found in the <Nav.Link style={{margin: '0px'}} href='/help' target='_blank'>help page</Nav.Link>
+                                        <br/><br/><br/>
+                                     </Form>
                                       <Nav className="flex-column">
                                         <Nav.Link href="/phylogeny" target='_blank'>taxa sequence based phylogeny <BsBoxArrowUpRight size={20}/></Nav.Link>
                                         <Nav.Link href="/phylogenyUnique" target='_blank'>unique sequence based phylogeny <BsBoxArrowUpRight size={20} /></Nav.Link>
@@ -106,18 +96,17 @@ class TaxonomicAnalysisMenu extends Component{
                         </Card>
                         <Card>
                             <Accordion.Toggle as={Card.Header} eventKey='1'>
-                                export tree visualisation
+                                export tree visualization
                             </Accordion.Toggle>
                             <Accordion.Collapse eventKey='1'>
                                 <Card.Body>
+                                    Different export options for the taxonomic tree including the bar chart. The <b>publication ready</b> option will remove the
+                                    white spaces between the nodes and visualizes the full tree as static visualization. <br/>
+                                    The <b>unlock publication ready</b> button unlocks the static visualization. <br/><br/>
                                     <Nav className='mr-auto'>
-                                        <OverlayTrigger placement='bottom' delay={{show:150, hide:50}} overlay={renderPublicReadyTooltip}>
                                         <button id="public_ready_taxa"  onClick={publicationReady}>publication ready</button>
-                                        </OverlayTrigger>
                                         <ExportTrees />
-                                        <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
                                         <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
-                                        </OverlayTrigger>
                                     </Nav>
                                 </Card.Body>
                             </Accordion.Collapse>

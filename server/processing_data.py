@@ -36,8 +36,8 @@ count_clades = 0
 # functions prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir
 ######################################################################################################################## BLAST
 ''' run and parse the blast result dependent on the server input 
-    prot                    amino acid sequence or direct Blast result as xml file
-    prot_file_type:         0= aa sequence, 1= xml file
+    prot                    amino acid sequence or direct Blast result as csv file
+    prot_file_type:         0= aa sequence, 1= csv file
     blast_type:             blastp or blastx dependent on the input (by now only blastp)
     eValue:                 significant threshold for the blast search
     min_align_ident         minimal identity between query and subject sequence in the alignment
@@ -66,12 +66,10 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
             preFilter.columns = header_basic
 
         subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
-        #print(subjectAlignedLength)
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
-        #print(subjectCoverage)
+
         alignIdent = preFilter['pident'] > (float(min_align_ident))
-        #print(alignIdent)
-        #print(preFilter['pident'])
+
         result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (float(min_query_cover))) & subjectCoverage & alignIdent]
 
         print(result.shape)
@@ -87,9 +85,8 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         preFilter = pd.read_csv(blast_out_path, sep='\t', names=header)
 
         subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
-        #print(subjectAlignedLength)
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (float(min_subject_cover))
-        #print(subjectCoverage)
+
         alignIdent = preFilter['pident'] > (int(min_align_ident)/100)
 
         result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (float(min_query_cover))) & subjectCoverage & alignIdent]
@@ -105,8 +102,8 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 '''
 def filter_blast_result(blast_record, tree_tax_IDs):
     filtered_result = {}
-    sequence_dic = {}  # taxid encoded seq dic
-    uniqueAccs = {}  # accession ID encoded seq dic
+    sequence_dic = {}  # taxid encoded seq dic --> for taxa-based phylogeny
+    uniqueAccs = {}  # accession ID encoded seq dic  --> for unique sequence-based phylogeny
     filtered_blast = blast_record[blast_record['staxids'].notna()]  # remove all rows with no taxid information
     ncbi = NCBITaxa()
 
@@ -126,7 +123,7 @@ def filter_blast_result(blast_record, tree_tax_IDs):
             if int(start_taxa) in tree_tax_IDs:
                 uniqueAccs[row['sacc']] = [row['sseq'], len(taxIDlist)]
 
-                try:
+                try: # taxon was already in filtered_result
                     filtered_result[int(start_taxa)][number_of_queries.index(row['qacc'])] += 1
                     sequence_dic[int(start_taxa)][1].append(row['sseq'])
                     sequence_dic[int(start_taxa)][0].append(row['sacc'])
@@ -136,10 +133,11 @@ def filter_blast_result(blast_record, tree_tax_IDs):
                     sequence_dic[int(start_taxa)] = [[row['sacc']], [row['sseq']]]
 
             else:
-                try:
+                try: # dependent on the ncbi taxonomy database version the taxon can not be present in the database
                     taxID_lineage = ncbi.get_lineage(start_taxa)
                 except:
                     continue
+
                 uniqueAccs[row['sacc']] = [row['sseq'], 0]
                 for line_taxa in taxID_lineage:  # all higher level taxa of these taxids
                     if line_taxa in tree_tax_IDs:
@@ -152,6 +150,7 @@ def filter_blast_result(blast_record, tree_tax_IDs):
                             filtered_result[line_taxa] = [0] * len(number_of_queries)
                             filtered_result[line_taxa][number_of_queries.index(row['qacc'])] = 1
                             sequence_dic[line_taxa] = [[row['sacc']], [row['sseq']]]
+
                 if uniqueAccs[row['sacc']][1] == 0:
                     uniqueAccs.pop(row['sacc'])
 
@@ -220,6 +219,8 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
     else:
         output_seqs = fasta
         print('Input was fasta file')
+
+        ### Code for full sequence alignments if a local protein database is stored
         # list_of_accessions = [subject_seqs[key][0][0] for key in subject_seqs.keys()]
         # blastdbcmd_cline = Blastdbcmd(db="/share/references/library/refseq_protein/refseq_protein", entry=','.join(list_of_accessions), out=output_seqs)  #db path = default path to refseq database on Romanov
         # blastdbcmd_stdout, blastdbcmd_stderr = blastdbcmd_cline()
@@ -258,20 +259,18 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
     print('Start Tree calculation and processing data')
     tree, tree_tax_ids, _ = read_tree_input(output_tree, '2', True)
     global count_clades
-    if uniqueSeqs:
 
+    if uniqueSeqs:  # unique sequence-based phylogeny
         count_clades = 0
-
         return unique_phylogeny_data(tree, subject_seqs, output_tree)
-    else:
+    else: # taxa-based phylogeny
         count_clades = 0
         d3Tree, parentnode_info, mosthitAcc = phylogeny_data(tree, subject_seqs, tree_tax_ids, output_tree, True)
-        #newickTree = phylogeny_data(tree, subject_seqs, tree_tax_ids, output_tree, False)
         newickTree = tree.write(format=3)
         return d3Tree, newickTree, parentnode_info, mosthitAcc
 
 '''
-    Taxon name have to be in a newick string valid form
+    Taxon name has to be in a newick string valid form
 '''
 def newick_valid_name(taxa):
     nonValidChar = [' ', '[', ']', '(', ')', ':', '/', '|', '\'']
@@ -325,18 +324,11 @@ def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
                 pseudo_filtered_blast[key] = [defaultvalue]
 
         accvalues = [subject_seqs[key][0][0] for key in subject_seqs.keys()]
-        #uniqueSeqs = [key for key in subject_seqs.keys() if len(subject_seqs[key][0]) == 1]
 
         uniqueSeqs = [key for key in subject_seqs.keys() if accvalues.count(subject_seqs[key][0][0]) == 1]
         newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10, 1)
         return newTree, parentnode_info, uniqueSeqs
 
-    '''else:
-        with open(treefile, 'r') as treehandle:
-            newickTree = treehandle.read()
-        treehandle.close()
-        newTree = replace_ID_Name(newickTree, treeIDs)
-        return newTree'''
 
 
 ''' 2. Phylogeny: unique hit based
@@ -347,9 +339,6 @@ def unique_phylogeny_data(tree, uniqueAccs, treefile):
     unique_count = {key: uniqueAccs[key][1] for key in uniqueAccs.keys()}
     d3_tree = unique_transfer_tree(tree, unique_count, 20)
     newickTree = tree.write(format=3)
-    '''with open(treefile, 'r') as treehandle:
-        newickTree = treehandle.read()
-    treehandle.close() '''
 
     return d3_tree, newickTree
 

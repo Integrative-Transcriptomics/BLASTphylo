@@ -96,7 +96,7 @@ class PhylogeneticAnalysisMenu extends Component{
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.state.tree};
         console.log(treeCopy)
-        chart({'size': treeCopy['size']}, this.state.extra, rank, rank, true, true);
+        chart({'size': treeCopy['size']}, this.state.extra, rank, false, true, true);
         if(document.getElementById('infoSelection')){
             showClades(this.state.extra[0], this.state.extra[1], null, null);
         }
@@ -115,25 +115,6 @@ class PhylogeneticAnalysisMenu extends Component{
             additionalInformation = additionalCladeInformation(this.showAdditional, this.handleUploadAdditional);
         }
 
-        const renderPublicReadyTooltip = (props) => (
-            <Tooltip id='public_ready_tooltip' {... props}>
-                Result will be a static tree.
-                Reload the page to start a new interpolation of the basic tree
-            </Tooltip>
-        );
-
-        const renderReturnTooltip = (props) => (
-            <Tooltip id="return_tooltip" {... props}>
-                return to dynamic visualisation
-            </Tooltip>
-        );
-
-        const returnButton = () => (
-                    <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
-                                        <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
-                    </OverlayTrigger>
-        );
-
         let phylogenyType;
         if(window.location.href.includes('Unique')){
             phylogenyType = 'unique sequence based';
@@ -149,18 +130,17 @@ class PhylogeneticAnalysisMenu extends Component{
                         {additionalInformation}
                         <Card>
                             <Accordion.Toggle as={Card.Header} eventKey='1'>
-                                export tree visualisation
+                                export tree visualization
                             </Accordion.Toggle>
                             <Accordion.Collapse eventKey='1'>
                                 <Card.Body>
+                                    Different export options for the tree visualization. The <b>publication ready</b> option will remove the
+                                    white spaces between the nodes of the cladogram and visualizes the full tree as static visualization.<br/>
+                                    The <b>unlock publication ready</b> button unlocks the static visualization. <br/><br/>
                                     <Nav className='mr-auto'>
-                                        <OverlayTrigger placement='bottom' delay={{show:150, hide:50}} overlay={renderPublicReadyTooltip}>
                                         <button id="public_ready_phylo" onClick={publicationReady}>publication ready</button>
-                                        </OverlayTrigger>
                                         <ExportTrees />
-                                        <OverlayTrigger placement='top' overlay={renderReturnTooltip} onEnter={this.showTooltip}>
                                         <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
-                                        </OverlayTrigger>
                                     </Nav>
                                 </Card.Body>
                             </Accordion.Collapse>
@@ -180,10 +160,12 @@ function additionalCladeInformation(showAdditional, handleUploadAdditional){
     return(
         <Card>
             <Accordion.Toggle as={Card.Header} eventKey='0'>
-                visualise additional clade information
+                visualize additional clade information
             </Accordion.Toggle>
             <Accordion.Collapse eventKey='0'>
                 <Card.Body>
+                    Visualize additional information for each node as heat map on the right of the tree. The heat map will be included in
+                    the exported visualization. <br/><br/>
                     <Form id='infoSelection'>
                         <div key={'inline-checkbox'} className='mb-3'>
                             <Form.Group inline id='ownCheckbox' style={{display: 'none'}}>
