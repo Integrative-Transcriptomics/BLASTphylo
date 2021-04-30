@@ -1,6 +1,9 @@
 # BLASTphylo
 
-BLASTphylo is an interactive web-tool, which applies a BLASTp search for a given protein sequence and maps the result on a given taxonomic tree. In addition, a phylogeny calculation of the remaining BLAST hits can be performed and visualised.
+BLASTphylo is an interactive web-tool, which applies a BLASTp search for a given protein and 
+maps the result on a given taxonomic tree. In addition, a phylogeny calculation of the 
+remaining BLAST hits can be performed and visualized. BLASTphylo is available for Unix and MAC. 
+We recommand Mozilla Firefox as browser. 
 
 
 ## Required Tools
@@ -26,6 +29,7 @@ Change in the `server` directory and run
 
 Change in the project directory and run 
 #### `npm install` 
+command will end with `found 3 vulnerabilities (2 moderate, 1 high)`
 
 ### Step 3: Start BLASTphylo
 
@@ -40,7 +44,8 @@ Enable the pop-up-window function for this app.
 ## Available Examples
 
 In the project directory folder **test examples** contain a example BLAST
-result and FASTA files, which was used to implement BLASTphylo. <br>
+result and FASTA files, which was used to implement BLASTphylo. In addition, different example taxonomies are
+given. <br>
 
 1. mapping_example <br>
 2. comparison_example <br>

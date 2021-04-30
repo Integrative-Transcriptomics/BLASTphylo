@@ -189,7 +189,7 @@ class Menu extends Component {
                         <BiHelpCircle style={{color: 'blue'}}/>
                     </OverlayTrigger>
                 </Form>
-                <Form.Control as='textarea' rows={5} cols={50} id='fasta_seq' name='fasta_seq' onChange={this.handleChange} />
+                <Form.Control as='textarea' placeholder={'>query1\nMEMEFNENNIDLETIIRDEVNKYLSRDI\nGDLPATQQAPLELREKYEKMEVPNKGRDIYEV'} rows={5} cols={50} id='fasta_seq' name='fasta_seq' onChange={this.handleChange} />
             </Form.Group>
             <Form.Group>
                 <Form inline>
