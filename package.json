@@ -29,8 +29,8 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
-    "preblastphylo": "echo '######################## \n BLASTphylo: \n \n During the first compilation the NCBI database is downloaded. This can take some time. \nThe FLASK server in localhost:5000 does not contain any information\n########################'",
-    "blastphylo":  "concurrently \"npm run server\" \"npm run start\"",
+    "preblastphylo": "echo '######################## \nBLASTphylo: \n \nDuring the first compilation the NCBI database is downloaded. This can take some time. \nThe FLASK server in localhost:5000 does not contain any information\n########################'",
+    "blastphylo": "concurrently \"npm run server\" \"npm run start\"",
     "start": "react-scripts start",
     "server": "cd server && flask run --no-debugger",
     "build": "react-scripts build",

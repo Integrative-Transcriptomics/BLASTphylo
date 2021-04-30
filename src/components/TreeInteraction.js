@@ -12,12 +12,16 @@ import {AiOutlineNodeCollapse, AiOutlineBarChart, AiOutlineArrowLeft} from 'reac
 import { hitBars, collapseTree, chart, startTreevis, showClades, stackBars} from '../visualisations/phyloblast2.js';
 
 
+// constant for taxonomic ranks
+var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
+
+
 // component for all direct tree interactions and frequently used functions
 class TreeInteraction extends Component{
      constructor(props){
         super(props);
 
-        if(this.props.calculationMethod === 'taxa'){
+        if(this.props.calculationMethod === 'taxa'){ // taxonomic Mapping
             this.state = {tree:  this.props.phyloData,
                       extra: null,
                       hitSelect: "-",
@@ -48,7 +52,6 @@ class TreeInteraction extends Component{
     // taxonomic analysis: tree interactions
     // handle hit barchart
     handleHits(event){
-        var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
         this.setState({hitSelect: event});
 
         if(!(taxonomyLevel.includes(this.state.tree['value'][2]))){
@@ -164,7 +167,6 @@ class TreeInteraction extends Component{
     render(){
 
         if(this.props.calculationMethod === 'taxa'){ // tree interaction for taxonomic mapping
-            var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
             var MakeItem = function(X){
                     return <Dropdown.Item eventKey={X}>{X}</Dropdown.Item>;
             };

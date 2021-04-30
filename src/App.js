@@ -52,7 +52,7 @@ class App extends Component {
         this.handleAlert = this.handleAlert.bind(this);
     }
 
-    // change view independent of component
+    // switch between the componets and allow data transfer
     changeComp(stateName, stateValue){
         if(stateName === 'actual'){
             this.setState({isActualComponent: stateValue});
@@ -73,8 +73,6 @@ class App extends Component {
         this.setState({isActualComponent: 'menu'});
     }
 
-
-
     // close alert messages
     handleAlert(){
         document.getElementById("alert").style.display='none';
@@ -85,34 +83,33 @@ class App extends Component {
     render() {
         var alerts = null;
 
-        const isActualComponent = this.state.isActualComponent;
+        const isActualComponent = this.state.isActualComponent;   // main div: menu or visualizations
         const data = this.state.data;
-        var userMenu = <div />;
+        var userMenu = <div />;  // sub div: menus for the visualizations (export visualization, etc)
 
         //console.log(data)
         let actualComponent;
         d3v6.select('#phyloblastAlert').remove();
 
-        // switch view dependent of the component state
+        // switch view based on the isActualComponent state
         if (isActualComponent === 'help'){
             d3v6.select('#visualisation').style('border', 'hidden');
             actualComponent = <Help />;
-        } else if (isActualComponent === 'phyloblast'){
-            //this.getTaxonomicMapping();
+        } else if (isActualComponent === 'phyloblast'){ // taxonomic Mapping
             const copy = {...data};
             actualComponent = <TaxonomicAnalysisMenu phyloData={copy} changeComp={this.changeComp} />;
             userMenu = <TreeInteraction phyloData={copy} calculationMethod={'taxa'}/>;
 
-        }else if (isActualComponent === 'handlePhylogeny'){
+        }else if (isActualComponent === 'handlePhylogeny'){ // handle data processing of the phylogenetic analysis
             actualComponent = <HandlePhylogenyServer data={data} changeComp={this.changeComp} />;
-        }else if (isActualComponent === 'phylogeny'){
+        }else if (isActualComponent === 'phylogeny'){ // visualize the phylogeny
             actualComponent = <PhylogeneticAnalysisMenu data={data} changeComp={this.changeComp} />;
             userMenu = <TreeInteraction data={data} calculationMethod={'phylo'} />;
         } else {
             d3v6.select('#visualisation').style('border', 'hidden');
             actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp} />;
         }
-        console.log(this.state.isActualComponent)
+        //console.log(this.state.isActualComponent)
 
         if(this.state.error !== null){ // errors occurred during input
             alerts = this.state.error.map((alertmessage) =>
@@ -187,7 +184,7 @@ class App extends Component {
     }
 }
 
-// export the view of the treeVis div (phlogeny or taxonomic mapping) as jpeg
+// export the view of the treeVis div (phlogeny or taxonomic mapping) as jpeg or SVG
 class ExportTrees extends Component{
     constructor(props) {
         super(props);

@@ -1,5 +1,5 @@
 /***
-# * PhyloBlast
+# * BLASTphylo
 # * @author jennifer mueller
 # * 
 # * based on: https://observablehq.com/@d3v6/collapsible-tree
@@ -10,24 +10,28 @@ import * as d3v6 from 'd3v6';
 import "../../node_modules/phylotree/src/main";
 
 // global variables
-var clicked_nodes = {};
+var clicked_nodes = {};  // clicked nodes and their state (collapsed or not)
+
+// stored variables for the general information of the first visualization of the tree --> used for the return and publication ready function
 var treeVis = null;
 var extraInfo = null;
 var ownAddInfo = null;
-const flextree = require('d3-flextree').flextree;
-const taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
 var treeData = null;
 var treeHeight = 0;
-var svgWidth = 300;
-var margin = ({top: 60 , right: 50, bottom: 40, left: 60});
 var leftmostnode = null;
 var rightmostnode = null;
 var hitSelection = '-';
 var phyloTreetree = null;
 
+// constants for the visualization layout
+const flextree = require('d3-flextree').flextree;
+const taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
+var svgWidth = 300;
+var margin = ({top: 60 , right: 50, bottom: 40, left: 60});
+
 
 // ****************** General Functions ***************************
-// Function to remove "null" roots
+// Function to remove "null" roots --> are roots with no default label
 function removeNullroot(tree){
     while (tree.name === null && tree['children'].length === 1 ){
 	    tree = tree['children'][0];
@@ -61,17 +65,17 @@ function showTooltip(node, barhover, extraDataLength){
                         .style("background-color", "rgba(35, 29, 51, 0.7)");
 
     var text = null;   // define the content of the tooltip
-    if(extraDataLength === 1){
+    if(extraDataLength === 1){ // unique sequence-based phylogeny
         text = '<b>' + node.data.name + '</b> <br /> taxa: ' + String(node.data.value[0]) + '<br />';
-    }else if (extraDataLength === 2){
+    }else if (extraDataLength === 2){ // taxa-based phylogeny
         text = '<b>' + node.data.name + '</b> <br /> nodes: ' + String(node.data.value[2]) + '<br />';
     }else if (node.key){
         text = '<b>' + node.key + '</b> <br /> nodes: ' + String(node) + '<br />';
     }else{
-        if(taxonomyLevel.includes(node.data.value[2]) || node.data.value[2] === 'no rank'){
+        if(taxonomyLevel.includes(node.data.value[2]) || node.data.value[2] === 'no rank'){ // taxonomic mapping 2 proteins
             text = '<b>' + node.data.name + '</b> <br /> query1 hits: ' + String(node.data.value[0]) + '<br />' +
 	                'query2 hits: ' + String(node.data.value[1]) + '<br /> rank: ' + node.data.value[2] + '<br />';
-	    }else{
+	    }else{ // taxonomic mapping 1 protein
 	        text = '<b>' + node.data.name + '</b> <br /> hits: ' + String(node.data.value[0][0]) + '<br />' +
 	                'subtree hits: ' + String(node.data.value[0][1]) + '<br /> rank: ' + node.data.value[1] + '<br />';
 	    }
@@ -149,19 +153,7 @@ function expand(d, b){
     return d
 }
 
-// check if children have lower taxonomic level than in select
-/***function checkTaxonomicLevel(children, taxonLevel){
-    for (var i = 0; i < children.length; i++){
-        if(taxonomyLevel.indexOf(children[i].data.value[taxaIndex]) > taxonLevel){
-            return true;
-        }
-    }
-    return false;
-}***/
-
-
-
-
+// ############################################################  main visualisation
 // main visualisation of the tree
 function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclickInteraction, returnFromStatic) {
     //console.log(clicked_nodes)
@@ -220,13 +212,9 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
           max_name_length = data_name.length;
        }
 
-        // resize tree if back (<--) button was clicked
+        // resize tree if back (unlock pubblication ready) button was clicked
         if(returnFromStatic && d.data._size){
-            //console.log(d.data)
-            //var oldSize = d.data.size.slice();
             d.data.size = d.data._size.slice();
-            //d.data._size = oldSize;
-            //console.log(d.data)
             delete d.data._size;
         }
 
@@ -237,21 +225,14 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
             indexOfNode = taxonomyLevel.indexOf(d.data.value[taxaIndex]);
         }
 
-        if((data_name in clicked_nodes)) { // node was collapsed
-        //(!(isNaN(d.data.value[taxaIndex])) && (d.data.value[taxaIndex] <= 30) )){                 // node contain less than 30 children
-            if ((clicked_nodes[data_name] === 2) && (indexOfNode < taxonomicLevel)
+        if((data_name in clicked_nodes)) { // node was clicked
+            if ((clicked_nodes[data_name] === 2) && (indexOfNode < taxonomicLevel) // node has higher rank than previous selection
                 && (d.data.value[taxaIndex] !== 'no rank')){
-                //console.log(['expand', data_name])
-                //console.log(d.data.value[taxaIndex])
                 d = expand(d, branchLength);
-            }else if((clicked_nodes[data_name] === 2) && taxonomicLevel !== (taxonomyLevel.length-1)){
-                //console.log(['col1', data_name])
-                //console.log(d.data.value[taxaIndex])
+            }else if((clicked_nodes[data_name] === 2) && taxonomicLevel !== (taxonomyLevel.length-1)){ // node was collapsed with previous taxonomic rank selection
                 d = collapse(d, branchLength, false);
-            }else if (clicked_nodes[data_name] === 0){
+            }else if (clicked_nodes[data_name] === 0){ // node was collpsed with click on the node ore label
                 d = collapseClickedNodesAfterSelection(d, branchLength);
-                //console.log(['col2', data_name])
-               // console.log(d.data.value[taxaIndex])
             }
         }
 
@@ -261,16 +242,8 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
 
                 if (((indexOfNode >= taxonomicLevel) ||    //  nodes has lower rank  OR no rank AND not clicked
                  (d.data.value[taxaIndex] === 'no rank')) && !(data_name in clicked_nodes)){
-                    //console.log(['colTaxa', data_name])
-                    //console.log(d.data.value[taxaIndex])
                     d = collapse(d, branchLength, true);
                  }
-                 /***else if (d.children && !(data_name === root.data.name)){  // inner node and one of the children has lower rank
-                    var childWithLowerTaxon = checkTaxonomicLevel(d.children, taxonomicLevel);
-                    if(childWithLowerTaxon && !(data_name in clicked_nodes)){
-                        d = collapse(d, branchLength, true);
-                    }
-                 }***/
             }
         }
     });
@@ -286,15 +259,14 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                 d.data.size[0] = d.data.size[0] + 10;
             }else if(d._children){
                 d.data._size = d.data.size.slice();
-                d.data.size[0] = 15; //d3v6.sum(d.children, function(child){return child.data.size[0];});
-                //d.data.size[0] = d.data.size[0] + 10;
+                d.data.size[0] = 15;
             }
         });
         rootHeight = root.data.size[0];
         treeHeight = rootHeight + margin.top + margin.bottom;
         document.getElementById('treeVis').style.height = String(treeHeight).concat('px');
 
-    }else if(returnFromStatic && !(extraInfo)){
+    }else if(returnFromStatic && !(extraInfo)){  // unlock publication ready was selected
         root.data.size[0] = d3v6.sum(root.data.children, function(child){return child.size[0];});
         rootHeight = root.data.size[0]
         treeHeight = rootHeight + margin.top + margin.bottom ;
@@ -335,6 +307,7 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
         // Assigns the x and y position to the nodes
         treeData = flexLayout(root);
 
+        // define the positions of the axis and labels for the additional visualizations (bar chart or heat map)
         leftmostnode = treeData;
 	    rightmostnode = treeData;
 	    treeData.eachBefore(node => {
@@ -370,8 +343,8 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
         nodeEnter.append('circle')
             .attr('class', 'node')
 	        .attr('id', function(d){return 'nodecircle' + d.id;})
-            .attr('r', d => extraData != null && Object.keys(extraData).length === 1 ? circleSize(Math.log2(d.data.value[0])) : 4)
-            .attr("fill", function(d,i){ if( i === 0){return '#377ba8';} // violet: #9038c7
+            .attr('r', d => extraData != null && Object.keys(extraData).length === 1 ? circleSize(Math.log2(d.data.value[0])) : 4) // adapt the node size for the unqiue phylogeny
+            .attr("fill", function(d,i){ if( i === 0){return '#377ba8';}
                                         else if(d._children || d.children){return "#555";}
                                         else{return "#999";}})
             .attr("stroke-width", 10)
@@ -491,8 +464,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                                 .text(d.data.name);
                     d._children = d.children;
                     d.children = null;
-                    //d.data._size = d.data.size;
-                    //d.data.size = [15, branchLength];
 
                     // if nodes is going to be collapsed --> enable publication ready
                     if(window.location.href.includes('phylo')){
@@ -501,7 +472,7 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                         document.getElementById('public_ready_taxa').disabled = false;
                     }
 
-                }else if(!(d.children) && !(d._children) && extraData != null && Object.keys(extraData).length === 1){
+                }else if(!(d.children) && !(d._children) && extraData != null && Object.keys(extraData).length === 1){ // link to NCBI for unqiue phylogeny
                     window.open('https://www.ncbi.nlm.nih.gov/protein/'.concat(d.data.name), '_blank');
                 } else {
                     clicked_nodes[d.data.name] = 1;  // node is not collapsed
@@ -509,11 +480,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                                              .text(d =>  d.children || d._children ? 'p' : d.data.name);
                     d.children = d._children;
                     d._children = null;
-                    /***if(d.data._size){
-                        var oldSize = d.data.size;
-                        d.data.size = d.data._size;
-                        d.data._size = oldSize;
-                    }***/
                 }
                 update(d);
 
@@ -521,7 +487,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                 if (extraData === null){   // taxonomic mapping
                     if(taxonomyLevel.includes(d.data.value[2]) || d.data.value[2] === 'no rank'){
                         stackBars(hitSelection);
-                        console.log('run stack')
                     }else{
                         hitBars(hitSelection);
                     }
@@ -540,15 +505,17 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
 
 
 
-// ******************************** Barcharts   ***************************
+// ******************************** Bar charts   ***************************
 
-// show hit values based on the actual state of the tree (phyloblast.html)
+
+// ####################################### taxonomic Mapping bar charts
+// show hit values based on the actual state of the tree
 function hitBars(value){
     hitSelection = value;
     var barheight = 7;
 
     var hitValue = null;
-    if (value === 'node hits'){  // show node bars
+    if (value === 'node hits'){  // shown node bars
 	    hitValue = 0;
     } else if (value === 'subtree hits'){
         hitValue = 1;
@@ -564,6 +531,7 @@ function hitBars(value){
     var nodes = treeData.descendants();
     var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue];});
 
+    // define the number of ticks for the axis
     var ticksStep = 0;
     if((max_hit >=  1000) || (max_hit <= 10)){
         ticksStep = 5;
@@ -572,6 +540,7 @@ function hitBars(value){
     }
     var scaleX = d3v6.scaleLinear().domain([0, max_hit]).range([0, svgWidth]);
 
+    // general SVG element
     var hitbars = d3v6.select('#additionalInfo')
            .append('svg')
            .attr('id', 'hitbars')
@@ -580,7 +549,8 @@ function hitBars(value){
            .style("font", "10px sans-serif")
            .style("overflow","visible")
            .style("user-select", "none");
-      
+
+    // axis
     hitbars.append('g')
              .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
              .call(d3v6.axisTop(scaleX)
@@ -591,6 +561,7 @@ function hitBars(value){
         return
     }
 
+    // bars
     hitbars.append('g')
             .attr('transform', `translate(` + margin.left + `,${treeHeight/2})`)
             .selectAll('.bars')
@@ -606,6 +577,7 @@ function hitBars(value){
             .on("mouseout", function(d, i){hideTooltip(i, false, 4);})
             .on("mousemove", function(d, i){moveTooltip(i, false);});
 
+    // append a axis to the bottom of the tree if it is larger as the display
     if((rightmostnode.y-leftmostnode.y) >= (window.innerHeight*0.8)){
         hitbars.append('g')
                  .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2+rightmostnode.y+barheight) + ')')
@@ -638,7 +610,6 @@ function stackBars(value){
     nodes.forEach(function(d){
         stacks.push({'node': d, 'query1': d.data.value[0][hitValue], 'query2': d.data.value[1][hitValue]});
     });
-    //console.log(stacks)
 
     // define ticks of the axis
     var ticksStep = 0;
@@ -650,6 +621,7 @@ function stackBars(value){
 
     var scaleX = d3v6.scaleLinear().domain([0, max_hit]).range([0, svgWidth-50]);
 
+    // general SVG element
     var hitbars = d3v6.select('#additionalInfo')
            .append('svg')
            .attr('id', 'hitbars')
@@ -676,8 +648,6 @@ function stackBars(value){
 
     // stack each value of the subgroup above each other
     var stack = d3v6.stack().keys(['query1', 'query2']);
-                  //  .order(d3v6.stackOrderNone)
-                   // .offset(d3v6.stackOffsetExpand);
     var stackedData = stack(stacks);
     //console.log(stackedData)
 
@@ -688,11 +658,11 @@ function stackBars(value){
         .data(stackedData)
         .enter()
         .append("g")
-        // loop over profiles
+        // loop over taxa
         .attr("class", 'stackData')
         .attr("fill", function(d,i){return colors(d.key);})
         .selectAll("rect")
-        // loop over taxa
+        // loop over proteins
         .data(function(d){return d;})
         .enter()
         .append("rect")
@@ -704,6 +674,7 @@ function stackBars(value){
         .attr("width", function(d,i){return scaleX(d[1]) - scaleX(d[0]);})
         .attr("height", barheight);
 
+    // legend of for the stack colors
     var legend = hitbars.selectAll(".legend")
         .data(['query1', 'query2'])
         .enter()
@@ -728,6 +699,7 @@ function stackBars(value){
 }
 
 
+// ####################################### taxa-based phylogeny additional information
 // translate node names into valid newick string names
 function validNodename(taxa){
     var nonValidChar = [' ', '[', ']', '(', ')', ':', '/', '|', '\\'];
@@ -739,7 +711,7 @@ function validNodename(taxa){
     return res;
 }
 
-// show parent taxa as color-coded bars  (phylogeny.html)
+// visualizatio of the additional information as heat map
 var actualVisualisation = 'clade'
 function showClades(taxData, accData, ownAddData, libTree){
     // trace the click state of the additional information
@@ -748,6 +720,7 @@ function showClades(taxData, accData, ownAddData, libTree){
     var ownAdditional = false;
     var numberOfAdditionalFeatures = 0;
 
+    // check if own additional information was given
     if (document.getElementById('ownCheckbox').style.display === 'block'){
         ownAdditional = document.getElementById('ownAdditional').checked;
         if(ownAddData){
@@ -767,18 +740,16 @@ function showClades(taxData, accData, ownAddData, libTree){
     document.getElementById('phylogram').addEventListener('click', function(){
     actualVisualisation = 'phylo';});
 
+    // check if the phylogeny is a cladogram of phylogram (default cladogram)
     if(libTree){
         phyloTreetree = libTree;
         actualVisualisation = 'phylo';
     }
 
     if(uniqueCheck || phylumCheck || ownAdditional){
-        // color-encoding of the taxids   Problem to much ids/accs as colors
+        // color-encoding of the taxids
         var taxids = Object.keys(taxData);
         var colorsParent = d3v6.scaleOrdinal().domain(taxids).range(d3v6.schemeCategory10);
-        //console.log(taxids)
-
-        //[...new Set(d3v6.schemeDark2.concat(d3v6.schemePaired).concat(d3v6.schemeCategory10).concat(d3v6.schemeTableau10))])
 
 
         //remove old taxids
@@ -802,8 +773,9 @@ function showClades(taxData, accData, ownAddData, libTree){
             var treeContainer = document.getElementsByClassName('phylotree-container')[0];
             var offset = treeContainer.transform.baseVal[0].matrix;
             actualTreeHeight = offset.f;
-            console.log(dataInfo)
         }
+
+        // general SVG element
         var clades = d3v6.select('#additionalInfo')
                .append('svg')
                .attr('id', 'clade_vis')
@@ -863,12 +835,11 @@ function showClades(taxData, accData, ownAddData, libTree){
 
         }
 
+        // unique sequence info was selected
         if(uniqueCheck){
             if(ownAdditional){
                 firstElementSpace = firstElementSpace + rectSize*2+10;
-            }/***else{
-                firstElementSpace = 0;
-            }***/
+            }
 
             clades.append('g')
                    .attr('transform', 'translate(' + 5 + ',' + actualTreeHeight + ')')
@@ -882,14 +853,15 @@ function showClades(taxData, accData, ownAddData, libTree){
                                         return 'translate(' + (firstElementSpace)+ ','  + (dataInfo[taxaName].screen_y-(rectSize/2)) + ')';}
                                         else{return 'translate(' + (firstElementSpace)+ ',' + (d.y-(rectSize/2)) + ')'; }})
                    .attr('stroke', function(d){var taxaName = validNodename(d.data.name);
-                        if(accData.includes(d.data.value[1]) && !(d.children)){
+                        if(accData.includes(d.data.value[1]) && !('children' in d)){
                             if(phylotreePresent && (!(taxaName in dataInfo) || dataInfo[taxaName].hidden )){
                                 return 'none';
-                            }else{return 'black';}
+                            }else{
+                            return 'black';}
                         }else{
                             return 'none';}})
                    .attr('fill', function(d){var taxaName = validNodename(d.data.name);
-                        if(accData.includes(d.data.value[1]) && !(d.children)) {
+                        if(accData.includes(d.data.value[1]) && !('children' in d)) {
                             if(phylotreePresent && (!(taxaName in dataInfo) || dataInfo[taxaName].hidden )){
                                 return 'transparent';
                             }else{return d3v6.schemeSet1[3];}
@@ -898,6 +870,7 @@ function showClades(taxData, accData, ownAddData, libTree){
                    .attr("height", rectSize);
         }
 
+        // phylum info was selected
         if(phylumCheck){
             if(ownAdditional && !(uniqueCheck)){
                 firstElementSpace = firstElementSpace + rectSize*2+10;
@@ -939,6 +912,7 @@ function showClades(taxData, accData, ownAddData, libTree){
             spaceTillLegend =(numberOfAdditionalFeatures+2)*(rectSize*2+10)+15;
         }
 
+        // legend for the phylum information
         if(phylumCheck){
             var legend =  clades.selectAll('.legend')
                                     .data(taxids)
@@ -964,6 +938,7 @@ function showClades(taxData, accData, ownAddData, libTree){
                     .text(d => taxData[d]);
         }
 
+        // labels for the columns on top of the heat map
         var addLabels = [];
         if(ownAdditional){
             addLabels = Object.keys(ownAddData[firstKey]);
@@ -1014,15 +989,14 @@ function collapseTree(rank){
     console.log('run collapse')
     var taxonLevel = taxonomyLevel.indexOf(rank);
     d3v6.select('#tree_vis').remove();
-    chart(treeVis, null, taxonLevel, false, true, false);
-    if(taxonomyLevel.includes(treeVis['value'][1]) || (treeVis['value'][1] === 'no rank')){
+    chart(treeVis, null, taxonLevel, false, true, false); // update main visualization
+
+    if(taxonomyLevel.includes(treeVis['value'][1]) || (treeVis['value'][1] === 'no rank')){ // update bar chart
         hitBars(hitSelection);
     }else{
         stackBars(hitSelection);
     }
-
     previousTaxonomicLevel = taxonLevel;
-
 }
 
 
@@ -1031,9 +1005,10 @@ function publicationReady(){
     if((previousTaxonomicLevel !== taxonomyLevel.length -1) || (Object.keys(clicked_nodes).length > 0)){
         document.getElementById('returnButton').style.display = 'block'; // enable reset to dynamic visualisation
         d3v6.select('#tree_vis').remove();
-        console.log(treeVis)
-        chart(treeVis, extraInfo, previousTaxonomicLevel, false, false, false);
-        if (extraInfo === null){
+
+        chart(treeVis, extraInfo, previousTaxonomicLevel, false, false, false); // update main visualization
+
+        if (extraInfo === null){ // udate additional visualizations
             if(taxonomyLevel.includes(treeVis.value[1])){
                 hitBars(hitSelection);
             }else{

@@ -24,12 +24,11 @@ class PhylogeneticAnalysisMenu extends Component{
     constructor(props){
         super(props);
 
-
         // set state for visualisations
         var treeData = this.props.data.tree;
-        if( Object.keys(this.props.data).length === 3){
+        if( Object.keys(this.props.data).length === 3){  // taxa-based
             this.state = {tree: treeData, extra: this.props.data.extraInfo, ownInfo: null, actualTree: treeData, counter: 0};
-        }else{
+        }else{ // unique sequence-based
             this.state = {tree: treeData, extra: [1], actualTree: treeData, counter: 0};
         }
 
@@ -47,15 +46,14 @@ class PhylogeneticAnalysisMenu extends Component{
         showClades(this.state.extra[0], this.state.extra[1], this.state.ownInfo, null);
     }
 
+    // convert the given additional information in a json object for better handling in d3
     // based on: https://stackoverflow.com/questions/27979002/convert-csv-data-into-json-format-using-javascript
     convertCSVtoJson(csv){
         var result = {};
         const self = this;
         csv.onload = function(){
-            //console.log(this.result);
 
             var lines = this.result.split('\n');
-            //console.log(lines)
             const headers = lines[0].split(',');
 
             for (let i = 1; i < lines.length; i++) {
@@ -69,11 +67,11 @@ class PhylogeneticAnalysisMenu extends Component{
                 }
                 result[currentline[0]] = obj;
             }
-            //console.log(result)
             self.setState({ownInfo: result});
         }
     }
 
+    // handle the upload of the additional information
     handleUploadAdditional(event){
         const reader = new FileReader();
         reader.readAsText(event.target.files[0])
@@ -82,7 +80,7 @@ class PhylogeneticAnalysisMenu extends Component{
         document.getElementById('ownCheckbox').style.display = "block";
     }
 
-        // hide the tooltip in 5 seconds
+    // hide a tooltip in 5 seconds
     showTooltip(event){
         setTimeout(function(){d3v6.select('#' + event.id).style("visibility","hidden");}, 5000);
     }
@@ -92,10 +90,10 @@ class PhylogeneticAnalysisMenu extends Component{
         var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
         document.getElementById('returnButton').style.display = 'none';
         const rank = taxonomyLevel.indexOf(this.state.rankSelect);
-        console.log(['Return button', this.state.rankSelect])
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.state.tree};
-        console.log(treeCopy)
+
+        // update the visualizations
         chart({'size': treeCopy['size']}, this.state.extra, rank, false, true, true);
         if(document.getElementById('infoSelection')){
             showClades(this.state.extra[0], this.state.extra[1], null, null);
@@ -117,9 +115,9 @@ class PhylogeneticAnalysisMenu extends Component{
 
         let phylogenyType;
         if(window.location.href.includes('Unique')){
-            phylogenyType = 'unique sequence based';
+            phylogenyType = 'unique sequence-based';
         }else{
-            phylogenyType = 'taxa based';
+            phylogenyType = 'taxa-based';
         }
 
         return(
@@ -155,7 +153,7 @@ class PhylogeneticAnalysisMenu extends Component{
 }
 
 
-
+// Handle the display of  the additional clade information menu if the taxa-based phylogeny was calculated
 function additionalCladeInformation(showAdditional, handleUploadAdditional){
     return(
         <Card>
@@ -186,7 +184,7 @@ function additionalCladeInformation(showAdditional, handleUploadAdditional){
                                     <BiHelpCircle style={{color: 'blue', 'margin': '0px 10px 0px 5px'}}/>
                                 </OverlayTrigger>
                                 <Form.File id='additional_file' name='additional_file'
-                onChange={handleUploadAdditional} accept='.csv' />
+                                onChange={handleUploadAdditional} accept='.csv' />
                             </Form>
                         </div>
                     </Form>

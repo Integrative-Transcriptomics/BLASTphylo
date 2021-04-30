@@ -7,11 +7,13 @@ import {Spinner, Table} from 'react-bootstrap';
 class HandlePhylogenyServer extends Component{
     constructor(props){
         super(props);
-        console.log(this.props)
+
+        // functions
         this.calculatePhylogeny = this.calculatePhylogeny.bind(this);
 
     }
 
+    // dependent on the given link information taxa-based or unique sequence-based phylogeny will calculated in the back end
     calculatePhylogeny(){
         var self = this;
         var path = 'server/' + this.props.data;
@@ -19,7 +21,6 @@ class HandlePhylogenyServer extends Component{
          .then(function (response) {
              //console.log(response.data);
              self.props.changeComp('data', response.data);
-             self.props.changeComp('previous', 'handlePhylogeny'); // set state for help page content
              self.props.changeComp('actual', 'phylogeny');
          })
          .catch(error => {
@@ -27,6 +28,8 @@ class HandlePhylogenyServer extends Component{
             //console.log(error);
          })
    }
+
+   // visualize a rough run time expectation
    render(){
         this.calculatePhylogeny();
         return(
