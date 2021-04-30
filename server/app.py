@@ -1,5 +1,5 @@
 ##/***
-# * PhyloBlast
+# * BLASTphylo
 # * @author jennifer mueller
 # *
 # ***/
@@ -23,20 +23,25 @@ from flask import Flask, render_template, redirect, url_for, request, jsonify, m
 from werkzeug.utils import secure_filename
 import logging, click
 import time
+
+
+######################################################################################################################## general functions and settings
 # create tmp output folder for output file
 actual_dir = os.getcwd()
 flask_tmp_dir = actual_dir + '/flask_tmp'
 shutil.rmtree(flask_tmp_dir, ignore_errors=True)
 
-try:
+try:                          # during first installation need to generate flask_tmp folder and download NCBI database
     os.mkdir(flask_tmp_dir)
+    print('Download NCBI database')
     from ete2 import NCBITaxa
     ncbi = NCBITaxa()
-    print('Download NCBI database')
 except:
     print('flask_tmp folder is already generated')
+UPLOAD_FOLDER = '/server/flask_tmp'
 
-# generate fasta file from textfield input and check for amino acid sequence
+
+# generate fasta file from textfield input and check for amino acid sequence (can handle any number of queries)
 def generate_fasta_from_input(textfieldinput, outdir):
     fastas = []
     valid_pro_seq = True
@@ -49,36 +54,35 @@ def generate_fasta_from_input(textfieldinput, outdir):
             seq = ''.join(split_fasta[1:]).replace('\r', '')
             valid_pro_seq = re.search(regAA, seq)
             if valid_pro_seq:
-                fastas.append(SeqRecord(Seq(seq), id='>'+split_fasta[0]))
+                fastas.append(SeqRecord(Seq(seq), id=split_fasta[0], description=''))
             else:
                 return valid_pro_seq
     SeqIO.write(fastas, outdir, "fasta")
     return valid_pro_seq
 
-
-UPLOAD_FOLDER = '/server/flask_tmp'
-
 # start server
 app = Flask(__name__)
 
+# global parameter for the run
 hit_seqs = {}
 accs_seqs = {}
 d3_tree = {}
 
+
+######################################################################################################################## connection to the front end
 # taxa-based phylogeny
 @app.route('/server/phylogeny', methods=['POST', 'GET'])
 def phylogeny():
     global hit_seqs
     output_tree = "flask_tmp/fasttree.tree"
-    if os.path.isfile(output_tree):
+    if os.path.isfile(output_tree): # generate only data for the visualization
         tree, tree_tax_ids,_ = processing_data.read_tree_input(output_tree, '2', True)
-        d3Tree, phylum_info, acc_info = processing_data.phylogeny_data(tree, hit_seqs,tree_tax_ids, output_tree, True)
+        d3Tree, phylum_info, acc_info = processing_data.phylogeny_data(tree, hit_seqs,tree_tax_ids)
         newick_phylogeny = tree.write(format=3)
-    else:
+
+    else: # perform complete calculation
         print('Start Phylogeny calculation')
-        start_time = time.time()
         d3Tree, newick_phylogeny, phylum_info, acc_info = processing_data.calculate_phylogeny(hit_seqs, None, 'flask_tmp/', 'True',  False)
-        print("taxa--- %s seconds ---" % (time.time() - start_time))
     return {'tree': d3Tree, 'newick': newick_phylogeny[:-1], 'extraInfo': [phylum_info, acc_info]}
 
 # unique sequence-based phylogeny
@@ -86,14 +90,13 @@ def phylogeny():
 def phylogenyUnique():
     global accs_seqs
     output_tree = "flask_tmp/fasttree_unique.tree"
-    if os.path.isfile(output_tree):
+    if os.path.isfile(output_tree): # generate only data for the visualization
         tree, tree_tax_ids, _ = processing_data.read_tree_input(output_tree, '2', True)
-        d3_phylogeny, newick_phylogeny = processing_data.unique_phylogeny_data(tree, accs_seqs, output_tree)
-    else:
+        d3_phylogeny, newick_phylogeny = processing_data.unique_phylogeny_data(tree, accs_seqs)
+
+    else: # perform complete calculation
         print('Start Phylogeny calculation')
-        start_time = time.time()
         d3_phylogeny, newick_phylogeny = processing_data.calculate_phylogeny(accs_seqs, None, 'flask_tmp/', 'True',  True)
-        print("unique--- %s seconds ---" % (time.time() - start_time))
 
     return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1]}
 
@@ -129,7 +132,7 @@ def menu():
                 protein_data = request.files['fasta_file'].save('flask_tmp/protein.fasta')
                 protein = 'flask_tmp/protein.fasta'
                 print('Sequence from file')
-            elif protein_file_type == '1': # blast result xml file
+            elif protein_file_type == '1': # blast result csv file
                 protein_data = request.files['fasta_file'].save('flask_tmp/blast_result.csv')
                 protein = 'flask_tmp/blast_result.csv'
                 try:
@@ -191,11 +194,9 @@ def menu():
             # start processing of the data
             print('\nStart PhyloBlast')
             try:
-                d3_tree, hit_seqs, accs_seqs = processing_data.run_phyloblast(protein, protein_file_type, tree_data, tree_menu_selection, 'blastp', eValue, min_align_identity, min_query_cover, min_hit_cover, 'flask_tmp/')
+                d3_tree, hit_seqs, accs_seqs = processing_data.run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, 'blastp', eValue, min_align_identity, min_query_cover, min_hit_cover, 'flask_tmp/')
                 #print(d3_tree)
                 if len(d3_tree) > 0:
-                    #processing_data.generate_phyloblast_output(d3_tree, 'flask_tmp/')  # generate mapping output as csv
-
                     print('Root of the tree: ' + d3_tree['name'])
                     return {'tree': d3_tree, 'error': None}
                 else:

@@ -1,73 +1,26 @@
-#
-# Module to use the Blast+ tool blastdbcmd inside a python file
-# based on: https://github.com/biopython/biopython/blob/master/Bio/Blast/Applications.py (03.11.2020)
+'''
+BLASTphylo: external tools
+    @author jennifer mueller
+
+    command line classes to run FastTree and blastdbcmd (actual not required)
+    from within the application
+
+    Check for POSSIBLE CHANGE comments
+'''
+
 from Bio.Application import _Option, AbstractCommandline, _Switch, _Argument
 
 
-class NCBIblastdbcmdCommandline(AbstractCommandline):
-    def __init__(self, cmd="blastdbcmd", **kwargs):
-        assert cmd is not None
-        extra_parameters = [
-            # Core:
-            _Switch(
-                ["-h", "h"], "Print USAGE and DESCRIPTION;  ignore other arguments."
-            ),
-            _Switch(
-                ["-help", "help"],
-                "Print USAGE, DESCRIPTION and ARGUMENTS description; "
-                "ignore other arguments.",
-            ),
-            _Switch(
-                ["-version", "version"],
-                "Print version number;  ignore other arguments.",
-            ),
-            # Output configuration options
-            _Option(
-                ["-out", "out"],
-                "Output file for sequences.",
-                filename=True,
-                equate=False,
-            ),
-            # Formatting options:
-            _Option(
-                ["-outfmt", "outfmt"],
-                "Output format, default: %f means sequence in FASTA format",
-                filename=True,  # to ensure spaced inputs are quoted
-                equate=False,
-            ),
-            # General search options:
-            _Option(["-db", "db"],
-                    "Database for the sequence search.", equate=False
-            ),
-            _Option(["-entry", "entry"],
-                    "Comma-delimited search string(s) of sequence identifiers: "
-                    "e.g.: 555, AC147927, gnl|dbname|tag",
-                    equate=False,
-            ),
+# Copyright 2013 by Nate Sutton.
+# Based on code in _Phyml.py by Eric Talevich.
+# All rights reserved.
+#
+# This code is part of the Biopython distribution and governed by its
+# license.  Please see the LICENSE file that should have been included
+# as part of this package.
+"""Command-line wrapper for tree inference program Fasttree."""
 
-        ]
-        try:
-            # Insert extra parameters - at the start just in case there
-            # are any arguments which must come last:
-            self.parameters = extra_parameters
-        except AttributeError:
-            # Should we raise an error?  The subclass should have set this up!
-            self.parameters = extra_parameters
-        AbstractCommandline.__init__(self, cmd, **kwargs)
-
-
-def _is_int(x):
-    """Test whether the argument can be serialized as an integer (PRIVATE)."""
-    return isinstance(x, int) or str(x).isdigit()
-
-
-def _is_numeric(x):
-    """Test whether the argument can be serialized as a number (PRIVATE)."""
-    try:
-        float(str(x))
-        return True
-    except ValueError:
-        return False
+# adapted by Jennifer Mueller 05.11.2020
 
 
 class FastTreeCommandline(AbstractCommandline):
@@ -94,6 +47,8 @@ class FastTreeCommandline(AbstractCommandline):
         print(out)
         print(err)
     """
+######################################################################################################################## POSSIBLE CHANGE
+    # PLEASE CHANGE cmd="fasttree" to your command line version. Can be 'fasttree' or 'FastTree'
 
     def __init__(self, cmd="fasttree", **kwargs):
         """Initialize the class."""
@@ -589,39 +544,74 @@ class FastTreeCommandline(AbstractCommandline):
 
         AbstractCommandline.__init__(self, cmd, **kwargs)
 
-# Copyright 2013 by Nate Sutton.
-# Based on code in _Phyml.py by Eric Talevich.
-# All rights reserved.
+
+
+
 #
-# This code is part of the Biopython distribution and governed by its
-# license.  Please see the LICENSE file that should have been included
-# as part of this package.
-"""Command-line wrapper for tree inference program Fasttree."""
+# Module to use the Blast+ tool blastdbcmd inside a python file
+# based on: https://github.com/biopython/biopython/blob/master/Bio/Blast/Applications.py (03.11.2020)
 
-# adapted by Jennifer Mueller 05.11.2020
+class NCBIblastdbcmdCommandline(AbstractCommandline):
+    def __init__(self, cmd="blastdbcmd", **kwargs):
+        assert cmd is not None
+        extra_parameters = [
+            # Core:
+            _Switch(
+                ["-h", "h"], "Print USAGE and DESCRIPTION;  ignore other arguments."
+            ),
+            _Switch(
+                ["-help", "help"],
+                "Print USAGE, DESCRIPTION and ARGUMENTS description; "
+                "ignore other arguments.",
+            ),
+            _Switch(
+                ["-version", "version"],
+                "Print version number;  ignore other arguments.",
+            ),
+            # Output configuration options
+            _Option(
+                ["-out", "out"],
+                "Output file for sequences.",
+                filename=True,
+                equate=False,
+            ),
+            # Formatting options:
+            _Option(
+                ["-outfmt", "outfmt"],
+                "Output format, default: %f means sequence in FASTA format",
+                filename=True,  # to ensure spaced inputs are quoted
+                equate=False,
+            ),
+            # General search options:
+            _Option(["-db", "db"],
+                    "Database for the sequence search.", equate=False
+            ),
+            _Option(["-entry", "entry"],
+                    "Comma-delimited search string(s) of sequence identifiers: "
+                    "e.g.: 555, AC147927, gnl|dbname|tag",
+                    equate=False,
+            ),
+
+        ]
+        try:
+            # Insert extra parameters - at the start just in case there
+            # are any arguments which must come last:
+            self.parameters = extra_parameters
+        except AttributeError:
+            # Should we raise an error?  The subclass should have set this up!
+            self.parameters = extra_parameters
+        AbstractCommandline.__init__(self, cmd, **kwargs)
 
 
+def _is_int(x):
+    """Test whether the argument can be serialized as an integer (PRIVATE)."""
+    return isinstance(x, int) or str(x).isdigit()
 
-# commandline parser to run Phyloblast from the commandline
-import argparse
-# prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_query_cover, min_identity, run_phylogeny, from_aligned, outdir
-class Command_line_parser:
-    def command_line_options(self):
-        parser = argparse.ArgumentParser("Phyloblast",
-                                         description="Perform Blastp search for a given protein and map the number of hits to a given taxonomy. \n "
-                                         "Furthermore it can calculate a phylogeny for the subject sequences (aligned or full seq) with Mafft parttree and FastTree"
-                                                     "\n \n run server_processing_data.py --help for more informations about the parameters")
-        parser.add_argument("--inputFile", "-i", type=str, help="input file path for a FASTA file or Blast result")
-        parser.add_argument("--taxonomy", "--taxa", type=str, help='taxonomy as newick string, .dnd file or ncbi taxonomy (NCBI example: Staphylococcus,Staphylococcus aureus|subtree)'),
-        parser.add_argument("--eValue" , type=str, default='0.05',
-                            help="E-value to restirct the blast search, default: 0.05")
-        parser.add_argument("--minQueryCoverage", "--queryCover", type=str, default='80',
-                            help="minimal query coverage per HSP, value between 0 and 100, default: 80")
-        parser.add_argument("--minQueryIdentity", "--queryIdent", type=str, default='80',
-                            help="minimal query identity per HSP, value between 0 and 100, default: 80")
-        parser.add_argument("--runPhylogeny", "--phylo", default=False,   # action="store_false" needed ? same for aligned argument
-                            help="boolean for additional phylogeny calculation, default: false")
-        parser.add_argument("--fromAligned", "--aligned", default=True,
-                            help="boolean for phylogeny calculation from aligned part (True) or full (False) subject sequences, default: True")
-        parser.add_argument("--outdir", type=str, help="path to output directory where all subresults of the pipeline are stored")
-        return parser.parse_args()
+
+def _is_numeric(x):
+    """Test whether the argument can be serialized as a number (PRIVATE)."""
+    try:
+        float(str(x))
+        return True
+    except ValueError:
+        return False

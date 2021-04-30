@@ -1,5 +1,5 @@
 # /***
-# * PhyloBlast
+# * BLASTphylo
 # * processing of the data
 # *
 # * @author jennifer mueller
@@ -33,28 +33,26 @@ from external_tools import FastTreeCommandline as FastTree
 # global variables 
 count_clades = 0
 
-# functions prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir
-######################################################################################################################## BLAST
+########################################################################################################################
+#                                                                                                                  BLAST
+########################################################################################################################
 ''' run and parse the blast result dependent on the server input 
     prot                    amino acid sequence or direct Blast result as csv file
     prot_file_type:         0= aa sequence, 1= csv file
-    blast_type:             blastp or blastx dependent on the input (by now only blastp)
+    blast_type:             blastp or blastx dependent on the input (by now only blastp)   --> TODO: change database if blastn should be implemented
     eValue:                 significant threshold for the blast search
     min_align_ident         minimal identity between query and subject sequence in the alignment
     min_query_cover:        minimal coverage with the query
     min_subject_cover:      minimal coverage with the subject (hit)
     entrez_query:           restrict the blast search to 'roots' of the given taxonomy
     out_dir:                path to output directory
-
-    output: Tabular only WP identifier lesser hits as with XML file ?
-    tab sep: # Fields: query acc.ver, subject acc.ver, % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score, % positives
 '''
 def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_subject_cover, entrez_query, out_dir):
     header = ['qacc', 'sacc', 'qstart', 'qend', 'sstart', 'send', 'slen', 'nident', 'evalue', 'pident', 'staxids', 'qcovhsp', 'sseq']
 
     header_basic = ['qacc', 'sacc', 'pident', 'alen', 'mm', 'g', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bit', 'm']
 
-    if prot_file_type == "1":
+    if prot_file_type == "1": # input was csv file
         try:
             preFilter = pd.read_csv(prot, sep='\t')
         except:
@@ -65,6 +63,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         else:
             preFilter.columns = header_basic
 
+        # filter for alignment identity, query coverage, subject coverage, evalue
         subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
 
@@ -74,7 +73,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 
         print(result.shape)
 
-    else:
+    else: # input was a protein
         blast_out_path = out_dir + 'blast_result.csv'
         blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
@@ -84,6 +83,8 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         print(stderr)
         preFilter = pd.read_csv(blast_out_path, sep='\t', names=header)
 
+        # filter for alignment identity, query coverage, subject coverage, evalue
+        # evalue and query coverage are necessary given that BLAST stop when the first subject sequences exceed the threshold
         subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (float(min_subject_cover))
 
@@ -95,7 +96,10 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
     return result
 
 
-######################################################################################################################## Filtering and Hit count
+
+########################################################################################################################
+#                                                                                                Filtering and Hit count
+########################################################################################################################
 '''Filter blast result for hits similar to the species in the tree
     blast_record:      result of the blast search
     tree_taxIDs:       set of all taxonomic IDs in the given taxonomy
@@ -142,7 +146,8 @@ def filter_blast_result(blast_record, tree_tax_IDs):
                 for line_taxa in taxID_lineage:  # all higher level taxa of these taxids
                     if line_taxa in tree_tax_IDs:
                         uniqueAccs[row['sacc']][1] += 1
-                        try:
+
+                        try: # taxon was already in filtered_result
                             filtered_result[line_taxa][number_of_queries.index(row['qacc'])] += 1
                             sequence_dic[line_taxa][1].append(row['sseq'])
                             sequence_dic[line_taxa][0].append(row['sacc'])
@@ -151,14 +156,16 @@ def filter_blast_result(blast_record, tree_tax_IDs):
                             filtered_result[line_taxa][number_of_queries.index(row['qacc'])] = 1
                             sequence_dic[line_taxa] = [[row['sacc']], [row['sseq']]]
 
-                if uniqueAccs[row['sacc']][1] == 0:
+                if uniqueAccs[row['sacc']][1] == 0: # remove the sequence when it was not present
                     uniqueAccs.pop(row['sacc'])
 
     return filtered_result, sequence_dic, uniqueAccs, number_of_queries
 
 
 
-######################################################################################################################## sequence-based Phylogeny
+########################################################################################################################
+#                                                                                                              Phylogeny
+########################################################################################################################
 '''
     extract best hit for each taxID
     seqs:           dictionary with sequence array per taxID
@@ -201,6 +208,7 @@ def generate_fasttree_input(mafft_out, taxid_accession):
 
 ''' calculate phylogeny for given hit sequences
     subject_seqs:         dictionary with subject aligned seqs and their accessions
+    fasta:                placeholder for phylogeny calculation with full subject sequences 
     output_dir:           path to output directory
     from_aligned_seq:     boolean, true: aligned subject sequences, false: full subject sequences
     uniqueSeqs:           boolean, true: accession encoded seqs, false: taxid encoded seqs
@@ -220,7 +228,7 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
         output_seqs = fasta
         print('Input was fasta file')
 
-        ### Code for full sequence alignments if a local protein database is stored
+        ### Code for full sequence alignments if a local protein database is stored, TODO: need to be changed (path to database) and tested
         # list_of_accessions = [subject_seqs[key][0][0] for key in subject_seqs.keys()]
         # blastdbcmd_cline = Blastdbcmd(db="/share/references/library/refseq_protein/refseq_protein", entry=','.join(list_of_accessions), out=output_seqs)  #db path = default path to refseq database on Romanov
         # blastdbcmd_stdout, blastdbcmd_stderr = blastdbcmd_cline()
@@ -262,15 +270,16 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
 
     if uniqueSeqs:  # unique sequence-based phylogeny
         count_clades = 0
-        return unique_phylogeny_data(tree, subject_seqs, output_tree)
+        return unique_phylogeny_data(tree, subject_seqs)
     else: # taxa-based phylogeny
         count_clades = 0
-        d3Tree, parentnode_info, mosthitAcc = phylogeny_data(tree, subject_seqs, tree_tax_ids, output_tree, True)
+        d3Tree, parentnode_info, mosthitAcc = phylogeny_data(tree, subject_seqs, tree_tax_ids)
         newickTree = tree.write(format=3)
         return d3Tree, newickTree, parentnode_info, mosthitAcc
 
 '''
     Taxon name has to be in a newick string valid form
+    taxa:   string with scientific name
 '''
 def newick_valid_name(taxa):
     nonValidChar = [' ', '[', ']', '(', ')', ':', '/', '|', '\'']
@@ -301,48 +310,52 @@ def replace_ID_Name(newick, treeIDs):
     tree:           FastTree newickString as tree like datastructure
     subject_seqs:   taxa encoded dic with hit Accession and sequences
     treeIDs:        list of all taxa IDs in the tree
-    treefile:       path to FastTree output
-    d3_version:     boolean, True: d3 ouput needed, False: Phylotree output
 '''
-def phylogeny_data(tree, subject_seqs, treeIDs, treefile, d3_version):
+def phylogeny_data(tree, subject_seqs, treeIDs):
     ncbi = NCBITaxa()
 
     pseudo_filtered_blast = {}  # instead of the hit counts the parent taxid is saved
     parentnode_info = {}
 
-    if d3_version:
-        for key in list(treeIDs):
-            defaultvalue = 1
-            try:
-                key_lineage = ncbi.get_rank(ncbi.get_lineage(key))
-                parent_of_key = [key for key in key_lineage if
-                                 key_lineage[key] == 'phylum']
-                pseudo_filtered_blast[key] = [parent_of_key[0]]
-                parentID, parentName = translate_node(str(parent_of_key[0]), 0)
-                parentnode_info[parentID] = parentName  # parentnode_info contain parent sci name + taxid for visualisation
-            except:
-                pseudo_filtered_blast[key] = [defaultvalue]
 
-        accvalues = [subject_seqs[key][0][0] for key in subject_seqs.keys()]
+    for key in list(treeIDs):
+        defaultvalue = 1
+        try: # extract phylum information
+            key_lineage = ncbi.get_rank(ncbi.get_lineage(key))
+            parent_of_key = [key for key in key_lineage if
+                             key_lineage[key] == 'phylum']
+            pseudo_filtered_blast[key] = [parent_of_key[0]]
+            parentID, parentName = translate_node(str(parent_of_key[0]), 0)
+            parentnode_info[parentID] = parentName  # parentnode_info contain parent sci name + taxid for visualisation
+        except:
+            pseudo_filtered_blast[key] = [defaultvalue]
 
-        uniqueSeqs = [key for key in subject_seqs.keys() if accvalues.count(subject_seqs[key][0][0]) == 1]
-        newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10, 1)
-        return newTree, parentnode_info, uniqueSeqs
+    # extract all taxonomic IDs with unique accessions for the best hit
+    accvalues = [subject_seqs[key][0][0] for key in subject_seqs.keys()]
+    uniqueSeqs = [key for key in subject_seqs.keys() if accvalues.count(subject_seqs[key][0][0]) == 1]
+
+    # generate cladogram dictionary
+    newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10, 1)
+    return newTree, parentnode_info, uniqueSeqs
 
 
 
 ''' 2. Phylogeny: unique hit based
-    tree, tree file:    see 1. Phylogeny
-    uniqueAccs:         hit accession encoded dic with seqs + #taxa connected to hit
+    tree:           see 1. Phylogeny
+    uniqueAccs:     hit accession encoded dic with seqs + #taxa connected to hit
 '''
-def unique_phylogeny_data(tree, uniqueAccs, treefile):
+def unique_phylogeny_data(tree, uniqueAccs):
     unique_count = {key: uniqueAccs[key][1] for key in uniqueAccs.keys()}
     d3_tree = unique_transfer_tree(tree, unique_count, 20)
     newickTree = tree.write(format=3)
 
     return d3_tree, newickTree
 
-######################################################################################################################## Tree handling
+
+
+########################################################################################################################
+#                                                                                                 Taxonomy/Tree handling
+########################################################################################################################
 '''read tree input 
     tree_input:     tree as newick string, file or string of sientific names/IDs to generate a tree from the NCBI taxonomy
     ncbi_boolean:   boolean to seperate the two input types (0 = NCBI, 1 = own taxonomy) 
@@ -402,7 +415,7 @@ def translate_nodes(tree_nodes):
         if node != '':
             if node.isnumeric():
                 translated_set.add(int(node))
-            else:
+            else: # need to translate the scientific name
                 try:
                     translated_node = ncbi.get_name_translator([node.replace('_', ' ')])
                     translated_set.add(translated_node[node.replace('_', ' ')][0])
@@ -412,11 +425,14 @@ def translate_nodes(tree_nodes):
     return translated_set
 
 
-################################ d3 compatible format #############################################
+########################################################################################################################
+#                                                                                                   d3-compatible format
+########################################################################################################################
 '''Transfer the given tree in a d3 compatible hierarchical format
     tree:                   input tree 
     filtered_blast_result:  filtered blast results with found hits 
     ncbi_boolean:           dependent on the input tree the nodes could have a mixed labeling 
+    number_of_queries:      number of input queries 
 '''
 def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean, number_of_queries):
     d3_tree = {}
@@ -431,22 +447,26 @@ def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean, number_of_que
 
 ''' generate tree and transfer it into d3 format
     filtered_blast_result:  result of the blast filtering is used to generate the minimal tree to connact the nodes
-    ncbi_boolean:           see transfer_tree_in_d3       
+    ncbi_boolean:           see transfer_tree_in_d3     
+    branch_length:          default branch length (unique sequence-based phylogeny need more space)
+    number_of_queries:      number of input queries  
 '''
 def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_length, number_of_queries):
 
     ncbi = NCBITaxa()  # setup NCBI database
+
+    # get rank information for all taxa in filtered blast result
     taxa_keys = filtered_blast_result.keys()
     tree = ncbi.get_topology(taxa_keys)
     treeTaxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
     treeRanks = ncbi.get_rank(list(treeTaxIDs))
 
-    if len(taxa_keys) == 1:
+    if len(taxa_keys) == 1: # tree only contains root
         root_value = [[filtered_blast_result[int(tree.name)][i], 0] for i in range(number_of_queries)]
         root_value.append(treeRanks[int(tree.name)])
         return {'size': [15, branch_length], 'name': tree.sci_name, 'value': root_value}
 
-    else:
+    else: # iterate recursive over children
         root_children = list(
             filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
 
@@ -464,7 +484,7 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
             root_size += child['size'][0]
 
 
-        if ncbi_boolean == '2':
+        if ncbi_boolean == '2': # taxa-based phylogeny
             root_value.append(int(tree.name))
         else:
             [root_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
@@ -475,24 +495,28 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
 
 
 ''' transfer own tree with possible mixed labeling in d3 format
-    tree:                  given tree structure
-    filtered_blast_result: dictionary of hits  
+    tree:                   given tree structure
+    filtered_blast_result:  dictionary of hits  
     ncbi_boolean:           see transfer_tree_in_d3
+    branch_length:          default branch length
+    number_of_queries:      number of input queries
 '''
 def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_length, number_of_queries):
     global count_clades
     ncbi = NCBITaxa()
+
+    # get rank for all taxa in tree
     taxa_keys = filtered_blast_result.keys()
     treeTaxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
     treeRanks = ncbi.get_rank(list(treeTaxIDs))
     rootID, rootName = translate_node(tree.name.replace('_', ' '), count_clades)
 
-    if len(taxa_keys) == 1:
+    if len(taxa_keys) == 1: # filtered blast only contains root
         root_value = [[filtered_blast_result[rootID][i], 0] for i in range(number_of_queries)]
         root_value.append(treeRanks[rootID])
         return {'size': [15, branch_length], 'name': tree.sci_name, 'value': root_value}
 
-    else:
+    else: # iterate recursive over children
         root_children = list(
             filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
 
@@ -517,6 +541,8 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
                 if 'clade' not in child['name']:
                     list_of_child_ids.append(child['value'][1])
 
+        # get the last common ancestor (LCA) for the inner nodes in the taxa-based phylogeny
+        # same LCA for different branches are distinguished by numbers
         if ncbi_boolean == '2':
             root_value = root_value[0]
             if len(list_of_child_ids) == 1:
@@ -546,16 +572,20 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
                 'value': root_value}
 
 
-''' recursively transfer the subtrees
+''' recursively transfer the subtrees in d3 compatible format
     tree:                   subtree
     filtered_blast_result:  dictionary of hits
+    treeRanks:              dictionary of all ranks for the taxa in the tree
     ncbi_boolean:           dependent on the tree format the node information is different
+    branch_length:          default branch length
+    number_of_queries:      number of input queries
 '''
 def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries):
     nodeID = None
     nodeName = None
     global count_clades
     ncbi = NCBITaxa()
+
     if ncbi_boolean == '0':  # input was a ncbi taxonomy
         nodeID = int(tree.name)
         nodeName = tree.sci_name
@@ -600,6 +630,8 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
                 if 'clade' not in child['name']:
                     list_of_child_ids.append(child['value'][1])
 
+        # get the last common ancestor (LCA) for the inner nodes in the taxa-based phylogeny
+        # same LCA for different branches are distinguished by numbers
         if ncbi_boolean == '2':
             child_value = child_value[0]
             if len(list_of_child_ids) == 1:
@@ -644,9 +676,9 @@ def unique_transfer_tree(tree, unique_count, branch_length):
         tree.name = 'clade' + str(count_clades)
         count_clades += 1
 
-    if len(tree.get_children()) == 0:
+    if len(tree.get_children()) == 0: # hit a leaf
         return {'size': [branch_length, branch_length], 'name': tree.name, 'value': [unique_count[tree.name], 0]}
-    else:
+    else: # inner node
         tree_children = list(filter(None, [unique_transfer_tree(child, unique_count, branch_length) for child in tree.get_children()]))
         tree_size = sum([child['size'][0] for child in tree_children])
         return {'size': [tree_size+branch_length, branch_length], 'name': tree.name,
@@ -656,7 +688,6 @@ def unique_transfer_tree(tree, unique_count, branch_length):
 ''' Translate taxid and return sci_name and taxid
     node_label: given label of the node (taxid or sci_name)
     count:      for the phylogeny calculation count the number of unlabeled clades
-
 '''
 def translate_node(node_label, count):
     ncbi = NCBITaxa()  # setup NCBI database
@@ -667,19 +698,22 @@ def translate_node(node_label, count):
         return count, 'clade' + str(count)
     else:
         try:
-            if node_label.isnumeric():
+            if node_label.isnumeric(): # scientific name missing
                 nodeName = ncbi.get_taxid_translator([node_label])
                 return int(node_label), nodeName[int(node_label)]
-            else:
+            else: # taxonomic id missing
                 nodeId = ncbi.get_name_translator([node_label])
                 return nodeId[node_label][0], node_label
-        except KeyError:
+
+        except KeyError: # taxon not present in stored NCBI database
             print('no valid key')
             count_clades += 1
             return count, 'clade' + str(count)
 
 
-######################################################################################################################## Pipeline
+########################################################################################################################
+#                                                                                         Pipeline for taxonomic Mapping
+########################################################################################################################
 '''
 prot_data:                  aa sequence or blast result as xml file     
 prot_file_type:             0= aa sequence, 1= xml file     
@@ -692,28 +726,28 @@ min_query_cover:            minimal query coverage (percentage)
 min_hit_cover:              minimal hit coverage (percentage)
 out_dir:	   
 '''
-def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_align_ident, min_query_cover,  min_hit_cover, out_dir):
+def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_align_ident, min_query_cover,  min_hit_cover, out_dir):
     d3_tree = {}
     sequence_dic = {}
     uniqueAccs = {}
 
     # read tree
-    #try:
-    print('Start Tree calculation')
-    tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
-    print('complete')
-    '''except:
+    try:
+        print('Start Tree calculation')
+        tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
+        print('complete')
+    except:
         sys.stderr.write('Tree calculation failed')
-        return d3_tree, sequence_dic, uniqueAccs'''
+        return d3_tree, sequence_dic, uniqueAccs
     
     # run BLAST
-    #try:
-    print('Start Blast run')
-    blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir)
-    print('complete')
-    '''except:
+    try:
+        print('Start Blast run')
+        blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir)
+        print('complete')
+    except:
         sys.stderr.write('Blast run failed')
-        return d3_tree, sequence_dic, uniqueAccs '''
+        return d3_tree, sequence_dic, uniqueAccs
 
     # filtering
     if blast_result.size > 0:
@@ -729,23 +763,26 @@ def run_phyloblast(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         return d3_tree, sequence_dic, uniqueAccs
 
     if filtered_blast:
-        #try:
-        print('Start conversion')
-        d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
-        #generate_phyloblast_output(d3_tree, out_dir, len(number_of_queries))
-        print('complete')
-        return d3_tree, sequence_dic, uniqueAccs
-        ##except:
-         #   sys.stderr.write('Transfer in d3 compatible tree/newick failed')
-         #   return d3_tree, sequence_dic, uniqueAccs
+        try:
+            print('Start conversion')
+            d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
+            generate_blastphylo_output(d3_tree, out_dir, len(number_of_queries))
+            print('complete')
+            return d3_tree, sequence_dic, uniqueAccs
+        except:
+            sys.stderr.write('Transfer in d3 compatible tree/newick failed')
+            return d3_tree, sequence_dic, uniqueAccs
     else:
         sys.stderr.write('Non of the BLAST hits were present in the tree')
         return d3_tree, sequence_dic, uniqueAccs
 
 
-######################################################################################################################## Output/Export files
+########################################################################################################################
+#                                                                                                    Output/Export files
+########################################################################################################################
 '''Generate Table like output of the d3 tree 
-   d3_tree: tree in d3 compatible format
+   d3_tree:             tree in d3 compatible format
+   number_of_queries:   number of input queries
 '''
 def generate_tree_output(d3_tree, number_of_queries):
 
@@ -763,7 +800,12 @@ def generate_tree_output(d3_tree, number_of_queries):
             return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][number_of_queries].replace(' ', '_') + ',' + child_string
 
 
-def generate_phyloblast_output(tree, outdir, number_of_queries):
+''' Generate csv file with header for the d3-compatible tree
+    tree:               d3-compatible tree structure (dictionary)
+    outdir:             path to folder 
+    number_of_queries:  number of input queries
+'''
+def generate_blastphylo_output(tree, outdir, number_of_queries):
     if number_of_queries == 1:
         query_string = '#hits,#subtree_hits'
     else:
@@ -775,12 +817,4 @@ def generate_phyloblast_output(tree, outdir, number_of_queries):
     with open(tree_out, 'w') as w:
         w.write(table_tree)
 
-''' Generate newick string from dictionary
-    d3_tree:    tree in d3 compatible format
-'''
-def generate_newick_from_dic(d3_tree):
-    if 'children' in d3_tree.keys():
-        return (','.join([generate_newick_from_dic(child) for child in de_tree['children']])) + d3_tree['name']
-    else:
-        return d3_tree['name']
 
