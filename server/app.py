@@ -118,12 +118,16 @@ def menu():
 
         # Blast Search
         protein_seq = request.form['protein']
-        valid_pro_seq = generate_fasta_from_input(protein_seq, "flask_tmp/protein.fasta")
-        if valid_pro_seq:
-            protein = 'flask_tmp/protein.fasta'
-        else:
-            error.append({'message': 'Protein sequence(s) contain irregular amino acids'})
-            protein = None
+        if len(protein_seq) > 0:
+            if '>' not in protein_seq:
+                error.append({'message': 'Protein sequence(s) does not contain > identifier'})
+                protein = None
+            valid_pro_seq = generate_fasta_from_input(protein_seq, "flask_tmp/protein.fasta")
+            if valid_pro_seq:
+                protein = 'flask_tmp/protein.fasta'
+            else:
+                error.append({'message': 'Protein sequence(s) contain irregular amino acids'})
+                protein = None
 
         protein_file_type = ''
         if len(protein_seq) == 0:

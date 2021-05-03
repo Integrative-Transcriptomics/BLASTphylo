@@ -177,6 +177,14 @@ class Menu extends Component {
                 </Popover>);
         };
 
+        // error message next to submit button
+        let errormessage;
+         if(document.getElementById('alert')){
+            errormessage = <div style={{color: 'red'}}><b>Error occurred. Check error messages above.</b></div>;
+         }else{
+            errormessage = <div />;
+         }
+
         return(
 
             <div id="menu" >
@@ -279,6 +287,7 @@ class Menu extends Component {
             </Form>
             <br />
             <Button id='submit' type="submit" value="Submit" onClick={this.handleSubmit}>Submit </Button>
+            {errormessage}
             <div id='loadingButton' style={{display: 'none'}}>
                 <Button variant="primary" disabled>
                     <Spinner
