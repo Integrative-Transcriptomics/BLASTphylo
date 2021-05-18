@@ -86,9 +86,9 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         # filter for alignment identity, query coverage, subject coverage, evalue
         # evalue and query coverage are necessary given that BLAST stop when the first subject sequences exceed the threshold
         subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
-        subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (float(min_subject_cover))
+        subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
 
-        alignIdent = preFilter['pident'] > (int(min_align_ident)/100)
+        alignIdent = preFilter['pident'] > (float(min_align_ident))
 
         result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (float(min_query_cover))) & subjectCoverage & alignIdent]
         print(result.shape)
