@@ -15,6 +15,9 @@ import numpy as np
 
 # packages for Blast + Taxonomy mapping
 from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
+from Bio.Blast.Applications import NcbiblastxCommandline as Blastx
+from Bio.Blast.Applications import NcbiblastnCommandline as Blastn
+
 from ete3 import NCBITaxa  # NCBI taxonomy (localy stored, require ~300MB)
 #ncbi.update_taxonomy_database() # update actual NCBI taxonomy version
 
@@ -75,9 +78,21 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 
     else: # input was a protein
         blast_out_path = out_dir + 'blast_result.csv'
-        blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
+
+        # switch beteen the blasttypes
+        if blast_type == 'blastp':
+            blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
                               outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq', out=blast_out_path)
+        elif blast_type == 'blastx':
+            blastp_cline = Blastx(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
+                              qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
+                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq', out=blast_out_path)
+        elif blast_type == 'blastn':
+            blastp_cline = Blastn(cmd=blast_type, remote=True, query=prot, db='nt', evalue=eValue, max_hsps=1, num_alignments=1000,
+                              qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
+                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq', out=blast_out_path)
+
         print(blastp_cline)
         stdout, stderr = blastp_cline()
         print(stderr)

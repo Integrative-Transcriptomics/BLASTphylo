@@ -42,17 +42,24 @@ UPLOAD_FOLDER = '/server/flask_tmp'
 
 
 # generate fasta file from textfield input and check for amino acid sequence (can handle any number of queries)
-def generate_fasta_from_input(textfieldinput, outdir):
+def generate_fasta_from_input(textfieldinput, outdir, blast_type):
     fastas = []
     valid_pro_seq = True
     regAA = "^[ACDEFGHIKLMNPQRSTVWY]*$"
+    regNuc = "^[ACTG]*$"
+
     split_input = textfieldinput.split('>')
 
     for fasta in split_input:
         if len(fasta) > 0:
             split_fasta = fasta.split('\n')
             seq = ''.join(split_fasta[1:]).replace('\r', '')
-            valid_pro_seq = re.search(regAA, seq)
+
+            if blast_type == 'blastp':  # check for valid protein sequence
+                valid_pro_seq = re.search(regAA, seq)
+            elif blast_typ == 'blastx' or blast_type == 'blastn': # check for valid nucleotid sequence
+                valid_pro_seq = re.search(regNuc, seq)
+
             if valid_pro_seq:
                 fastas.append(SeqRecord(Seq(seq), id=split_fasta[0], description=''))
             else:
@@ -117,12 +124,14 @@ def menu():
         print('Parameter of this run:')
 
         # Blast Search
+        blasttype = request.form['blasttype']
+        print('BLAST search:   ' + blasttype)
         protein_seq = request.form['protein']
         if len(protein_seq) > 0:
             if '>' not in protein_seq:
                 error.append({'message': 'Protein sequence(s) does not contain > identifier'})
                 protein = None
-            valid_pro_seq = generate_fasta_from_input(protein_seq, "flask_tmp/protein.fasta")
+            valid_pro_seq = generate_fasta_from_input(protein_seq, "flask_tmp/protein.fasta", blasttype)
             if valid_pro_seq:
                 protein = 'flask_tmp/protein.fasta'
             else:
@@ -198,7 +207,7 @@ def menu():
             # start processing of the data
             print('\nStart PhyloBlast')
             try:
-                d3_tree, hit_seqs, accs_seqs = processing_data.run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, 'blastp', eValue, min_align_identity, min_query_cover, min_hit_cover, 'flask_tmp/')
+                d3_tree, hit_seqs, accs_seqs = processing_data.run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, 'flask_tmp/')
                 #print(d3_tree)
                 if len(d3_tree) > 0:
                     print('Root of the tree: ' + d3_tree['name'])

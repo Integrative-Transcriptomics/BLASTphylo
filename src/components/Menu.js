@@ -11,8 +11,9 @@ import './menuStyle.css';
 
 // constant dictionary for help messages
 const helpMessages = {
-    'prot': ['Protein sequence', 'Enter query sequence without white spaces in the text area. Only PROTEIN sequences'],
-    'protFile': ['Protein files', 'Either a protein sequence or already calculated BLAST result with the columns: qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq'],
+    'blasttype': ['BLAST search', 'Select the BLAST search you want to use. Dependent on the selection the given sequence will be checked for usability'],
+    'prot': ['Sequence', 'Enter query sequence without white spaces in the text area'],
+    'protFile': ['FastA files', 'Either a sequence or already calculated BLAST result with the columns: qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq'],
     'NCBI': ['NCBI taxonomy', 'Enter comma-separated list of scientific names or taxonomic IDs. Addition of \'|subtree\' will select complete subtree. Check https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi for more information' ],
     'ownTaxa': ['Newick string', 'Enter a newick string in the text area or upload a text file which contain a newick string.'],
     'eValue': ['E-value', 'Common filter parameter for BLAST searches'],
@@ -27,7 +28,8 @@ class Menu extends Component {
         super(props);
         this.protFileInput = React.createRef();
         this.treeFileInput = React.createRef();
-        this.state = { protein: '',
+        this.state = { blasttype: 'blastp',
+                       protein: '',
                        protein_file_type: '0',
                        tree_data: '',
                        tree_menu_selection: '0',
@@ -51,7 +53,7 @@ class Menu extends Component {
          if (this.state.protein === ''){
             var protFileContent = this.protFileInput.current.files[0];
             if(typeof protFileContent === 'undefined'){
-                error.push({'message': 'Protein is undefined. Please, define a protein'});
+                error.push({'message': 'Sequence is undefined. Please, enter a nucleotide or protein sequence'});
             }else{
                 formData.append("fasta_file", protFileContent);
                 formData.append("fasta_filename", protFileContent.name);
@@ -107,44 +109,46 @@ class Menu extends Component {
 
     // Handle changes in the parameter settings
     handleChange(event) {
-
-        if (event.target.name === "fasta_seq"){
-          this.setState({protein: event.target.value});
+        if ((event.target.name === 'blastp') || (event.target.name === 'blastn') || (event.target.name === 'blastx')){
+            this.setState({blasttype: event.target.name})
+        }
+        else if (event.target.name === "fasta_seq"){
+            this.setState({protein: event.target.value});
         }
         else if (event.target.name === "file_type"){
-          this.setState({protein_file_type: event.target.value});
+            this.setState({protein_file_type: event.target.value});
         }
         else if (event.target.name === "tree_menu"){
-          this.setState({tree_menu_selection: event.target.value});
-          this.taxaChoice(event);
+            this.setState({tree_menu_selection: event.target.value});
+            this.taxaChoice(event);
         }
         else if (event.target.name === "taxa"){
-          this.setState({tree_data: event.target.value});
+            this.setState({tree_data: event.target.value});
         }
         else if (event.target.name === "newick_string"){
-          this.setState({tree_data: event.target.value});
-          this.setState({tree_menu_selection: '1'});
+            this.setState({tree_data: event.target.value});
+            this.setState({tree_menu_selection: '1'});
         }
         else if (event.target.name === "eValue"){
-          this.setState({eValue: event.target.value});
+            this.setState({eValue: event.target.value});
         }
         else if (event.target.name === "align_ident"){
-          this.setState({align_ident: event.target.value});
+            this.setState({align_ident: event.target.value});
         }
         else if (event.target.name === "query_cover"){
-          this.setState({query_cover: event.target.value});
+            this.setState({query_cover: event.target.value});
         }
         else if (event.target.name === "hit_ident"){
-          this.setState({hit_ident: event.target.value});
+            this.setState({hit_ident: event.target.value});
         }
         else if (event.target.name === "hit_cover"){
-          this.setState({hit_cover: event.target.value});
+            this.setState({hit_cover: event.target.value});
         }
         else if (event.target.name === "newick_file"){
-          this.setState({tree_menu_selection: '1'});
+            this.setState({tree_menu_selection: '1'});
         }
         else {
-          console.log('no matching state present')
+            console.log('no matching state present')
         }
         //console.log([event.target.name, event.target.value]);
    }
@@ -189,10 +193,22 @@ class Menu extends Component {
 
             <div id="menu" >
             <Form as='fieldset' id='BlastpSearch'>
-            <legend>Blastp Search</legend>
+            <legend>Blast Search</legend>
             <Form.Group >
                 <Form inline>
-                    <Form.Label>Enter protein sequence:</Form.Label>
+                    <Form.Label>Select your BLAST search:</Form.Label>
+                    <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['blasttype'])}>
+                        <BiHelpCircle style={{color: 'blue'}}/>
+                    </OverlayTrigger>
+                </Form>
+                <Form id='blasttypes' inline>
+                    <Form.Check inline type={'checkbox'} name='blastp' label={'blastp'} onChange={this.handleChange} />
+                    <Form.Check inline type={'checkbox'} name='blastn' label={'blastn'} onChange={this.handleChange} />
+                    <Form.Check inline type={'checkbox'} name='blastx' label={'blastx'} onChange={this.handleChange} />
+                </Form>
+                <br/>
+                <Form inline>
+                    <Form.Label>Enter nucleotide/protein sequence:</Form.Label>
                     <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['prot'])}>
                         <BiHelpCircle style={{color: 'blue'}}/>
                     </OverlayTrigger>
@@ -211,7 +227,7 @@ class Menu extends Component {
                     </OverlayTrigger>
                 </Form>
                 <Form.File ref={this.protFileInput} id='fasta_file' name='fasta_file'
-                onChange={this.handleChange} accept='.fasta,.fastq,.csv' />
+                onChange={this.handleChange} accept='.fasta,.fastq,.csv,.fna' />
             </Form.Group>
             </Form>
             <br />
