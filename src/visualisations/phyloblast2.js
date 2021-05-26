@@ -10,6 +10,7 @@ import * as d3v6 from 'd3v6';
 import "../../node_modules/phylotree/src/main";
 
 // global variables
+import ncbi_normalisation from '../data/ncbi_normalisation.json'
 var clicked_nodes = {};  // clicked nodes and their state (collapsed or not)
 
 // stored variables for the general information of the first visualization of the tree --> used for the return and publication ready function
@@ -53,6 +54,15 @@ function startTreevis(tree){
 const tooltip_x_pos = 20;
 const tooltip_y_pos = 35;
 
+function getNumberOfLeaves(node, count){
+    if(node.children){
+        count = count + d3v6.sum(node.children, function(child){return getNumberOfLeaves(child,  count);})
+        return count;
+    }else{
+        return 1;
+    }
+}
+
 function showTooltip(node, barhover, extraDataLength){
     var tooltip = d3v6.select("#tree")
                         .append("div")
@@ -72,12 +82,18 @@ function showTooltip(node, barhover, extraDataLength){
     }else if (node.key){
         text = '<b>' + node.key + '</b> <br /> nodes: ' + String(node) + '<br />';
     }else{
-        if(taxonomyLevel.includes(node.data.value[2]) || node.data.value[2] === 'no rank'){ // taxonomic mapping 2 proteins
+        var additionalText = '';
+
+        if(node.children || node._children){ // NCBI taxonomy normalisation for inner nodes
+            additionalText = 'taxa represented: ' + String(getNumberOfLeaves(node.data, 0)) + ' / ' + ncbi_normalisation[node.data.name][1] +  '<br />';
+        }
+
+        if(taxonomyLevel.includes(node.data.value[2]) || node.data.value[2] === 'no rank'){                             // taxonomic mapping 2 proteins
             text = '<b>' + node.data.name + '</b> <br /> query1 hits: ' + String(node.data.value[0]) + '<br />' +
-	                'query2 hits: ' + String(node.data.value[1]) + '<br /> rank: ' + node.data.value[2] + '<br />';
+	                'query2 hits: ' + String(node.data.value[1]) + '<br /> rank: ' + node.data.value[2] + '<br />' + additionalText;
 	    }else{ // taxonomic mapping 1 protein
 	        text = '<b>' + node.data.name + '</b> <br /> hits: ' + String(node.data.value[0][0]) + '<br />' +
-	                'subtree hits: ' + String(node.data.value[0][1]) + '<br /> rank: ' + node.data.value[1] + '<br />';
+	                'subtree hits: ' + String(node.data.value[0][1]) + '<br /> rank: ' + node.data.value[1] + '<br />' + additionalText;
 	    }
     }
 

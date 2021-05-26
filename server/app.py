@@ -24,7 +24,6 @@ from werkzeug.utils import secure_filename
 import logging, click
 import time
 
-
 ######################################################################################################################## general functions and settings
 # create tmp output folder for output file
 actual_dir = os.getcwd()
@@ -36,10 +35,20 @@ try:                          # during first installation need to generate flask
     print('Download NCBI database')
     from ete2 import NCBITaxa
     ncbi = NCBITaxa()
+    print('complete')
 except:
     print('flask_tmp folder is already generated')
 UPLOAD_FOLDER = '/server/flask_tmp'
 
+# set up normalisation dictionary of the NCBI taxonomy
+ncbi_taxonomy_normalisation = {}
+ncbi_norm_dir = actual_dir + '/ncbi_normalisation.json'
+try:
+    print('Load NCBI taxonomy normalisation')
+    with open(ncbi_norm_dir) as ncbi_json:
+        ncbi_taxonomy_normalisation = json.load(ncbi_json)
+except:
+    print('Run ncbi_taxonomy_normalisation.py to generate json file')
 
 # generate fasta file from textfield input and check for amino acid sequence (can handle any number of queries)
 def generate_fasta_from_input(textfieldinput, outdir, blast_type):
