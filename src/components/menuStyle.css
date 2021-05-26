@@ -62,3 +62,8 @@
 #blasttypes{
   margin: 0 0 0 10px;
 }
+
+#searchbar{
+  width: 50%;
+  margin: 10px 0px;
+}

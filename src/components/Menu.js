@@ -1,13 +1,17 @@
 // used libraries
-import React, {Component} from 'react';
+import React, {Component, useState} from 'react';
 import axios from 'axios';
 import * as d3v6 from 'd3v6';
-import {Spinner, Button, Form, Popover, OverlayTrigger} from 'react-bootstrap';
+import {Spinner, Button, Form, Popover, OverlayTrigger, Dropdown, FormControl} from 'react-bootstrap';
 import {BiHelpCircle} from 'react-icons/bi';
-
+import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 
 // own style sheets
 import './menuStyle.css';
+
+// load own data
+import search_terms from '../data/searchbar_entries.json';
+//var search_terms = [];
 
 // constant dictionary for help messages
 const helpMessages = {
@@ -26,6 +30,10 @@ class Menu extends Component {
 
     constructor(props) {
         super(props);
+
+
+
+        console.log(props)
         this.protFileInput = React.createRef();
         this.treeFileInput = React.createRef();
         this.state = { blasttype: 'blastp',
@@ -38,11 +46,21 @@ class Menu extends Component {
                        align_ident: '80',
                        hit_cover: '50'}
 
+
         // functions
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.handleSearch = this.handleSearch.bind(this);
 
    }
+
+
+    // handle Search for taxonomic IDs or scientific name and add the selected id in the textarea
+    handleSearch(item){
+        // the item selected
+        console.log(item)
+        document.getElementById('taxa').value = item.menuInput;
+    }
 
 
     // handle click on Submit button: extract actual state of the parameters and send them to the back end
@@ -249,6 +267,15 @@ class Menu extends Component {
                         <BiHelpCircle style={{color: 'blue'}}/>
                     </OverlayTrigger>
                 </Form>
+                <div  id='searchbar'>
+                    <ReactSearchAutocomplete
+                        items={search_terms}
+                        onSelect={this.handleSearch}
+                        inputDebounce={10}
+                        placeholder={'Search for bacteria'}
+                        autofocus
+                    />
+                </div>
                 <Form.Control as='textarea' rows={5} cols={50} id='taxa' name='taxa'
                 placeholder='Staphylococcus,Staphylococcus aureus|subtree' onChange={this.handleChange} />
             </Form.Group>

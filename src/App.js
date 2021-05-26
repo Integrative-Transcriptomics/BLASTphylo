@@ -15,6 +15,7 @@ import TaxonomicAnalysisMenu from './components/TaxonomicAnalysisMenu.js';
 import PhylogeneticAnalysisMenu from './components/PhylogeneticAnalysisMenu.js';
 import TreeInteraction from './components/TreeInteraction.js';
 
+
 /*** #################################### IMPORTANT
     1.
         update of window.location.href for home/help links has to be updated if tool become online version
