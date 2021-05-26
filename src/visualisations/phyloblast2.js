@@ -85,7 +85,11 @@ function showTooltip(node, barhover, extraDataLength){
         var additionalText = '';
 
         if(node.children || node._children){ // NCBI taxonomy normalisation for inner nodes
-            additionalText = 'taxa represented: ' + String(getNumberOfLeaves(node.data, 0)) + ' / ' + ncbi_normalisation[node.data.name][1] +  '<br />';
+            var taxa_leaves = getNumberOfLeaves(node.data, 0);
+            var taxa_ncbi_leaves = ncbi_normalisation[node.data.name][1];
+            var percentage_taxa = (taxa_leaves/parseInt(taxa_ncbi_leaves))*100;
+            additionalText = 'taxa represented: ' + String(taxa_leaves) + '/' + taxa_ncbi_leaves +
+             ' ('+ String(percentage_taxa.toFixed(2))+'%)<br />';
         }
 
         if(taxonomyLevel.includes(node.data.value[2]) || node.data.value[2] === 'no rank'){                             // taxonomic mapping 2 proteins
