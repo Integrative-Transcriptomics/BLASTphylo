@@ -116,6 +116,23 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 ########################################################################################################################
 #                                                                                                Filtering and Hit count
 ########################################################################################################################
+'''
+    Scoring function for the best hit of each taxa (taxa-based phylogeny)
+    row:        actual hit 
+    score:      previous best score
+
+'''
+def best_hit_scoring_function(row, score):
+
+    subjectCoverage = abs(row['send']-row['sstart'])/row['slen']
+    row_score = 0.25*(float(row['pident'])/100) + 0.25*float(row['evalue']) + 0.2*subjectCoverage + 0.2*(float(row['qcovhsp'])/100)
+
+    if score >= row_score:
+        return score
+    else:
+        return row_score
+
+
 '''Filter blast result for hits similar to the species in the tree
     blast_record:      result of the blast search
     tree_taxIDs:       set of all taxonomic IDs in the given taxonomy
@@ -145,12 +162,14 @@ def filter_blast_result(blast_record, tree_tax_IDs):
 
                 try: # taxon was already in filtered_result
                     filtered_result[int(start_taxa)][number_of_queries.index(row['qacc'])] += 1
-                    sequence_dic[int(start_taxa)][1].append(row['sseq'])
-                    sequence_dic[int(start_taxa)][0].append(row['sacc'])
+
+                    new_score = best_hit_scoring_function(row, sequence_dic[int(start_taxa)][2])
+                    if new_score != sequence_dic[int(start_taxa)][2]:
+                        sequence_dic[int(start_taxa)] = [row['sacc'], row['sseq'], new_score]
                 except KeyError:
                     filtered_result[int(start_taxa)] = [0]*len(number_of_queries)
                     filtered_result[int(start_taxa)][number_of_queries.index(row['qacc'])] = 1
-                    sequence_dic[int(start_taxa)] = [[row['sacc']], [row['sseq']]]
+                    sequence_dic[int(start_taxa)] = [row['sacc'], row['sseq'], best_hit_scoring_function(row, 0)]
 
             else:
                 try: # dependent on the ncbi taxonomy database version the taxon can not be present in the database
@@ -165,12 +184,14 @@ def filter_blast_result(blast_record, tree_tax_IDs):
 
                         try: # taxon was already in filtered_result
                             filtered_result[line_taxa][number_of_queries.index(row['qacc'])] += 1
-                            sequence_dic[line_taxa][1].append(row['sseq'])
-                            sequence_dic[line_taxa][0].append(row['sacc'])
+
+                            new_score = best_hit_scoring_function(row, sequence_dic[int(line_taxa)][2])
+                            if new_score != sequence_dic[int(start_taxa)][2]:
+                                sequence_dic[int(line_taxa)] = [row['sacc'], row['sseq'], new_score]
                         except KeyError:
                             filtered_result[line_taxa] = [0] * len(number_of_queries)
                             filtered_result[line_taxa][number_of_queries.index(row['qacc'])] = 1
-                            sequence_dic[line_taxa] = [[row['sacc']], [row['sseq']]]
+                            sequence_dic[int(line_taxa)] = [row['sacc'], row['sseq'], best_hit_scoring_function(row, 0)]
 
                 if uniqueAccs[row['sacc']][1] == 0: # remove the sequence when it was not present
                     uniqueAccs.pop(row['sacc'])
@@ -189,7 +210,7 @@ def filter_blast_result(blast_record, tree_tax_IDs):
 '''
 def extract_best_hit(seqs, output_file):
     best_seqs = []
-    [best_seqs.append(SeqRecord(Seq(seqs[taxID][1][0]), id=str(taxID), description='')) for taxID in seqs.keys()]
+    [best_seqs.append(SeqRecord(Seq(seqs[taxID][1]), id=str(taxID), description='')) for taxID in seqs.keys()]
     SeqIO.write(best_seqs, output_file, "fasta")
     print('Taxa-based phylogeny number of seqs. ' + str(len(best_seqs)))
 
@@ -221,6 +242,7 @@ def generate_fasttree_input(mafft_out, taxid_accession):
     SeqIO.write(new_mafft, mafft_out.split('.')[0] + '_NEW.fasta', 'fasta')
 
     return None
+
 
 ''' calculate phylogeny for given hit sequences
     subject_seqs:         dictionary with subject aligned seqs and their accessions
@@ -285,7 +307,7 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
 
     # alternative calculation to directly pipe the MAFFT output in FastTree
     command_arguments_mafft = ['mafft', '--thread', '-1', output_seqs]
-    command_arguments_fasttree = [ 'fasttree', '-fastest', '-quiet', '-out', output_tree]
+    command_arguments_fasttree = [ 'fasttree', '-fastest', '-quiet', '-out', output_tree]                               ########################################### ATTENTION: check your FastTree command
     mafft = subprocess.Popen(command_arguments_mafft, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     #print(mafft.stdout)
     fasttree = subprocess.Popen(command_arguments_fasttree, stdin=mafft.stdout, stdout=subprocess.PIPE)
