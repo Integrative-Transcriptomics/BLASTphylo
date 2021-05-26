@@ -11,6 +11,7 @@
 import sys
 import pandas as pd
 import numpy as np
+import subprocess
 
 
 # packages for Blast + Taxonomy mapping
@@ -252,13 +253,13 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
     mafft_file = "mafft_aligned_unique.fasta" if uniqueSeqs else "mafft_aligned.fasta"
     output_fasta = output_dir + mafft_file
 
-    mafft_cline = Mafft(input=output_seqs, amino=True, clustalout=False,
-                        parttree=True, thread=4)  # treeout --> guidetree in output
+    '''mafft_cline = Mafft(input=output_seqs, amino=True, clustalout=False,                                             # old version: MSA file generation
+                        parttree=True, thread=4)  # treeout --> guidetree in output                                     # is needed if full sequence alignments should be calculated
     print(mafft_cline)
     stdout_Mafft, stderr_Mafft = mafft_cline()  # stdout_Mafft = MSA
     with open(output_fasta, "w") as handle:
         handle.write(stdout_Mafft)
-    handle.close()
+    handle.close()'''
 
     if from_aligned_seq == 'False':  # need to convert the Mafft full seq output to a similar shape as for aligned seqs
         acc_taxids = {}
@@ -274,10 +275,23 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
     fasttree_file = "fasttree_unique.tree" if uniqueSeqs else "fasttree.tree"
     output_tree = output_dir + fasttree_file
 
-    fasttree_cline = FastTree(input=output_fasta, quiet=True,
+    '''fasttree_cline = FastTree(input=output_fasta, quiet=True,                                                        # old version: input is MSA file path
                               out=output_tree, fastest=True)  # fastest --> faster calculation by focus on best hit
+
+
+
     print(fasttree_cline)
-    stdout_FastTree, stderr_FastTree = fasttree_cline()
+    stdout_FastTree, stderr_FastTree = fasttree_cline()'''
+
+    # alternative calculation to directly pipe the MAFFT output in FastTree
+    command_arguments_mafft = ['mafft', '--thread', '-1', output_seqs]
+    command_arguments_fasttree = [ 'fasttree', '-fastest', '-quiet', '-out', output_tree]
+    mafft = subprocess.Popen(command_arguments_mafft, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #print(mafft.stdout)
+    fasttree = subprocess.Popen(command_arguments_fasttree, stdin=mafft.stdout, stdout=subprocess.PIPE)
+    #print(fasttree.stdout)
+    mafft.wait()
+    fasttree.wait()
 
     print('Start Tree calculation and processing data')
     tree, tree_tax_ids, _ = read_tree_input(output_tree, '2', True)
@@ -831,5 +845,7 @@ def generate_blastphylo_output(tree, outdir, number_of_queries):
     tree_out = outdir + 'taxonomicMapping.csv'
     with open(tree_out, 'w') as w:
         w.write(table_tree)
+
+
 
 
