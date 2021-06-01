@@ -120,7 +120,7 @@ class App extends Component {
                 <div className="App">
                     <header className="App-header">
                     <nav>
-                    <h1 id='title'>BLASTPhylo</h1>
+                    <h1 id='title'>BLASTphylo</h1>
                     <ul>
                         <li id='link1'>
                             <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
@@ -156,7 +156,7 @@ class App extends Component {
                 <div className="App">
                     <header className="App-header">
                     <nav>
-                    <h1 id='title'>BLASTPhylo</h1>
+                    <h1 id='title'>BLASTphylo</h1>
                     <ul>
                         <li id='link1'>
                             <button id='menuLink' onClick={this.handleMenuClick} >menu </button>

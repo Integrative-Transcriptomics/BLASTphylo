@@ -287,9 +287,9 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
         acc_taxids = {}
         for key in subject_seqs:
             try:
-                acc_taxids[subject_seqs[key][0][0]].append(key)
+                acc_taxids[subject_seqs[key][0]].append(key)
             except KeyError:
-                acc_taxids[subject_seqs[key][0][0]] = [key]
+                acc_taxids[subject_seqs[key][0]] = [key]
         generate_fasttree_input(output_fasta, acc_taxids)
         output_fasta = output_dir + mafft_file.split('.')[0] + '_NEW.fasta'
 
@@ -382,8 +382,8 @@ def phylogeny_data(tree, subject_seqs, treeIDs):
             pseudo_filtered_blast[key] = [defaultvalue]
 
     # extract all taxonomic IDs with unique accessions for the best hit
-    accvalues = [subject_seqs[key][0][0] for key in subject_seqs.keys()]
-    uniqueSeqs = [key for key in subject_seqs.keys() if accvalues.count(subject_seqs[key][0][0]) == 1]
+    accvalues = [subject_seqs[key][0] for key in subject_seqs.keys()]
+    uniqueSeqs = [key for key in subject_seqs.keys() if accvalues.count(subject_seqs[key][0]) == 1]
 
     # generate cladogram dictionary
     newTree = wrapper_transfer_own_tree(tree, pseudo_filtered_blast, '2', 10, 1)
