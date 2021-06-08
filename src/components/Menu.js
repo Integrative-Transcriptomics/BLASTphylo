@@ -8,10 +8,11 @@ import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 
 // own style sheets
 import './menuStyle.css';
+import {checkBrowser} from '../App.js';
 
 // load own data
-import search_terms from '../data/searchbar_entries.json';
-//var search_terms = [];
+//import search_terms from '../data/searchbar_entries.json';
+var search_terms = [];
 
 // constant dictionary for help messages
 const helpMessages = {
@@ -30,8 +31,6 @@ class Menu extends Component {
 
     constructor(props) {
         super(props);
-
-
 
         console.log(props)
         this.protFileInput = React.createRef();
@@ -207,6 +206,15 @@ class Menu extends Component {
             errormessage = <div />;
          }
 
+         // check browser and switch newline symbol
+         const actualBrowser = checkBrowser();
+         let placeholderFasta;
+         if(actualBrowser === 'safari'){
+            placeholderFasta = '>query1&#x0a; MEMEFNENNIDLETIIRDEVNKYLSRDI&#x0a; GDLPATQQAPLELREKYEKMEVPNKGRDIYEV';
+         }else{
+            placeholderFasta = '>query1\nMEMEFNENNIDLETIIRDEVNKYLSRDI\nGDLPATQQAPLELREKYEKMEVPNKGRDIYEV';
+         }
+
         return(
 
             <div id="menu" >
@@ -231,7 +239,7 @@ class Menu extends Component {
                         <BiHelpCircle style={{color: 'blue'}}/>
                     </OverlayTrigger>
                 </Form>
-                <Form.Control as='textarea' placeholder={'>query1\nMEMEFNENNIDLETIIRDEVNKYLSRDI\nGDLPATQQAPLELREKYEKMEVPNKGRDIYEV'} rows={5} cols={50} id='fasta_seq' name='fasta_seq' onChange={this.handleChange} />
+                <Form.Control as='textarea' placeholder={placeholderFasta} rows={5} cols={50} id='fasta_seq' name='fasta_seq' onChange={this.handleChange} />
             </Form.Group>
             <Form.Group>
                 <Form inline>

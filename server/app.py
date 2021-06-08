@@ -230,6 +230,8 @@ def menu():
       
 
 
-
+# start flask server
+if __name__ == '__main__':
+    app.run()
 
 

@@ -419,21 +419,7 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
     tree_taxIDs = set()
 
     if ncbi_boolean == '0': # NCBI taxonomy
-        ncbi_taxa = []
-        subtrees = tree_input.split(',')
-        for node in subtrees:  # user could select the complete subtree
-            ncbi = NCBITaxa()
-            descendants = node.split('|')
-            if len(descendants) > 1:
-                ncbi_taxa.append(descendants[0])
-                tree_taxIDs.update(ncbi.get_descendant_taxa(descendants[0],
-                                                            intermediate_nodes=True))  # output of descendant is a list of ids
-            else:
-                ncbi_taxa.append(descendants[0])
-        rootIDs = translate_nodes(ncbi_taxa)
-        root = ['txid' + str(taxon) + '[ORGN]' for taxon in list(rootIDs)]
-        roots = ' OR '.join(root)
-        tree_taxIDs = tree_taxIDs.union(translate_nodes(ncbi_taxa))
+        roots, tree_taxIDs = translate_string_in_taxa(tree_input)
 
     elif ncbi_boolean == '1': # own taxonomic phylogeny
         tree = Tree(tree_input, format=8)
@@ -454,6 +440,76 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
 
     return tree, tree_taxIDs, roots
 
+def translate_string_in_taxa(string):
+    tree_taxa = set()
+    regular_exp = ''
+    root = ''
+    not_option = ''
+    previous_symbol = ''
+    ncbi = NCBITaxa()
+
+    i = 0
+    while i < len(string):
+
+        if string[i] == '|':
+            if string[i+1] == '!':   # input was taxa|!(....)
+                previous_symbol = '!'
+                #print(root)
+                j = i+3
+                while string[j] != ')':     # iterate over inner nodes
+                    not_option += string[j]
+                    j = j + 1
+                #print(not_option)
+                not_regular, not_taxa = translate_string_in_taxa(not_option)  # evaluate subexpression
+
+                rootID, rootName = translate_node(root, 0)
+                root_descendents =  ncbi.get_descendant_taxa(rootID, intermediate_nodes=True)
+                root_descendents.append(rootID)
+
+                if 'OR' in not_regular:  # for complex subexpressions brackets around subexpression | root without subexpression
+                    regular_exp = regular_exp + '(txid' + str(rootID) + '[ORGN] NOT (' + not_regular + '))'
+                else:
+                    regular_exp = regular_exp + '(txid' + str(rootID) + '[ORGN] NOT ' + not_regular + ')'
+                tree_taxa.update(set(root_descendents).difference(not_taxa))                             # root taxa without subexpression taxa
+
+                root = ''
+                not_option = ''
+                previous_symbol = ''
+                i = j+1
+
+            elif string[i+1:i+9] == 'subtree':   # input was taxa|subtree
+                #print(root)
+                rootID, rootName = translate_node(root, 0)
+                tree_taxa.update(set(ncbi.get_descendant_taxa(rootID, intermediate_nodes=True)))
+                tree_taxa.update(set([rootID]))
+                regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN]'              # important have to be ID
+                root = ''
+                not_option = ''
+                previous_symbol = ''
+                i = i+8
+
+        elif string[i] == ',':  # check next list element
+            if len(root) > 0:  # input was  taxa,
+                rootID, rootName = translate_node(root, 0)
+                regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN] OR '
+                tree_taxa.update(set([rootID]))
+                root = ''
+            else:
+                regular_exp = regular_exp + ' OR '
+            i += 1
+        else:
+            if previous_symbol == '!':
+                not_option += string[i]
+            else:
+                root += string[i]
+            i += 1
+
+    if len(root) > 0:   # add last element of the list
+        rootID, rootName = translate_node(root, 0)
+        regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN]'
+        tree_taxa.update(set([rootID]))
+
+    return regular_exp, tree_taxa
 
 '''Translate all nodes to NCBI taxonomy ID
     tree_nodes:     list of all tree nodes  
