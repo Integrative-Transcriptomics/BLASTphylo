@@ -3,7 +3,12 @@ import React, {Component} from 'react';
 import * as d3v6 from 'd3v6';
 import domtoimage from 'dom-to-image';
 import "bootstrap/dist/css/bootstrap.min.css";
+import {Table, Form, OverlayTrigger, Tooltip} from 'react-bootstrap';
 import {BsBoxArrowUpRight} from "react-icons/bs";
+import {IoMdArrowDropleft, IoMdArrowDropright} from 'react-icons/io';
+import {BiHelpCircle} from 'react-icons/bi';
+import {AiFillHome} from 'react-icons/ai';
+
 //import "./visualisations/defaultFirefox.css";
 
 // own components and style sheets
@@ -14,6 +19,7 @@ import HandlePhylogenyServer from './components/HandlePhylogenyServer.js';
 import TaxonomicAnalysisMenu from './components/TaxonomicAnalysisMenu.js';
 import PhylogeneticAnalysisMenu from './components/PhylogeneticAnalysisMenu.js';
 import TreeInteraction from './components/TreeInteraction.js';
+import headerTree from './visualisations/header_tree.png';
 
 
 /*** #################################### IMPORTANT
@@ -92,6 +98,12 @@ class App extends Component {
         let actualComponent;
         d3v6.select('#phyloblastAlert').remove();
 
+        //Navbar tooltips
+        const generalTooltip = function(name){ return(<Tooltip id='tooltip-bottom'>
+                                {name}
+                            </Tooltip>)};
+
+
         // switch view based on the isActualComponent state
         if (isActualComponent === 'help'){
             d3v6.select('#visualisation').style('border', 'hidden');
@@ -119,16 +131,28 @@ class App extends Component {
             return (
                 <div className="App">
                     <header className="App-header">
-                    <nav>
-                    <h1 id='title'>BLASTphylo</h1>
-                    <ul>
-                        <li id='link1'>
-                            <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
+                    <nav >
+                        <li id='headerName' >
+                            <h1 id='title'>BLASTphylo</h1>
+                            <h1 id='subtitle'>taxonomy <IoMdArrowDropleft /> blast result <IoMdArrowDropright /> phylogeny</h1>
                         </li>
-                        <li id='link2'>
-                            <a id='helpLink' href='/help' target='_blank' >help </a>
-                        </li>
-                    </ul>
+                        <img src={headerTree} alt='headerPicture' id='headerPicture'/>
+                        <ul id='subMenu'>
+                            <li id='link1' >
+                                    <button id='menuLink' onClick={this.handleMenuClick} >
+                                        <OverlayTrigger key='tooltip_home' placement='bottom' overlay={generalTooltip('home')}>
+                                        <AiFillHome style={{color: '#002060'}} size={25}/>
+                                        </OverlayTrigger>
+                                    </button>
+                            </li>
+                            <li id='link2'>
+                                    <a id='helpLink' href='/help' target='_blank' >
+                                        <OverlayTrigger key='tooltip_help' placement='bottom'  overlay={generalTooltip('help')}>
+                                        <BiHelpCircle style={{color: '#002060'}} size={25}/>
+                                        </OverlayTrigger>
+                                    </a>
+                            </li>
+                        </ul>
                     </nav>
                     </header>
                     <div className='App-body'>
@@ -155,16 +179,28 @@ class App extends Component {
             return (
                 <div className="App">
                     <header className="App-header">
-                    <nav>
-                    <h1 id='title'>BLASTphylo</h1>
-                    <ul>
-                        <li id='link1'>
-                            <button id='menuLink' onClick={this.handleMenuClick} >menu </button>
+                    <nav >
+                        <li id='headerName' >
+                            <h1 id='title'>BLASTphylo</h1>
+                            <h1 id='subtitle'>taxonomy <IoMdArrowDropleft /> blast result <IoMdArrowDropright /> phylogeny</h1>
                         </li>
-                        <li id='link2'>
-                            <a id='helpLink' href='/help' target='_blank' >help </a>
-                        </li>
-                    </ul>
+                        <img src={headerTree} alt='headerPicture' id='headerPicture'/>
+                        <ul id='subMenu'>
+                            <li id='link1' >
+                                    <button id='menuLink' onClick={this.handleMenuClick} >
+                                        <OverlayTrigger key='tooltip_home' placement='bottom' overlay={generalTooltip('home')}>
+                                        <AiFillHome style={{color: '#002060'}} size={25}/>
+                                        </OverlayTrigger>
+                                    </button>
+                            </li>
+                            <li id='link2'>
+                                    <a id='helpLink' href='/help' target='_blank' >
+                                        <OverlayTrigger key='tooltip_help' placement='bottom'  overlay={generalTooltip('help')}>
+                                        <BiHelpCircle style={{color: '#002060'}} size={25}/>
+                                        </OverlayTrigger>
+                                    </a>
+                            </li>
+                        </ul>
                     </nav>
                     </header>
                     <div className='App-body'>

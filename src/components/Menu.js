@@ -97,10 +97,8 @@ class Menu extends Component {
            }***/
 
            // switch to loading button
-           if ((this.state.protein !== '') || (this.state.protein_file_type === '0') ){
-               document.getElementById('submit').style.display = "none";
-               document.getElementById('loadingButton').style.display = "block";
-           }
+           document.getElementById('submit').style.display = "none";
+           document.getElementById('loadingButton').style.display = "block";
 
            // send data to back end
            var self = this;

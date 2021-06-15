@@ -12,6 +12,7 @@ import shutil, re
 
 # check menu inputs and preprocess them
 import pandas as pd
+import tempfile
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord

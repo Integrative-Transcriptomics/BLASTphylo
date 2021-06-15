@@ -12,6 +12,7 @@ import sys
 import pandas as pd
 import numpy as np
 import subprocess
+from io import StringIO
 
 
 # packages for Blast + Taxonomy mapping
@@ -84,7 +85,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         if blast_type == 'blastp':
             blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
-                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq', out=blast_out_path)
+                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq')
         elif blast_type == 'blastx':
             blastp_cline = Blastx(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
@@ -96,8 +97,10 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 
         print(blastp_cline)
         stdout, stderr = blastp_cline()
+        #print(stdout)
+        blast_data = StringIO(stdout)
         print(stderr)
-        preFilter = pd.read_csv(blast_out_path, sep='\t', names=header)
+        preFilter = pd.read_csv(blast_data, sep='\t', names=header)
 
         # filter for alignment identity, query coverage, subject coverage, evalue
         # evalue and query coverage are necessary given that BLAST stop when the first subject sequences exceed the threshold

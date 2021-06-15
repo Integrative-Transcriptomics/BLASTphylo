@@ -12,27 +12,40 @@ body {
   padding: 0px 10% 40px 10%;
 }
 
+.App-header {
+  width: 100%;
+}
 
-.App-header h1, .App-header h2, .App-header h3, .App-header h4, .App-header h5, .App-header h6, #title{
+.App-header h1, .App-header h2, .App-header h3, .App-header h5, .App-header h6, #title{
   font-family: serif;
-  color: #377ba8;
+  color: #002060;
   margin: 10rem;
   text-align: left;
   font-weight: bold;
   font-size: 1.75rem;
 }
 
+#subtitle {
+  font-family: arial;
+  color: #002060;
+  margin: 0px 15px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 1em;
+  font-style: italic;
+}
 
-#menuLink, #helpLink{
-  height: 100%;
+ #menuLink, #helpLink{
   border: none;
   color: #377ba8;
   text-decoration: none;
-  background: lightgray;
-  padding: 10px;
+  background: white;
+  padding: 20px 10px;
+  text-align: center;
+  font-size: 1em;
 }
 
-#link1:hover, #link2:hover{
+/* #link1:hover, #link2:hover{
   background: #377ba8;
 }
 
@@ -41,7 +54,7 @@ body {
   color: white;
   text-decoration: none;
   background: #377ba8;
-}
+} */
 
 
 
@@ -52,17 +65,19 @@ body {
 
 /* Website header styling */
 .App-header nav {
-  background: lightgray;
+  background: white;
   width: 100%;
   display: flex;
   align-items: center;
   padding: 10px 0.5rem;
+  border-bottom: solid 0.3em  #377ba8;
 }
 .App-header nav h1, #title {
   flex: auto;
   margin: 0px 15px;
 }
-.App-header nav, .App-header h1, .App-header a, #title{
+
+.App-header nav, .App-header h1, #title{
   text-decoration: none;
   padding: 0.25rem 0.5rem;
 }
@@ -74,6 +89,21 @@ body {
   padding: 0;
 }
 
+#headerPicture {
+  opacity: 0.4;
+}
+
+#headerName {
+   width: 30%
+}
+
+#subMenu {
+  float: right;
+}
+
+#subMenu li {
+  align-self: stretch;
+}
 
 
 .App-header nav ul li a, .App-header nav ul li span, .App-header header .action {
@@ -138,7 +168,7 @@ body {
 }
 
 /* Help page style */
-img {
+#helpInfo img {
   max-width: 100%;
   max-height: 100%;
 }
@@ -149,4 +179,9 @@ img {
 
 h4.helpHeader {
   padding: 10px 0 0 0;
+}
+
+#howtoHelpInfo .subList {
+  margin: 10px 15px;
+  /* HOW-TO change list style -->   list-style-type: lower-alpha; == a) b) ... */
 }

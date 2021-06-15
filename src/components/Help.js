@@ -22,7 +22,7 @@ class Help extends Component {
                     </p>
                 </div>
                 <br />
-                <MenuHelpInfo />
+                <HowToDoHelpInfo />
                 <br />
                 <TaxonomyHelpInfo />
                 <br />
@@ -31,6 +31,49 @@ class Help extends Component {
         );
     }
 }
+
+function HowToDoHelpInfo(){
+    return(
+        <div id='howtoHelpInfo'>
+            <h2 class='helpHeader'>How to get started:</h2>
+            <ol>
+                <li>Selcet your BLAST type: BLASTn, BLASTp, or BLASTx</li>
+                <li>Enter one/two sequence(s) or upload a FASTA file <br/>
+                <div class='subList'><i>required format:</i><br />
+                    <p style={{'margin-left':'20px'}}>
+                        >query1 <br/>
+                        AAATTTGMMM....<br />
+                        ....CCCPLLLLLL<br />
+                        >query2 <br />
+                        TTTGCGPPP...<br />
+                        ....AACCCMMLL<br />
+                    </p>
+                </div>
+                </li>
+                <li>Define your taxonomic tree:
+                    <ul style={{margin:'5px'}} class='sublist'>
+                        <li>Enter list of taxonomic IDs or scientific names</li>
+                        <li><b>|subtree</b> select complete subtree </li>
+                        <li><b>taxa|!(....)</b> remove all taxon in brackets from the subtree below the taxa <br />
+                        <p style={{margin:'8px'}} > <i>example:</i> Staphylococcus|!(1280|subtree) = Staphylococcus except for the Staphylococcus aureus (txid: 1280) subtree </p>
+                        </li>
+                        <li><b>search bar:</b> Start typing to search for bacteria. Click on the listed bacteria to add them to the taxonomy</li>
+                    </ul>
+                </li>
+                <li>Check setting of the filter parameter. They will influence the used sequences for the taxa-bassed phylogeny
+                    <ul class='subList'>
+                        <li><b>E-value: </b>expect value for random hit</li>
+                        <li><b>alignment identity:  </b>minimal identity between query and subject sequencen within the alignment</li>
+                        <li><b>query coverage:  </b>alignment has to cover at least <b>x</b>% of the query sequence</li>
+                        <li><b>subject coverage:    </b>alignment has to cover at least <b>x</b>% of the HSP for the subject sequence</li>
+                    </ul>
+                </li>
+                <li>Click on <b>Submit</b>. You will be redircted to the taxonomic mappind when the calculation is completed.</li>
+            </ol>
+        </div>
+    );
+}
+
 
 
 function MenuHelpInfo(){
