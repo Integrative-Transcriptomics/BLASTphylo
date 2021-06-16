@@ -9,8 +9,10 @@
 
 # packages
 import sys
+import os
 import pandas as pd
 import numpy as np
+import tempfile
 import subprocess
 from io import StringIO
 
@@ -59,9 +61,9 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 
     if prot_file_type == "1": # input was csv file
         try:
-            preFilter = pd.read_csv(prot, sep='\t')
+            preFilter = pd.read_csv(StringIO(prot), sep='\t')
         except:
-            preFilter = pd.read_csv(prot, sep=',')
+            preFilter = pd.read_csv(StringIO(prot), sep=',')
 
         if len(preFilter.columns) == len(header):
             preFilter.columns = header
@@ -79,7 +81,6 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         print(result.shape)
 
     else: # input was a protein
-        blast_out_path = out_dir + 'blast_result.csv'
 
         # switch beteen the blasttypes
         if blast_type == 'blastp':
@@ -89,11 +90,11 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         elif blast_type == 'blastx':
             blastp_cline = Blastx(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
-                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq', out=blast_out_path)
+                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq')
         elif blast_type == 'blastn':
             blastp_cline = Blastn(cmd=blast_type, remote=True, query=prot, db='nt', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
-                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq', out=blast_out_path)
+                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq')
 
         print(blastp_cline)
         stdout, stderr = blastp_cline()
@@ -256,7 +257,16 @@ def generate_fasttree_input(mafft_out, taxid_accession):
     based on: #https://biopython.org/wiki/Phylo
 '''
 def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqueSeqs):
-    output_seqs = output_dir + "blast_subject_seqs.fasta"
+
+    # generation of tmp file
+    # temp fasta for MAFFT
+    temp_fasta_file = tempfile.NamedTemporaryFile(prefix=output_dir)
+    output_seqs = temp_fasta_file.name
+
+    # temp tree for FastTree
+    temp_tree_file = tempfile.NamedTemporaryFile(prefix=output_dir)
+    output_tree = temp_tree_file.name
+
 
     if from_aligned_seq == 'True':
         if uniqueSeqs:
@@ -275,16 +285,16 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
         # blastdbcmd_stdout, blastdbcmd_stderr = blastdbcmd_cline()
 
     # calculate MSA
-    mafft_file = "mafft_aligned_unique.fasta" if uniqueSeqs else "mafft_aligned.fasta"
+    '''mafft_file = "mafft_aligned_unique.fasta" if uniqueSeqs else "mafft_aligned.fasta"
     output_fasta = output_dir + mafft_file
 
-    '''mafft_cline = Mafft(input=output_seqs, amino=True, clustalout=False,                                             # old version: MSA file generation
+    mafft_cline = Mafft(input=output_seqs, amino=True, clustalout=False,                                             # old version: MSA file generation
                         parttree=True, thread=4)  # treeout --> guidetree in output                                     # is needed if full sequence alignments should be calculated
     print(mafft_cline)
     stdout_Mafft, stderr_Mafft = mafft_cline()  # stdout_Mafft = MSA
     with open(output_fasta, "w") as handle:
         handle.write(stdout_Mafft)
-    handle.close()'''
+    handle.close()
 
     if from_aligned_seq == 'False':  # need to convert the Mafft full seq output to a similar shape as for aligned seqs
         acc_taxids = {}
@@ -300,7 +310,7 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
     fasttree_file = "fasttree_unique.tree" if uniqueSeqs else "fasttree.tree"
     output_tree = output_dir + fasttree_file
 
-    '''fasttree_cline = FastTree(input=output_fasta, quiet=True,                                                        # old version: input is MSA file path
+    fasttree_cline = FastTree(input=output_fasta, quiet=True,                                                        # old version: input is MSA file path
                               out=output_tree, fastest=True)  # fastest --> faster calculation by focus on best hit
 
 
@@ -322,6 +332,10 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
     tree, tree_tax_ids, _ = read_tree_input(output_tree, '2', True)
     global count_clades
 
+    # close temp files
+    temp_tree_file.close()
+    temp_fasta_file.close()
+
     if uniqueSeqs:  # unique sequence-based phylogeny
         count_clades = 0
         return unique_phylogeny_data(tree, subject_seqs)
@@ -329,6 +343,7 @@ def calculate_phylogeny(subject_seqs, fasta, output_dir, from_aligned_seq, uniqu
         count_clades = 0
         d3Tree, parentnode_info, mosthitAcc = phylogeny_data(tree, subject_seqs, tree_tax_ids)
         newickTree = tree.write(format=3)
+        temp_fasta_file.close()
         return d3Tree, newickTree, parentnode_info, mosthitAcc
 
 '''
@@ -840,51 +855,52 @@ def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     d3_tree = {}
     sequence_dic = {}
     uniqueAccs = {}
+    number_of_queries = []
 
     # read tree
-    try:
-        print('Start Tree calculation')
-        tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
-        print('complete')
-    except:
+    #try:
+    print('Start Tree calculation')
+    tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
+    print('complete')
+    '''except:
         sys.stderr.write('Tree calculation failed')
-        return d3_tree, sequence_dic, uniqueAccs
+        return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)
     
     # run BLAST
-    try:
-        print('Start Blast run')
-        blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir)
-        print('complete')
-    except:
+    try:'''
+    print('Start Blast run')
+    blast_result = run_blast(prot_data, prot_file_type, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, entrez_query, out_dir)
+    print('complete')
+    '''except:
         sys.stderr.write('Blast run failed')
-        return d3_tree, sequence_dic, uniqueAccs
+        return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)'''
 
     # filtering
     if blast_result.size > 0:
-        try:
-            print('Start filtering')
-            filtered_blast, sequence_dic, uniqueAccs, number_of_queries = filter_blast_result(blast_result, taxid_tree_set)
-            print('complete')
-        except:
+        #try:
+        print('Start filtering')
+        filtered_blast, sequence_dic, uniqueAccs, number_of_queries = filter_blast_result(blast_result, taxid_tree_set)
+        print('complete')
+        '''except:
             sys.stderr.write('Filtering failed')
-            return d3_tree, sequence_dic, uniqueAccs
+            return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)'''
     else:
         sys.stderr.write('Blast prefiltering lead to no hits')
-        return d3_tree, sequence_dic, uniqueAccs
+        return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)
 
     if filtered_blast:
-        try:
-            print('Start conversion')
-            d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
-            generate_blastphylo_output(d3_tree, out_dir, len(number_of_queries))
-            print('complete')
-            return d3_tree, sequence_dic, uniqueAccs
-        except:
+        #try:
+        print('Start conversion')
+        d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
+        #generate_blastphylo_output(d3_tree, out_dir, len(number_of_queries))
+        print('complete')
+        return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)
+        ''''except:
             sys.stderr.write('Transfer in d3 compatible tree/newick failed')
-            return d3_tree, sequence_dic, uniqueAccs
+            return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)'''
     else:
-        sys.stderr.write('Non of the BLAST hits were present in the tree')
-        return d3_tree, sequence_dic, uniqueAccs
+        sys.stderr.write('None of the BLAST hits were present in the tree')
+        return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)
 
 
 ########################################################################################################################
@@ -923,9 +939,10 @@ def generate_blastphylo_output(tree, outdir, number_of_queries):
         query_string = ','.join(query_header)
 
     table_tree = 'Sci_Name,rank,' + query_string + '\n' + generate_tree_output(tree, number_of_queries)
-    tree_out = outdir + 'taxonomicMapping.csv'
-    with open(tree_out, 'w') as w:
-        w.write(table_tree)
+    return table_tree
+    #tree_out = outdir + 'taxonomicMapping.csv'
+    #with open(tree_out, 'w') as w:
+     #   w.write(table_tree)
 
 
 

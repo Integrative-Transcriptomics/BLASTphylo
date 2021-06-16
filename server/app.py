@@ -13,6 +13,7 @@ import shutil, re
 # check menu inputs and preprocess them
 import pandas as pd
 import tempfile
+from io import StringIO
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -28,7 +29,7 @@ import time
 ######################################################################################################################## general functions and settings
 # create tmp output folder for output file
 actual_dir = os.getcwd()
-flask_tmp_dir = actual_dir + '/flask_tmp'
+flask_tmp_dir = actual_dir + '/flask_tmp/'
 shutil.rmtree(flask_tmp_dir, ignore_errors=True)
 
 try:                          # during first installation need to generate flask_tmp folder and download NCBI database
@@ -80,40 +81,65 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
 # start server
 app = Flask(__name__)
 
-# global parameter for the run
+# global parameter for the run and for the export of the data
 hit_seqs = {}
 accs_seqs = {}
 d3_tree = {}
+number_of_queries = 0
+taxa_newick = ''
+unique_newick = ''
+datafile_already_generated = [0, 0 ,0]   # array state if data is already generated: 1. taxonomic mapping 2. taxa-based phylo 3. unique phylo
 
 
 ######################################################################################################################## connection to the front end
+# accession for data export
+@app.route('/server/exportData', methods=['POST', 'GET'])
+def exportData():
+    global d3_tree
+    global number_of_queries
+    global taxa_newick
+    global unique_newick
+    global datafile_already_generated
+    print(datafile_already_generated)
+
+    if datafile_already_generated[0] == 0:
+        table_tree = processing_data.generate_blastphylo_output(d3_tree, '', number_of_queries)
+        datafile_already_generated[0] = 1
+        return {'data': table_tree, 'data_type': 'table'}
+    elif datafile_already_generated[1] == 0:
+        datafile_already_generated[1] = 1
+        return {'data': taxa_newick, 'data_type': 'newick'}
+    elif datafile_already_generated[2] == 0:
+        datafile_already_generated[2] = 1
+        return {'data': unique_newick, 'data_type': 'newick'}
+    else:
+        print('All data are ready for the download')
+        return {'data': '', 'data_type': 'error'}
+
+
+
+
+
+
 # taxa-based phylogeny
 @app.route('/server/phylogeny', methods=['POST', 'GET'])
 def phylogeny():
     global hit_seqs
-    output_tree = "flask_tmp/fasttree.tree"
-    if os.path.isfile(output_tree): # generate only data for the visualization
-        tree, tree_tax_ids,_ = processing_data.read_tree_input(output_tree, '2', True)
-        d3Tree, phylum_info, acc_info = processing_data.phylogeny_data(tree, hit_seqs,tree_tax_ids)
-        newick_phylogeny = tree.write(format=3)
+    global taxa_newick
+    print('Start taxa-based phylogeny calculation')
+    d3Tree, newick_phylogeny, phylum_info, acc_info = processing_data.calculate_phylogeny(hit_seqs, None, flask_tmp_dir, 'True',  False)
+    taxa_newick = newick_phylogeny
 
-    else: # perform complete calculation
-        print('Start Phylogeny calculation')
-        d3Tree, newick_phylogeny, phylum_info, acc_info = processing_data.calculate_phylogeny(hit_seqs, None, 'flask_tmp/', 'True',  False)
     return {'tree': d3Tree, 'newick': newick_phylogeny[:-1], 'extraInfo': [phylum_info, acc_info]}
 
 # unique sequence-based phylogeny
 @app.route('/server/phylogenyUnique', methods=['POST', 'GET'])
 def phylogenyUnique():
     global accs_seqs
-    output_tree = "flask_tmp/fasttree_unique.tree"
-    if os.path.isfile(output_tree): # generate only data for the visualization
-        tree, tree_tax_ids, _ = processing_data.read_tree_input(output_tree, '2', True)
-        d3_phylogeny, newick_phylogeny = processing_data.unique_phylogeny_data(tree, accs_seqs)
-
-    else: # perform complete calculation
-        print('Start Phylogeny calculation')
-        d3_phylogeny, newick_phylogeny = processing_data.calculate_phylogeny(accs_seqs, None, 'flask_tmp/', 'True',  True)
+    global unique_newick
+    print('Start unique sequence-based phylogeny calculation')
+    d3_phylogeny, newick_phylogeny = processing_data.calculate_phylogeny(accs_seqs, None, flask_tmp_dir, 'True',  True)
+    unique_newick = newick_phylogeny
 
     return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1]}
 
@@ -121,13 +147,17 @@ def phylogenyUnique():
 # data generation for taxonomic mapping
 @app.route('/server/menu', methods=['POST', 'GET'])
 def menu():
-    # remove all old files
+    # remove all old files + set global variable
     [os.remove(os.path.join('flask_tmp/', f)) for f in os.listdir('flask_tmp')]
+    global datafile_already_generated
+    datafile_already_generated = [0, 0, 0]
 
     if request.method == 'POST':
         global hit_seqs
         global accs_seqs
         global d3_tree
+        global number_of_queries
+
         tree_data = None
         tree_menu_selection = None
         error = []
@@ -141,33 +171,42 @@ def menu():
             if '>' not in protein_seq:
                 error.append({'message': 'Protein sequence(s) does not contain > identifier'})
                 protein = None
-            valid_pro_seq = generate_fasta_from_input(protein_seq, "flask_tmp/protein.fasta", blasttype)
+            # generation of tmp file
+            temp_prot_file = tempfile.NamedTemporaryFile(prefix=flask_tmp_dir)
+            valid_pro_seq = generate_fasta_from_input(protein_seq, temp_prot_file.name, blasttype)
             if valid_pro_seq:
-                protein = 'flask_tmp/protein.fasta'
+                protein = temp_prot_file.name
             else:
                 error.append({'message': 'Protein sequence(s) contain irregular amino acids'})
                 protein = None
+            print(protein)
 
         protein_file_type = ''
         if len(protein_seq) == 0:
             protein_file_type = request.form['protein_file_type']
             if protein_file_type == '0': # fasta like file
-                protein_data = request.files['fasta_file'].save('flask_tmp/protein.fasta')
-                protein = 'flask_tmp/protein.fasta'
+                protein_data = request.files['fasta_file'].read()
+
+                # generation of tmp file
+                temp_prot_file = tempfile.NamedTemporaryFile(prefix=flask_tmp_dir)
+                temp_prot_file.write(protein_data)
+                temp_prot_file.read()
+                protein = temp_prot_file.name
+                print(protein)
                 print('Sequence from file')
             elif protein_file_type == '1': # blast result csv file
-                protein_data = request.files['fasta_file'].save('flask_tmp/blast_result.csv')
-                protein = 'flask_tmp/blast_result.csv'
+                protein_data = request.files['fasta_file'].read().decode('utf-8')
+                protein = protein_data
                 try:
-                    blastResult = pd.read_csv(protein, sep='\t')
+                    blastResult = pd.read_csv(StringIO(protein), sep='\t')
                 except:
-                    blastResult = pd.read_csv(protein, sep=',')
+                    blastResult = pd.read_csv(StringIO(protein), sep=',')
                 if len(blastResult.columns) != 13:
                     error.append({'message': 'Uploaded BLAST result has to much/less columns. Check the help page for '
                                              'more details.'})
                     protein = None
+                print('Data input: CSV table')
 
-        print(protein)
 
         # tree
         tree_menu_selection = request.form['tree_menu_selection']
@@ -217,8 +256,13 @@ def menu():
             # start processing of the data
             print('\nStart PhyloBlast')
             try:
-                d3_tree, hit_seqs, accs_seqs = processing_data.run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, 'flask_tmp/')
+                d3_tree, hit_seqs, accs_seqs, number_of_queries = processing_data.run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
                 #print(d3_tree)
+
+                # remove temporary files
+                if protein_file_type == '0':
+                    temp_prot_file.close()
+
                 if len(d3_tree) > 0:
                     print('Root of the tree: ' + d3_tree['name'])
                     return {'tree': d3_tree, 'error': None}

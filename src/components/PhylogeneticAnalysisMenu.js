@@ -13,7 +13,7 @@ import '../../node_modules/phylotree/phylotree.css'
 
 // own components and style sheets
 import './phylogenyStyle.css';
-import {ExportTrees} from '../App.js'
+import {ExportTreeImage, ExportCsvData} from './HandleDataExports.js'
 
 
 // own visualisations
@@ -113,11 +113,14 @@ class PhylogeneticAnalysisMenu extends Component{
             additionalInformation = additionalCladeInformation(this.showAdditional, this.handleUploadAdditional);
         }
 
-        let phylogenyType;
+        let phylogenyType, newickFilename;
+
         if(window.location.href.includes('Unique')){
             phylogenyType = 'unique sequence-based';
+            newickFilename = 'unique_sequence_based_phylogeny.txt';
         }else{
             phylogenyType = 'taxa-based';
+            newickFilename = 'taxa_based_phylogeny.txt';
         }
 
         return(
@@ -128,7 +131,7 @@ class PhylogeneticAnalysisMenu extends Component{
                         {additionalInformation}
                         <Card>
                             <Accordion.Toggle as={Card.Header} eventKey='1'>
-                                export tree visualization
+                                download tree information
                             </Accordion.Toggle>
                             <Accordion.Collapse eventKey='1'>
                                 <Card.Body>
@@ -137,7 +140,8 @@ class PhylogeneticAnalysisMenu extends Component{
                                     The <b>unlock publication ready</b> button unlocks the static visualization. <br/><br/>
                                     <Nav className='mr-auto'>
                                         <button id="public_ready_phylo" onClick={publicationReady}>publication ready</button>
-                                        <ExportTrees />
+                                        <ExportTreeImage />
+                                        <ExportCsvData dataName='Newick string' filename={newickFilename} />
                                         <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
                                     </Nav>
                                 </Card.Body>

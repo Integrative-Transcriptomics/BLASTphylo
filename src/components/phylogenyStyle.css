@@ -8,7 +8,7 @@
 }
 
 #phylogenyMenu button {
-  margin: 0 0 0 10px;
+  margin: 5px 0 0 10px;
 }
 
 #phylogenyMenu li{
@@ -16,18 +16,20 @@
  width: 50%;
  list-style-type: none;
  text-align: center;
- padding: 5px 0 5px 0;
+ padding: 5px 5px 5px 0;
  background: #8e93ca;
  border: solid 1.5px white;
 }
 
-#phylogenyMenu li:hover{
+#phylogenyMenu li:hover, #txtDataExport:hover{
   background: #5e66b4;
+  text-decoration: none;
 }
 
-#phylogenyMenu button, #public_ready_phylo {
+#phylogenyMenu button, #public_ready_phylo, #txtDataExport {
   background: #8e93ca;
   color: white;
+
 }
 
 #phylogenyMenu button:hover, #public_ready_phylo:hover {

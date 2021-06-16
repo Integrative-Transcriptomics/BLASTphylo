@@ -7,7 +7,7 @@ import {AiOutlineArrowLeft} from 'react-icons/ai';
 
 // own components and style sheets
 import './phyloblastStyle.css';
-import {ExportTrees} from '../App.js';
+import {ExportTreeImage, ExportCsvData} from './HandleDataExports.js';
 
 
 // own visualisations
@@ -97,7 +97,7 @@ class TaxonomicAnalysisMenu extends Component{
                         </Card>
                         <Card>
                             <Accordion.Toggle as={Card.Header} eventKey='1'>
-                                export tree visualization
+                                download tree information
                             </Accordion.Toggle>
                             <Accordion.Collapse eventKey='1'>
                                 <Card.Body>
@@ -106,7 +106,8 @@ class TaxonomicAnalysisMenu extends Component{
                                     The <b>unlock publication ready</b> button unlocks the static visualization. <br/><br/>
                                     <Nav className='mr-auto'>
                                         <button id="public_ready_taxa"  onClick={publicationReady}>publication ready</button>
-                                        <ExportTrees />
+                                        <ExportTreeImage />
+                                        <ExportCsvData dataName='taxonomic Mapping' filename='taxonomic_mapping.csv' />
                                         <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
                                     </Nav>
                                 </Card.Body>

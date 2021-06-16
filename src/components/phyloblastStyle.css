@@ -9,14 +9,17 @@
  margin-right: 5px;
 }
 
-.mr-auto button:hover, #public_ready_taxa:hover {
+.mr-auto button:hover, #public_ready_taxa:hover, #csvDataExport:hover {
   background: #377ba8;
 }
 
-.mr-auto button, #public_ready_taxa {
-  margin: 5px 0 0 10px;
+
+
+.mr-auto button, #public_ready_taxa, #csvDataExport {
+  margin: 5px 5px 0 10px;
   background: #6ea9d0;
   color: white;
+  text-decoration: none;
 }
 
 
@@ -30,7 +33,7 @@
 }
 
 #phyloblastMenu button {
-  margin: 0 0 0 10px;
+  margin: 5px 0 0 10px;
 }
 
 #taxaPhylo:hover, #uniquePhylo:hover{

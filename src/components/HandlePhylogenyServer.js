@@ -7,14 +7,10 @@ import {Spinner, Table} from 'react-bootstrap';
 class HandlePhylogenyServer extends Component{
     constructor(props){
         super(props);
-
-        // functions
-        this.calculatePhylogeny = this.calculatePhylogeny.bind(this);
-
     }
 
     // dependent on the given link information taxa-based or unique sequence-based phylogeny will calculated in the back end
-    calculatePhylogeny(){
+    componentDidMount(){
         var self = this;
         var path = 'server/' + this.props.data;
         axios.post(path, null)
@@ -31,7 +27,6 @@ class HandlePhylogenyServer extends Component{
 
    // visualize a rough run time expectation
    render(){
-        this.calculatePhylogeny();
         return(
             <div style={{margin:"20px"}}>
                 <p>Calculation of the phylogeny can take up to <b>10 min </b> dependent

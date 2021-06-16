@@ -1,10 +1,8 @@
 // used libraries
 import React, {Component} from 'react';
 import * as d3v6 from 'd3v6';
-import domtoimage from 'dom-to-image';
 import "bootstrap/dist/css/bootstrap.min.css";
 import {Table, Form, OverlayTrigger, Tooltip} from 'react-bootstrap';
-import {BsBoxArrowUpRight} from "react-icons/bs";
 import {IoMdArrowDropleft, IoMdArrowDropright} from 'react-icons/io';
 import {BiHelpCircle} from 'react-icons/bi';
 import {AiFillHome} from 'react-icons/ai';
@@ -221,75 +219,6 @@ class App extends Component {
     }
 }
 
-// export the view of the treeVis div (phlogeny or taxonomic mapping) as jpeg or SVG
-class ExportTrees extends Component{
-    constructor(props) {
-        super(props);
-        this.exportJPEG = this.exportJPEG.bind(this);
-        this.exportSVG = this.exportSVG.bind(this);
-    }
-
-
-
-    exportJPEG(){
-        var element = document.getElementById('treeVis');
-        console.log(element)
-        var borderStyle = element.style.border;
-        element.style.border = 'none';
-        // labeling of the tree
-        var figureName = '';
-        if(window.location.href.includes('phylogeny')){
-            figureName = 'phylogeny';
-        }else{
-            figureName = 'taxonomicmapping';
-        }
-
-        domtoimage.toJpeg(element, { quality: 1, bgcolor: 'white',
-                                            style:{overflow:'visible'} })
-            .then(function (dataUrl) {
-                var link = document.createElement('a');
-                link.download = figureName;
-                link.href = dataUrl;
-                link.click();
-                link.remove();
-                element.style.border = borderStyle;
-        });
-        element.style.height = '80vh';
-    }
-
-        exportSVG(){
-        var element = document.getElementById('treeVis');
-        console.log(element)
-        var borderStyle = element.style.border;
-        element.style.border = 'none';
-        // labeling of the tree
-        var figureName = '';
-        if(window.location.href.includes('phylogeny')){
-            figureName = 'phylogeny';
-        }else{
-            figureName = 'taxonomicmapping';
-        }
-
-        domtoimage.toSvg(element, { quality: 1, bgcolor: 'white',
-                                            style:{overflow:'visible'} })
-            .then(function (dataUrl) {
-                var link = document.createElement('a');
-                link.download = figureName;
-                link.href = dataUrl;
-                link.click();
-                link.remove();
-                element.style.border = borderStyle;
-        });
-        element.style.height = '80vh';
-    }
-
-   render(){
-        return(<div>
-               <button id="export_svg" onClick={this.exportSVG}>export tree as svg <BsBoxArrowUpRight size={20}/> </button>
-               <button id="export_pdf" onClick={this.exportJPEG}>export tree as jpeg <BsBoxArrowUpRight size={20}/> </button>
-               </div>);
-   }
-}
 
 
 // check the actual browser the application is running in
@@ -327,5 +256,5 @@ function checkBrowser(){
 }
 
 
-export {ExportTrees, checkBrowser};
+export {checkBrowser};
 export default App;
