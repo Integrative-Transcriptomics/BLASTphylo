@@ -11,8 +11,8 @@ import './menuStyle.css';
 import {checkBrowser} from '../App.js';
 
 // load own data
-//import search_terms from '../data/searchbar_entries.json';
-var search_terms = [];
+import search_terms from '../data/searchbar_entries_small.json';
+//var search_terms = [];
 
 // constant dictionary for help messages
 const helpMessages = {
@@ -89,7 +89,7 @@ class Menu extends Component {
 
         if(error.length === 0){
             for (var key in this.state){
-                console.log([key, this.state[key]]);
+                //console.log([key, this.state[key]]);
                 formData.append(String(key), this.state[key]);
             }
            /***for(var pair of formData.entries()) {
@@ -277,9 +277,9 @@ class Menu extends Component {
                     <ReactSearchAutocomplete
                         items={search_terms}
                         onSelect={this.handleSearch}
+                        fuseOptions={{shouldSort: false, threshold: 0.6, ignoreLocation:true, maxPatternLength:32, minMatchCharLength:3, keys:['name','menuInput']}}
                         inputDebounce={10}
                         placeholder={'Search for bacteria'}
-                        autofocus
                     />
                 </div>
                 <Form.Control as='textarea' rows={5} cols={50} id='taxa' name='taxa'
