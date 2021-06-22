@@ -268,7 +268,7 @@ class Menu extends Component {
             </Form.Group>
             <Form.Group id='NCBI taxonomy'>
                 <Form inline>
-                    <Form.Label>Enter list of taxa as scientific names of taxonomic IDs:</Form.Label>
+                    <Form.Label>Enter list of taxa as scientific names or taxonomic IDs:</Form.Label>
                     <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['NCBI'])}>
                         <BiHelpCircle style={{color: 'blue'}}/>
                     </OverlayTrigger>

@@ -135,7 +135,7 @@ class App extends Component {
                             <h1 id='subtitle'>taxonomy <IoMdArrowDropleft /> blast result <IoMdArrowDropright /> phylogeny</h1>
                         </li>
                         <img src={headerTree} alt='headerPicture' id='headerPicture'/>
-                        <ul id='subMenu'>
+                        <ul  style={{width:'80%'}} id='subMenu'>
                             <li id='link1' >
                                     <button id='menuLink' onClick={this.handleMenuClick} >
                                         <OverlayTrigger key='tooltip_home' placement='bottom' overlay={generalTooltip('home')}>
@@ -183,7 +183,7 @@ class App extends Component {
                             <h1 id='subtitle'>taxonomy <IoMdArrowDropleft /> blast result <IoMdArrowDropright /> phylogeny</h1>
                         </li>
                         <img src={headerTree} alt='headerPicture' id='headerPicture'/>
-                        <ul id='subMenu'>
+                        <ul  style={{width:'80%'}} id='subMenu'>
                             <li id='link1' >
                                     <button id='menuLink' onClick={this.handleMenuClick} >
                                         <OverlayTrigger key='tooltip_home' placement='bottom' overlay={generalTooltip('home')}>

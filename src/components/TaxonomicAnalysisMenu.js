@@ -85,7 +85,7 @@ class TaxonomicAnalysisMenu extends Component{
                                 <Card.Body>
                                     <Form inline>
                                         Links will start the phylogeny calculation in a new tab. A detailed description of the difference between the phylogenies
-                                        can be found in the <Nav.Link style={{margin: '0px'}} href='/help' target='_blank'>help page</Nav.Link>
+                                        can be found on the help page
                                         <br/><br/><br/>
                                      </Form>
                                       <Nav className="flex-column">
@@ -108,6 +108,7 @@ class TaxonomicAnalysisMenu extends Component{
                                         <button id="public_ready_taxa"  onClick={publicationReady}>publication ready</button>
                                         <ExportTreeImage />
                                         <ExportCsvData dataName='taxonomic Mapping' filename='taxonomic_mapping.csv' />
+                                        <ExportCsvData dataName='Newick string' filename='newick_taxonomic_mapping.txt' />
                                         <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
                                     </Nav>
                                 </Card.Body>

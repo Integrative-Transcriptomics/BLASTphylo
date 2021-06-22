@@ -9,13 +9,13 @@
  margin-right: 5px;
 }
 
-.mr-auto button:hover, #public_ready_taxa:hover, #csvDataExport:hover {
+.mr-auto button:hover, #public_ready_taxa:hover, #csvDataExport:hover, #phyloblastMenu #txtDataExport:hover{
   background: #377ba8;
 }
 
 
 
-.mr-auto button, #public_ready_taxa, #csvDataExport {
+.mr-auto button, #public_ready_taxa, #csvDataExport, #phyloblastMenu #txtDataExport {
   margin: 5px 5px 0 10px;
   background: #6ea9d0;
   color: white;

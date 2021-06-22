@@ -88,7 +88,7 @@ d3_tree = {}
 number_of_queries = 0
 taxa_newick = ''
 unique_newick = ''
-datafile_already_generated = [0, 0 ,0]   # array state if data is already generated: 1. taxonomic mapping 2. taxa-based phylo 3. unique phylo
+datafile_already_generated = [0, 0 ,0, 0]   # array state if data is already generated: 1. taxonomic mapping 2. newick tax. map. 3. taxa-based phylo 4. unique phylo
 
 
 ######################################################################################################################## connection to the front end
@@ -107,10 +107,14 @@ def exportData():
         datafile_already_generated[0] = 1
         return {'data': table_tree, 'data_type': 'table'}
     elif datafile_already_generated[1] == 0:
-        datafile_already_generated[1] = 1
-        return {'data': taxa_newick, 'data_type': 'newick'}
+        d3_newick = processing_data.generate_Newick_from_dict(d3_tree)
+        d3_newick = d3_newick[:-1] + ';'
+        return {'data': d3_newick, 'data_type': 'newick'}
     elif datafile_already_generated[2] == 0:
         datafile_already_generated[2] = 1
+        return {'data': taxa_newick, 'data_type': 'newick'}
+    elif datafile_already_generated[3] == 0:
+        datafile_already_generated[3] = 1
         return {'data': unique_newick, 'data_type': 'newick'}
     else:
         print('All data are ready for the download')
@@ -257,7 +261,7 @@ def menu():
             print('\nStart PhyloBlast')
             try:
                 d3_tree, hit_seqs, accs_seqs, number_of_queries = processing_data.run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
-                #print(d3_tree)
+                print(d3_tree)
 
                 # remove temporary files
                 if protein_file_type == '0':

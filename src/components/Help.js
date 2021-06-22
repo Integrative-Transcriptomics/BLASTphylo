@@ -37,16 +37,14 @@ function HowToDoHelpInfo(){
         <div id='howtoHelpInfo'>
             <h2 class='helpHeader'>How to get started:</h2>
             <ol>
-                <li>Selcet your BLAST type: BLASTn, BLASTp, or BLASTx</li>
+                <li>Select your BLAST type: BLASTn, BLASTp, or BLASTx</li>
                 <li>Enter one/two sequence(s) or upload a FASTA file <br/>
                 <div class='subList'><i>required format:</i><br />
                     <p style={{'margin-left':'20px'}}>
                         >query1 <br/>
-                        AAATTTGMMM....<br />
-                        ....CCCPLLLLLL<br />
+                        AAATTTGMMM<br />
                         >query2 <br />
-                        TTTGCGPPP...<br />
-                        ....AACCCMMLL<br />
+                        TTTGCGPPP<br />
                     </p>
                 </div>
                 </li>

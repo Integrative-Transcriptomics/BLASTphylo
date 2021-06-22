@@ -98,7 +98,7 @@ body {
 }
 
 #subMenu {
-  float: right;
+  justify-content: flex-end;
 }
 
 #subMenu li {

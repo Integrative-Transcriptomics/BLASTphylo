@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import tempfile
 import subprocess
+import json
 from io import StringIO
 
 
@@ -39,6 +40,9 @@ from external_tools import FastTreeCommandline as FastTree
 
 # global variables 
 count_clades = 0
+normalization_dic = {}
+
+
 
 ########################################################################################################################
 #                                                                                                                  BLAST
@@ -589,7 +593,7 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
     if len(taxa_keys) == 1: # tree only contains root
         root_value = [[filtered_blast_result[int(tree.name)][i], 0] for i in range(number_of_queries)]
         root_value.append(treeRanks[int(tree.name)])
-        return {'size': [15, branch_length], 'name': tree.sci_name, 'value': root_value}
+        return {'size': [15, branch_length], 'name': tree.sci_name, 'value': root_value, 'leaf_counter': 1}
 
     else: # iterate recursive over children
         root_children = list(
@@ -603,10 +607,12 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
 
         subtree_hits = [0]*number_of_queries
         root_size = 0
+        leaf_counter = 0
         for child in root_children:
             for i in range(number_of_queries):
                 subtree_hits[i] += sum(child['value'][i][:2])
             root_size += child['size'][0]
+            leaf_counter += child['leaf_counter']
 
 
         if ncbi_boolean == '2': # taxa-based phylogeny
@@ -616,7 +622,7 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
             root_value.append(treeRanks[int(tree.name)])
 
         return {'size': [root_size, branch_length], 'name': tree.sci_name, 'children': root_children,
-                'value': root_value}
+                'value': root_value, 'leaf_counter': leaf_counter}
 
 
 ''' transfer own tree with possible mixed labeling in d3 format
@@ -639,7 +645,7 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
     if len(taxa_keys) == 1: # filtered blast only contains root
         root_value = [[filtered_blast_result[rootID][i], 0] for i in range(number_of_queries)]
         root_value.append(treeRanks[rootID])
-        return {'size': [15, branch_length], 'name': tree.sci_name, 'value': root_value}
+        return {'size': [15, branch_length], 'name': tree.sci_name, 'value': root_value, 'leaf_counter':1}
 
     else: # iterate recursive over children
         root_children = list(
@@ -654,6 +660,7 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
 
         subtree_hits = [0]*number_of_queries
         root_size = 0
+        leaf_counter = 0
         list_of_child_ids = []  # phylogeny: all child ids to calculate the last common ancestor
         count_clade_members = 0  # phylogeny: addition to cladeName to distinguish between clades
         for child in root_children:
@@ -661,6 +668,7 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
                 for i in range(number_of_queries):
                     subtree_hits[i] += sum(child['value'][i][:2])
             root_size += child['size'][0]
+            leaf_counter += child['leaf_counter']
             if ncbi_boolean == '2':
                 count_clade_members += child['value'][2]
                 if 'clade' not in child['name']:
@@ -694,7 +702,7 @@ def wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, branch_
             root_value.append(treeRanks[rootID])
 
         return {'size': [root_size, branch_length], 'name': rootName, 'children': root_children,
-                'value': root_value}
+                'value': root_value, 'leaf_counter': leaf_counter}
 
 
 ''' recursively transfer the subtrees in d3 compatible format
@@ -722,12 +730,12 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
         if nodeID in filtered_blast_result.keys():
             if ncbi_boolean == '2': # taxa-based phylogeny
                 tree.name = newick_valid_name(nodeName)
-                return {'size': [15, branch_length], 'name': nodeName, 'value': [filtered_blast_result[nodeID], nodeID, 1]}
+                return {'size': [15, branch_length], 'name': nodeName, 'value': [filtered_blast_result[nodeID], nodeID, 1], 'leaf_counter': 1}
             else:
                 value = [[filtered_blast_result[nodeID][i], 0] for i in range(number_of_queries)]
                 value.append(treeRanks[nodeID])
 
-                return {'size': [15, branch_length], 'name': nodeName, 'value': value}
+                return {'size': [15, branch_length], 'name': nodeName, 'value': value, 'leaf_counter': 1}
 
     else:  # inner node
         tree_children = list(
@@ -742,6 +750,7 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
 
         subtree_hits = [0]*number_of_queries
         tree_size = 0
+        leaf_counter = 0
         list_of_child_ids = []                       # phylogeny: all child ids to calculate the last common ancestor
         count_clade_members = 0                      # phylogeny: addition to cladeName to distinguish between clades
         for child in tree_children:
@@ -749,6 +758,7 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
                 for i in range(number_of_queries):
                     subtree_hits[i] += sum(child['value'][i][:2])
             tree_size += child['size'][0]
+            leaf_counter += child['leaf_counter']
 
             if ncbi_boolean == '2':
                 count_clade_members += child['value'][2]
@@ -781,7 +791,7 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
 
             if sum(child_value[:2]) != 0:
                 return {'size': [tree_size + 10, branch_length], 'name': nodeName, 'children': tree_children,
-                        'value': child_value}
+                        'value': child_value, 'leaf_counter': leaf_counter}
 
         else:
             [child_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
@@ -789,7 +799,7 @@ def transfer_tree(tree, filtered_blast_result, treeRanks, ncbi_boolean, branch_l
 
             if sum([sum(child_value[i][:2]) for i in range(number_of_queries)]) != 0:
                 return {'size': [tree_size+10, branch_length], 'name': nodeName, 'children': tree_children,
-                    'value': child_value}
+                    'value': child_value, 'leaf_counter': leaf_counter}
 
 
 '''recursively transfer the tree in d3 compatible format + other data for hit tree
@@ -911,19 +921,27 @@ def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
    number_of_queries:   number of input queries
 '''
 def generate_tree_output(d3_tree, number_of_queries):
-
+    global  normalization_dic
     if number_of_queries == 1:
+        ncbi_nodes = normalization_dic[d3_tree['name']][1]
+        percent_nodes = round((d3_tree['leaf_counter']/ncbi_nodes)*100, 2)
         try:
-            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][1].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][0][:2]]) + '\n' + '\n'.join([generate_tree_output(child, number_of_queries) for child in d3_tree['children']])
+            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][1].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][0][:2]]) + ',' + \
+                   str(d3_tree['leaf_counter']) + ',' + str(ncbi_nodes) + ',' + str(percent_nodes) +'\n' + '\n'.join([generate_tree_output(child, number_of_queries) for child in d3_tree['children']])
         except KeyError:
-            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][1].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][0][:2]])
+            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][1].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][0][:2]]) + ',' + \
+                   str(d3_tree['leaf_counter']) + ',' + str(ncbi_nodes) + ',' + str(percent_nodes)
     else:
+        ncbi_nodes = normalization_dic[d3_tree['name']][1]
+        percent_nodes = round((d3_tree['leaf_counter']/ncbi_nodes)*100, 2)
         try:
             child_string = ','.join([str(val) for row in d3_tree['value'][:number_of_queries] for val in row])
-            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][number_of_queries].replace(' ', '_') + ',' + child_string + '\n' + '\n'.join([generate_tree_output(child, number_of_queries) for child in d3_tree['children']])
+            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][number_of_queries].replace(' ', '_') + ',' + child_string + ',' +\
+                   str(d3_tree['leaf_counter']) + ',' + str(ncbi_nodes) + ',' + str(percent_nodes) + '\n' + '\n'.join([generate_tree_output(child, number_of_queries) for child in d3_tree['children']])
         except KeyError:
             child_string = ','.join([str(val) for row in d3_tree['value'][:number_of_queries] for val in row])
-            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][number_of_queries].replace(' ', '_') + ',' + child_string
+            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][number_of_queries].replace(' ', '_') + ',' + child_string + ',' + \
+                   str(d3_tree['leaf_counter']) + ',' + str(ncbi_nodes) + ',' + str(percent_nodes)
 
 
 ''' Generate csv file with header for the d3-compatible tree
@@ -932,11 +950,19 @@ def generate_tree_output(d3_tree, number_of_queries):
     number_of_queries:  number of input queries
 '''
 def generate_blastphylo_output(tree, outdir, number_of_queries):
+    global normalization_dic
+
     if number_of_queries == 1:
-        query_string = '#hits,#subtree_hits'
+        query_string = '#hits,#subtree_hits,#nodesTree,#nodesNCBI,%nodes'
     else:
-        query_header = ['q'+str(i)+'#hits,q'+str(i)+'#subtree' for i in range(number_of_queries)]
+        query_header = ['q'+str(i)+'#hits,q'+str(i)+'#subtree,#nodesTree,#nodesNCBI,%nodes' for i in range(number_of_queries)]
         query_string = ','.join(query_header)
+
+    actual_dir = os.getcwd()
+    json_file = actual_dir[:-6] + 'src/data/ncbi_normalisation.json'
+    with open(json_file, 'r') as f:
+        normalization_dic = json.load(f)
+
 
     table_tree = 'Sci_Name,rank,' + query_string + '\n' + generate_tree_output(tree, number_of_queries)
     return table_tree
@@ -945,5 +971,11 @@ def generate_blastphylo_output(tree, outdir, number_of_queries):
      #   w.write(table_tree)
 
 
-
-
+''' Generate Newick string from dictionary like tree
+    tree:       d3-compatible tree structure (dictionary)
+'''
+def generate_Newick_from_dict(tree):
+    if 'children' in tree.keys():
+        return '(' + ''.join([generate_Newick_from_dict(child) for child in tree['children']])[:-1] + ')' + newick_valid_name(tree['name']) + ','
+    else:
+        return newick_valid_name(tree['name']) + ','
