@@ -9,6 +9,7 @@ import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 // own style sheets
 import './menuStyle.css';
 import {checkBrowser} from '../App.js';
+import SearchBar from './SearchBar.js'
 
 // load own data
 import search_terms from '../data/searchbar_entries_small.json';
@@ -49,17 +50,9 @@ class Menu extends Component {
         // functions
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleChange = this.handleChange.bind(this);
-        this.handleSearch = this.handleSearch.bind(this);
 
    }
 
-
-    // handle Search for taxonomic IDs or scientific name and add the selected id in the textarea
-    handleSearch(item){
-        // the item selected
-        console.log(item)
-        document.getElementById('taxa').value = item.menuInput;
-    }
 
 
     // handle click on Submit button: extract actual state of the parameters and send them to the back end
@@ -273,15 +266,7 @@ class Menu extends Component {
                         <BiHelpCircle style={{color: 'blue'}}/>
                     </OverlayTrigger>
                 </Form>
-                <div  id='searchbar'>
-                    <ReactSearchAutocomplete
-                        items={search_terms}
-                        onSelect={this.handleSearch}
-                        fuseOptions={{shouldSort: false, threshold: 0.6, ignoreLocation:true, maxPatternLength:32, minMatchCharLength:3, keys:['name','menuInput']}}
-                        inputDebounce={10}
-                        placeholder={'Search for bacteria'}
-                    />
-                </div>
+                <SearchBar />
                 <Form.Control as='textarea' rows={5} cols={50} id='taxa' name='taxa'
                 placeholder='Staphylococcus,Staphylococcus aureus|subtree' onChange={this.handleChange} />
             </Form.Group>

@@ -63,7 +63,26 @@
   margin: 0 0 0 10px;
 }
 
-#searchbar{
-  width: 50%;
-  margin: 10px 0px;
+
+#Searchbar {
+  width: 80%;
 }
+
+#SearchbarContent {
+  display: flex;
+  flex-direction: column;
+}
+
+#SearchResult {
+  height: auto;
+  max-height: 200px;
+  overflow: scroll;
+  width: 70%;
+  opacity: 0;
+  margin: 0 0 5px 0;
+}
+
+.react-search-field {
+  width:70%;
+}
+

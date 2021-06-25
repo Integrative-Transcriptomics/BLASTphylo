@@ -121,6 +121,23 @@ def exportData():
         return {'data': '', 'data_type': 'error'}
 
 
+# search for taxon
+@app.route('/server/searchNcbiTaxa', methods=['POST', 'GET'])
+def searchNcbiTaxa():
+    if request.method == 'POST':
+        searchquery = request.form['searchquery']
+        print(searchquery)
+        ncbi_taxa_file = actual_dir[:-6] + 'src/data/searchbar_entries.json'
+
+        with open(ncbi_taxa_file, 'r') as f:
+            ncbi_taxa = json.load(f)
+
+        matching_taxa = [taxon for taxon in ncbi_taxa if searchquery.lower() in taxon['name'].lower()]
+
+        return {'result': matching_taxa}
+    else:
+        return {'result': None}
+
 
 
 

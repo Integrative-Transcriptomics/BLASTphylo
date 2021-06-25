@@ -85,20 +85,40 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         print(result.shape)
 
     else: # input was a protein
+        blast_output_columns = '6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq'
 
         # switch beteen the blasttypes
         if blast_type == 'blastp':
             blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
-                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq')
+                              outfmt=blast_output_columns)
         elif blast_type == 'blastx':
             blastp_cline = Blastx(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
-                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq')
+                              outfmt=blast_output_columns)
         elif blast_type == 'blastn':
             blastp_cline = Blastn(cmd=blast_type, remote=True, query=prot, db='nt', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
-                              outfmt='6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq')
+                              outfmt=blast_output_columns)
+        elif blast_type == 'diamond': # implemented diamond but not tested --> miss local stored database
+            blastp_cline = 'used diamond with default setting for blastp'
+            # set up temporary output file
+            temp_diamond_file = tempfile.NamedTemporaryFile(prefix=output_dir)
+            output_diamond = temp_diamond_file.name
+
+            # set up command for diamond
+            '''
+                need to set up a database --> pathToDatabase
+                protein needs to be a file
+                -p = threads 
+                can automatically add the full sequences for query and subject (full_qseq, full_sseq)
+            '''
+            command_arguments_diamond = ['./diamond', 'blastp', '-q', prot, '-d', 'pathToDatabase', '-o', output_diamond,
+                                         '-f', blast_output_columns, '-e', str(eValue), '--id', str(min_align_ident),
+                                         '--query-cover', str(min_query_cover), '--subject-cover', str(min_subject_cover),
+                                         '--max-target-seqs', '1000', '-p', '3']
+            diamond = subprocess.Popen(command_arguments_diamond, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            diamond.wait()
 
         print(blastp_cline)
         stdout, stderr = blastp_cline()
