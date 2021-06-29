@@ -482,7 +482,7 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
 
     return tree, tree_taxIDs, roots
 
-def translate_string_in_taxa(string):
+def translate_string_in_taxa(taxonomy):
     tree_taxa = set()
     regular_exp = ''
     root = ''
@@ -490,16 +490,20 @@ def translate_string_in_taxa(string):
     previous_symbol = ''
     ncbi = NCBITaxa()
 
-    i = 0
-    while i < len(string):
+    if taxonomy[len(taxonomy)-1] == ',':  # taxonomy was generated with Search option --> last character is ','
+        taxonomy = taxonomy[:-1]
+    print(taxonomy)
 
-        if string[i] == '|':
-            if string[i+1] == '!':   # input was taxa|!(....)
+    i = 0
+    while i < len(taxonomy):
+        #print(root)
+        if taxonomy[i] == '|':
+            if taxonomy[i+1] == '!':   # input was taxa|!(....)
                 previous_symbol = '!'
                 #print(root)
                 j = i+3
-                while string[j] != ')':     # iterate over inner nodes
-                    not_option += string[j]
+                while taxonomy[j] != ')':     # iterate over inner nodes
+                    not_option += taxonomy[j]
                     j = j + 1
                 #print(not_option)
                 not_regular, not_taxa = translate_string_in_taxa(not_option)  # evaluate subexpression
@@ -519,8 +523,8 @@ def translate_string_in_taxa(string):
                 previous_symbol = ''
                 i = j+1
 
-            elif string[i+1:i+9] == 'subtree':   # input was taxa|subtree
-                #print(root)
+            elif taxonomy[i+1:i+8] == 'subtree':   # input was taxa|subtree
+                #print('extract subtree')
                 rootID, rootName = translate_node(root, 0)
                 tree_taxa.update(set(ncbi.get_descendant_taxa(rootID, intermediate_nodes=True)))
                 tree_taxa.update(set([rootID]))
@@ -530,7 +534,7 @@ def translate_string_in_taxa(string):
                 previous_symbol = ''
                 i = i+8
 
-        elif string[i] == ',':  # check next list element
+        elif taxonomy[i] == ',':  # check next list element
             if len(root) > 0:  # input was  taxa,
                 rootID, rootName = translate_node(root, 0)
                 regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN] OR '
@@ -541,9 +545,9 @@ def translate_string_in_taxa(string):
             i += 1
         else:
             if previous_symbol == '!':
-                not_option += string[i]
+                not_option += taxonomy[i]
             else:
-                root += string[i]
+                root += taxonomy[i]
             i += 1
 
     if len(root) > 0:   # add last element of the list

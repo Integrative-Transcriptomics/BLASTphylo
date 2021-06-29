@@ -2,7 +2,7 @@
 import React, {Component} from 'react';
 import axios from 'axios';
 import SearchField from 'react-search-field';
-import {Dropdown, Form} from 'react-bootstrap';
+import {Dropdown, Form, Spinner} from 'react-bootstrap';
 import * as d3v6 from 'd3v6';
 
 
@@ -25,6 +25,7 @@ class SearchBar extends Component{
     searchBacteria(event){
         var self = this;
         var path = 'server/searchNcbiTaxa'
+        document.getElementById('searchSpinner').style.opacity = 1;
 
         if(event !== ''){
             const formData = new FormData();
@@ -40,6 +41,9 @@ class SearchBar extends Component{
                     console.log(error);
                 })
         }
+        document.getElementById('searchSpinner').style.opacity = 0;
+
+
     }
 
     handleInputChange(value){
@@ -67,17 +71,24 @@ class SearchBar extends Component{
             document.getElementById('SearchResult').style.opacity = 1;
         }
 
-
         return(
             <div id='Searchbar'>
                 <div id='SearchbarContent'>
                 <div id='SearchField'>
-                    <SearchField
+                        <SearchField
                             placeholder='Search for bacteria'
                             onEnter={this.searchBacteria}
                             onChange={this.handleInputChange}
                             searchText={this.state.taxon}
-                   />
+                       />
+                        <Spinner
+                            id='searchSpinner'
+                            as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                        />
                </div>
                <Form.Control as='select' htmlSize={this.state.htmlSize} id='SearchResult' onClick={this.handleSelection} >
                     {matching_taxa.map(MakeItem)}

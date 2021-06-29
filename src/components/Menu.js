@@ -62,6 +62,7 @@ class Menu extends Component {
         var error = [];
          if (this.state.protein === ''){
             var protFileContent = this.protFileInput.current.files[0];
+            console.log(protFileContent)
             if(typeof protFileContent === 'undefined'){
                 error.push({'message': 'Sequence is undefined. Please, enter a nucleotide or protein sequence'});
             }else{
@@ -79,7 +80,6 @@ class Menu extends Component {
                 formData.append('newick_filename', treeFileContent.name);
             }
         }
-
         if(error.length === 0){
             for (var key in this.state){
                 //console.log([key, this.state[key]]);
@@ -112,6 +112,8 @@ class Menu extends Component {
             .catch(error => {
                 console.log(error);
             })
+        }else{
+            this.props.changeComp('error', error);
         }
     }
 

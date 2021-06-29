@@ -82,6 +82,11 @@
   margin: 0 0 5px 0;
 }
 
+#searchSpinner {
+  opacity: 0;
+}
+
+
 .react-search-field {
   width:70%;
 }

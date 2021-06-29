@@ -100,7 +100,6 @@ def exportData():
     global taxa_newick
     global unique_newick
     global datafile_already_generated
-    print(datafile_already_generated)
 
     if datafile_already_generated[0] == 0:
         table_tree = processing_data.generate_blastphylo_output(d3_tree, '', number_of_queries)
@@ -278,7 +277,7 @@ def menu():
             print('\nStart PhyloBlast')
             try:
                 d3_tree, hit_seqs, accs_seqs, number_of_queries = processing_data.run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
-                print(d3_tree)
+                #print(d3_tree)
 
                 # remove temporary files
                 if protein_file_type == '0':
