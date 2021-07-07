@@ -122,8 +122,10 @@ class ExportCsvData extends Component {
             //console.log(data);
             if(data.data_type === 'table'){
                 this.setState({dataString: data['data']});
-            }else{
+            }else if(data.data_type === 'newick'){
                 this.makeTextFile(data['data']);
+            }else{
+                this.setState({dataString: 'No data present'})
             }
         });
 

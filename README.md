@@ -43,7 +43,7 @@ Enable the pop-up-window function for this app.
 
 ## Available Examples
 
-In the project directory folder **test examples** contain a example BLAST
+In the project directory folder **server/test_examples** contain a example BLAST
 result and FASTA files, which was used to implement BLASTphylo. In addition, different example taxonomies are
 given. <br>
 
