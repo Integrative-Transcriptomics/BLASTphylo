@@ -37,6 +37,7 @@ class App extends Component {
 
         // check if new Tab for phylogeny was "opened"
         var actualWebpage = window.location.href.split('/');
+        console.log(actualWebpage)
         if(actualWebpage[actualWebpage.length-1].includes('phylogeny')){
             this.state = {isActualComponent: 'handlePhylogeny',
                    data: actualWebpage[actualWebpage.length-1],
@@ -72,7 +73,7 @@ class App extends Component {
 
     // reset view to the menu page
     handleMenuClick(){
-        if(window.location.href !== 'http://localhost:3000/'){
+        if(window.location.href.includes('phylogeny')){
             window.location.href = 'http://localhost:3000/';
         }
         this.setState({isActualComponent: 'menu'});

@@ -983,7 +983,7 @@ def generate_blastphylo_output(tree, outdir, number_of_queries):
         query_string = ','.join(query_header)
 
     actual_dir = os.getcwd()
-    json_file = actual_dir[:-6] + 'src/data/ncbi_normalisation.json'
+    json_file = actual_dir + '/data/ncbi_normalisation.json'
     with open(json_file, 'r') as f:
         normalization_dic = json.load(f)
 

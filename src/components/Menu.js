@@ -85,9 +85,9 @@ class Menu extends Component {
                 //console.log([key, this.state[key]]);
                 formData.append(String(key), this.state[key]);
             }
-           /***for(var pair of formData.entries()) {
-           console.log(pair[0] + ':  ' + pair[1]);
-           }***/
+           for(var pair of formData.entries()) {
+                console.log(pair[0] + ':  ' + pair[1]);
+           }
 
            // switch to loading button
            document.getElementById('submit').style.display = "none";
@@ -95,7 +95,7 @@ class Menu extends Component {
 
            // send data to back end
            var self = this;
-            axios.post("server/menu", formData)
+            axios.post('server/menu', formData)
              .then(function (response) {
                  console.log(response.data);
                  if(response.data.error === null){

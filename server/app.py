@@ -68,7 +68,7 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
 
             if blast_type == 'blastp':  # check for valid protein sequence
                 valid_pro_seq = re.search(regAA, seq)
-            elif blast_typ == 'blastx' or blast_type == 'blastn': # check for valid nucleotid sequence
+            elif blast_type == 'blastx' or blast_type == 'blastn': # check for valid nucleotid sequence
                 valid_pro_seq = re.search(regNuc, seq)
 
             if valid_pro_seq:
@@ -79,7 +79,7 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
     return valid_pro_seq
 
 # start server
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../build', static_url_path='/')
 
 # global parameter for the run and for the export of the data
 hit_seqs = {}
@@ -92,6 +92,13 @@ datafile_already_generated = [0, 0 ,0, 0]   # array state if data is already gen
 
 
 ######################################################################################################################## connection to the front end
+# start the flask server
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+
+
 # accession for data export
 @app.route('/server/exportData', methods=['POST', 'GET'])
 def exportData():
@@ -101,22 +108,27 @@ def exportData():
     global unique_newick
     global datafile_already_generated
 
-    if datafile_already_generated[0] == 0:
-        table_tree = processing_data.generate_blastphylo_output(d3_tree, '', number_of_queries)
-        datafile_already_generated[0] = 1
-        return {'data': table_tree, 'data_type': 'table'}
-    elif datafile_already_generated[1] == 0:
-        d3_newick = processing_data.generate_Newick_from_dict(d3_tree)
-        d3_newick = d3_newick[:-1] + ';'
-        return {'data': d3_newick, 'data_type': 'newick'}
-    elif datafile_already_generated[2] == 0:
-        datafile_already_generated[2] = 1
-        return {'data': taxa_newick, 'data_type': 'newick'}
-    elif datafile_already_generated[3] == 0:
-        datafile_already_generated[3] = 1
-        return {'data': unique_newick, 'data_type': 'newick'}
+    if len(d3_tree) > 0:
+
+        if datafile_already_generated[0] == 0:
+            table_tree = processing_data.generate_blastphylo_output(d3_tree, '', number_of_queries)
+            datafile_already_generated[0] = 1
+            return {'data': table_tree, 'data_type': 'table'}
+        elif datafile_already_generated[1] == 0:
+            d3_newick = processing_data.generate_Newick_from_dict(d3_tree)
+            d3_newick = d3_newick[:-1] + ';'
+            return {'data': d3_newick, 'data_type': 'newick'}
+        elif datafile_already_generated[2] == 0:
+            datafile_already_generated[2] = 1
+            return {'data': taxa_newick, 'data_type': 'newick'}
+        elif datafile_already_generated[3] == 0:
+            datafile_already_generated[3] = 1
+            return {'data': unique_newick, 'data_type': 'newick'}
+        else:
+            print('All data are ready for the download')
+            return {'data': '', 'data_type': 'error'}
     else:
-        print('All data are ready for the download')
+        print('No hits found')
         return {'data': '', 'data_type': 'error'}
 
 
@@ -126,7 +138,7 @@ def searchNcbiTaxa():
     if request.method == 'POST':
         searchquery = request.form['searchquery']
         print(searchquery)
-        ncbi_taxa_file = actual_dir[:-6] + 'src/data/searchbar_entries.json'
+        ncbi_taxa_file = actual_dir + '/data/searchbar_entries.json'
 
         with open(ncbi_taxa_file, 'r') as f:
             ncbi_taxa = json.load(f)
