@@ -11,10 +11,6 @@ import './menuStyle.css';
 import {checkBrowser} from '../App.js';
 import SearchBar from './SearchBar.js'
 
-// load own data
-import search_terms from '../data/searchbar_entries_small.json';
-//var search_terms = [];
-
 // constant dictionary for help messages
 const helpMessages = {
     'blasttype': ['BLAST search', 'Select the BLAST search you want to use. Dependent on the selection the given sequence will be checked for usability'],
