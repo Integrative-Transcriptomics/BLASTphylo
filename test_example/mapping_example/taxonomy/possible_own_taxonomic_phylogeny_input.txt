@@ -1,1 +1,0 @@
-(((Staphylococcus_aureus,Staphylococcus_condimenti,Staphylococcus_delphini,Staphylococcus_intermedius,Staphylococcus_pseudintermedius,Staphylococcus_epidermidis,Staphylococcus_lutrae)Staphylococcus,(Mammaliicoccus_fleurettii)Mammaliicoccus)Staphylococcaceae)Bacillales;
