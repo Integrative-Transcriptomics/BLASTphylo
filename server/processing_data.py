@@ -91,7 +91,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         if blast_type == 'blastp':
             blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
-                              outfmt=blast_output_columns)
+                              outfmt=blast_output_columns, out='blast_result.csv')
         elif blast_type == 'blastx':
             blastp_cline = Blastx(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
@@ -125,7 +125,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         #print(stdout)
         blast_data = StringIO(stdout)
         print(stderr)
-        preFilter = pd.read_csv(blast_data, sep='\t', names=header)
+        preFilter = pd.read_csv('blast_result.csv', sep='\t', names=header)
 
         # filter for alignment identity, query coverage, subject coverage, evalue
         # evalue and query coverage are necessary given that BLAST stop when the first subject sequences exceed the threshold
@@ -979,8 +979,8 @@ def generate_blastphylo_output(tree, outdir, number_of_queries):
     if number_of_queries == 1:
         query_string = '#hits,#subtree_hits,#nodesTree,#nodesNCBI,%nodes'
     else:
-        query_header = ['q'+str(i)+'#hits,q'+str(i)+'#subtree,#nodesTree,#nodesNCBI,%nodes' for i in range(number_of_queries)]
-        query_string = ','.join(query_header)
+        query_header = [query+'#hits,'+ query+'#subtree' for query in number_of_queries]
+        query_string = ','.join(query_header) + ',#nodesTree,#nodesNCBI,%nodes'
 
     actual_dir = os.getcwd()
     json_file = actual_dir[:-6] + '/src/data/ncbi_normalisation.json'
@@ -988,7 +988,7 @@ def generate_blastphylo_output(tree, outdir, number_of_queries):
         normalization_dic = json.load(f)
 
 
-    table_tree = 'Sci_Name,rank,' + query_string + '\n' + generate_tree_output(tree, number_of_queries)
+    table_tree = 'Sci_Name,rank,' + query_string + '\n' + generate_tree_output(tree, len(number_of_queries))
     return table_tree
     #tree_out = outdir + 'taxonomicMapping.csv'
     #with open(tree_out, 'w') as w:

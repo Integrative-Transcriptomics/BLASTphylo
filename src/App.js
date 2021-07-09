@@ -108,9 +108,9 @@ class App extends Component {
             d3v6.select('#visualisation').style('border', 'hidden');
             actualComponent = <Help />;
         } else if (isActualComponent === 'phyloblast'){ // taxonomic Mapping
-            const copy = {...data};
-            actualComponent = <TaxonomicAnalysisMenu phyloData={copy} changeComp={this.changeComp} />;
-            userMenu = <TreeInteraction phyloData={copy} calculationMethod={'taxa'}/>;
+            const copy = {...data[0]};
+            actualComponent = <TaxonomicAnalysisMenu phyloData={copy} queries={data[1]} changeComp={this.changeComp} />;
+            userMenu = <TreeInteraction phyloData={copy} queries={data[1]} calculationMethod={'taxa'}/>;
 
         }else if (isActualComponent === 'handlePhylogeny'){ // handle data processing of the phylogenetic analysis
             actualComponent = <HandlePhylogenyServer data={data} changeComp={this.changeComp} />;

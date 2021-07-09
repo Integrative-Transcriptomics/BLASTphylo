@@ -95,10 +95,14 @@ class ExportCsvData extends Component {
 
     // get data from server
     accessionOfData(){
-        var path = 'server/exportData'
-        return axios.get(path, null)
+        var path = 'server/exportData';
+        const formData = new FormData();
+        formData.append("datatype", this.props.filename);
+        console.log(this.props)
+
+        return axios.post(path, formData)
          .then(function (response) {
-             //console.log(response.data);
+             console.log(response.data);
              return response.data
 
          })

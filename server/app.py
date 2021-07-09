@@ -56,6 +56,7 @@ except:
 def generate_fasta_from_input(textfieldinput, outdir, blast_type):
     fastas = []
     valid_pro_seq = True
+    query_header = []
     regAA = "^[ACDEFGHIKLMNPQRSTVWY]*$"
     regNuc = "^[ACTG]*$"
 
@@ -72,11 +73,13 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
                 valid_pro_seq = re.search(regNuc, seq)
 
             if valid_pro_seq:
+                query_header.append(split_fasta[0])
                 fastas.append(SeqRecord(Seq(seq), id=split_fasta[0], description=''))
             else:
                 return valid_pro_seq
     SeqIO.write(fastas, outdir, "fasta")
-    return valid_pro_seq
+    print(query_header)
+    return valid_pro_seq, query_header
 
 # start server
 app = Flask(__name__, static_folder='../build', static_url_path='/')
@@ -85,10 +88,9 @@ app = Flask(__name__, static_folder='../build', static_url_path='/')
 hit_seqs = {}
 accs_seqs = {}
 d3_tree = {}
-number_of_queries = 0
+queries = []
 taxa_newick = ''
 unique_newick = ''
-datafile_already_generated = [0, 0 ,0, 0]   # array state if data is already generated: 1. taxonomic mapping 2. newick tax. map. 3. taxa-based phylo 4. unique phylo
 
 
 ######################################################################################################################## connection to the front end
@@ -103,33 +105,34 @@ def index():
 @app.route('/server/exportData', methods=['POST', 'GET'])
 def exportData():
     global d3_tree
-    global number_of_queries
+    global queries
     global taxa_newick
     global unique_newick
-    global datafile_already_generated
 
-    if len(d3_tree) > 0:
+    if request.method == 'POST':
+        print(request.form['datatype'])
+        datatype = request.form['datatype']
 
-        if datafile_already_generated[0] == 0:
-            table_tree = processing_data.generate_blastphylo_output(d3_tree, '', number_of_queries)
-            datafile_already_generated[0] = 1
-            return {'data': table_tree, 'data_type': 'table'}
-        elif datafile_already_generated[1] == 0:
-            d3_newick = processing_data.generate_Newick_from_dict(d3_tree)
-            d3_newick = d3_newick[:-1] + ';'
-            return {'data': d3_newick, 'data_type': 'newick'}
-        elif datafile_already_generated[2] == 0:
-            datafile_already_generated[2] = 1
-            return {'data': taxa_newick, 'data_type': 'newick'}
-        elif datafile_already_generated[3] == 0:
-            datafile_already_generated[3] = 1
-            return {'data': unique_newick, 'data_type': 'newick'}
+        if len(d3_tree) > 0:
+            if 'mapping.csv' in datatype:
+                table_tree = processing_data.generate_blastphylo_output(d3_tree, '', queries)
+                return {'data': table_tree, 'data_type': 'table'}
+            elif 'newick_taxonomic' in datatype:
+                d3_newick = processing_data.generate_Newick_from_dict(d3_tree)
+                d3_newick = d3_newick[:-1] + ';'
+                return {'data': d3_newick, 'data_type': 'newick'}
+            elif 'taxa_based' in datatype:
+                return {'data': taxa_newick, 'data_type': 'newick'}
+            elif 'unique' in datatype:
+                return {'data': unique_newick, 'data_type': 'newick'}
+            else:
+                print('All data are ready for the download')
+                return {'data': '', 'data_type': 'error'}
         else:
-            print('All data are ready for the download')
+            print('No hits found')
             return {'data': '', 'data_type': 'error'}
     else:
-        print('No hits found')
-        return {'data': '', 'data_type': 'error'}
+        return None
 
 
 # search for taxon
@@ -181,14 +184,13 @@ def phylogenyUnique():
 def menu():
     # remove all old files + set global variable
     [os.remove(os.path.join('flask_tmp/', f)) for f in os.listdir('flask_tmp')]
-    global datafile_already_generated
-    datafile_already_generated = [0, 0, 0]
+
 
     if request.method == 'POST':
         global hit_seqs
         global accs_seqs
         global d3_tree
-        global number_of_queries
+        global queries
 
         tree_data = None
         tree_menu_selection = None
@@ -205,7 +207,8 @@ def menu():
                 protein = None
             # generation of tmp file
             temp_prot_file = tempfile.NamedTemporaryFile(prefix=flask_tmp_dir)
-            valid_pro_seq = generate_fasta_from_input(protein_seq, temp_prot_file.name, blasttype)
+            valid_pro_seq, query_header = generate_fasta_from_input(protein_seq, temp_prot_file.name, blasttype)
+            queries = query_header
             if valid_pro_seq:
                 protein = temp_prot_file.name
             else:
@@ -233,6 +236,9 @@ def menu():
                     blastResult = pd.read_csv(StringIO(protein), sep='\t')
                 except:
                     blastResult = pd.read_csv(StringIO(protein), sep=',')
+                queries_np = blastResult.iloc[:,0].unique()
+                print(queries_np)
+                queries = queries_np.tolist()
                 if len(blastResult.columns) != 13:
                     error.append({'message': 'Uploaded BLAST result has to much/less columns. Check the help page for '
                                              'more details.'})
@@ -297,11 +303,11 @@ def menu():
 
                 if len(d3_tree) > 0:
                     print('Root of the tree: ' + d3_tree['name'])
-                    return {'tree': d3_tree, 'error': None}
+                    return {'tree': d3_tree, 'error': None, 'queries': queries}
                 else:
-                    return {'tree': None, 'error': None}
+                    return {'tree': None, 'error': None, 'queries': queries}
             except:
-                return {'tree': None, 'error': None}
+                return {'tree': None, 'error': None, 'queries': queries}
     else:
         return None
       

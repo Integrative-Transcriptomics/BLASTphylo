@@ -23,6 +23,7 @@ var leftmostnode = null;
 var rightmostnode = null;
 var hitSelection = '-';
 var phyloTreetree = null;
+var query_header = null;
 
 // constants for the visualization layout
 const flextree = require('d3-flextree').flextree;
@@ -41,10 +42,11 @@ function removeNullroot(tree){
 }
 
 // check if the dataset have any hits
-function startTreevis(tree){
+function startTreevis(tree, queries){
     if(Object.keys(tree).length === 0){
 	    return 0
     }else{
+        query_header = queries;
         return removeNullroot(tree);
     }
 }
@@ -93,8 +95,8 @@ function showTooltip(node, barhover, extraDataLength){
         }
 
         if(taxonomyLevel.includes(node.data.value[2]) || node.data.value[2] === 'no rank'){                             // taxonomic mapping 2 proteins
-            text = '<b>' + node.data.name + '</b> <br /> query1 hits: ' + String(node.data.value[0]) + '<br />' +
-	                'query2 hits: ' + String(node.data.value[1]) + '<br /> rank: ' + node.data.value[2] + '<br />' + additionalText;
+            text = '<b>' + node.data.name + '</b> <br />'+ query_header[0] +' hits: ' + String(node.data.value[0]) + '<br />' +
+	                query_header[1] + ' hits: ' + String(node.data.value[1]) + '<br /> rank: ' + node.data.value[2] + '<br />' + additionalText;
 	    }else{ // taxonomic mapping 1 protein
 	        text = '<b>' + node.data.name + '</b> <br /> hits: ' + String(node.data.value[0][0]) + '<br />' +
 	                'subtree hits: ' + String(node.data.value[0][1]) + '<br /> rank: ' + node.data.value[1] + '<br />' + additionalText;
@@ -628,7 +630,11 @@ function stackBars(value){
     var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue] + d.data.value[1][hitValue];});
 
     nodes.forEach(function(d){
-        stacks.push({'node': d, 'query1': d.data.value[0][hitValue], 'query2': d.data.value[1][hitValue]});
+        var stack_dict = {};
+        stack_dict['node'] = d;
+        stack_dict[query_header[0]] = d.data.value[0][hitValue];
+        stack_dict[query_header[1]] = d.data.value[1][hitValue];
+        stacks.push(stack_dict);
     });
 
     // define ticks of the axis
@@ -664,10 +670,10 @@ function stackBars(value){
 
 
     // colors of the segment, domain parameter need to be adapted for more than 2 queries
-    var colors = d3v6.scaleOrdinal().domain(['query1', 'query2']).range(d3v6.schemeTableau10);
+    var colors = d3v6.scaleOrdinal().domain(query_header).range(d3v6.schemeTableau10);
 
     // stack each value of the subgroup above each other
-    var stack = d3v6.stack().keys(['query1', 'query2']);
+    var stack = d3v6.stack().keys(query_header);
     var stackedData = stack(stacks);
     //console.log(stackedData)
 
@@ -696,7 +702,7 @@ function stackBars(value){
 
     // legend of for the stack colors
     var legend = hitbars.selectAll(".legend")
-        .data(['query1', 'query2'])
+        .data(query_header)
         .enter()
         .append("g")
         .attr("class", "legend")

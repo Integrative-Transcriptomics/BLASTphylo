@@ -98,7 +98,7 @@ class Menu extends Component {
                      if(document.getElementById('alert')){
                         document.getElementById('alert').remove();
                      }
-                     self.props.changeComp('data', response.data.tree);
+                     self.props.changeComp('data', [response.data.tree, response.data.queries]);
                      self.props.changeComp('actual', 'phyloblast');
                  }else{
                      self.props.changeComp('error', response.data.error);
