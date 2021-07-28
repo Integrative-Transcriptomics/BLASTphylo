@@ -76,6 +76,9 @@ class Menu extends Component {
                 formData.append('newick_filename', treeFileContent.name);
             }
         }
+        if((this.state.tree_menu_selection === '0') && (this.state.tree_data.length === 0)){
+            error.push({'message': 'Taxonomy is undefined. Please, define a taxonomy'});
+        }
         if(error.length === 0){
             for (var key in this.state){
                 //console.log([key, this.state[key]]);
@@ -91,7 +94,7 @@ class Menu extends Component {
 
            // send data to back end
            var self = this;
-            axios.post('server/menu', formData)
+           axios.post('server/menu', formData)
              .then(function (response) {
                  console.log(response.data);
                  if(response.data.error === null){
@@ -99,24 +102,25 @@ class Menu extends Component {
                         document.getElementById('alert').remove();
                      }
                      self.props.changeComp('data', [response.data.tree, response.data.queries]);
-                     self.props.changeComp('actual', 'phyloblast');
+                     self.props.changeComp('actual', 'tabhandling');
                  }else{
-                     self.props.changeComp('error', response.data.error);
-                     self.props.changeComp('actual', 'menu');
+                     self.props.sendErrors(response.data.error);
+                     //self.props.changeComp('actual', 'menu');
                  }
             })
             .catch(error => {
                 console.log(error);
-            })
+            }
+           )
         }else{
-            this.props.changeComp('error', error);
+            this.props.sendErrors(error);
         }
     }
 
     // Handle changes in the parameter settings
     handleChange(event) {
-        if ((event.target.name === 'blastp') || (event.target.name === 'blastn') || (event.target.name === 'blastx')){
-            this.setState({blasttype: event.target.name})
+        if (event.target.name === 'blast'){
+            this.setState({blasttype: event.target.id})
         }
         else if (event.target.name === "fasta_seq"){
             this.setState({protein: event.target.value});
@@ -187,14 +191,6 @@ class Menu extends Component {
                 </Popover>);
         };
 
-        // error message next to submit button
-        let errormessage;
-         if(document.getElementById('alert')){
-            errormessage = <div style={{color: 'red'}}><b>Error occurred. Check error messages above.</b></div>;
-         }else{
-            errormessage = <div />;
-         }
-
          // check browser and switch newline symbol
          const actualBrowser = checkBrowser();
          let placeholderFasta;
@@ -217,9 +213,9 @@ class Menu extends Component {
                     </OverlayTrigger>
                 </Form>
                 <Form id='blasttypes' inline>
-                    <Form.Check inline type={'checkbox'} name='blastp' label={'blastp'} onChange={this.handleChange} />
-                    <Form.Check inline type={'checkbox'} name='blastn' label={'blastn'} onChange={this.handleChange} />
-                    <Form.Check inline type={'checkbox'} name='blastx' label={'blastx'} onChange={this.handleChange} />
+                        <Form.Check inline type={'radio'} name='blast' id='blastp' label={'blastp'} onChange={this.handleChange} />
+                        <Form.Check inline type={'radio'} name='blast' id='blastn' label={'blastn'} onChange={this.handleChange} />
+                        <Form.Check inline type={'radio'} name='blast' id='blastx' label={'blastx'} onChange={this.handleChange} />
                 </Form>
                 <br/>
                 <Form inline>
@@ -319,7 +315,6 @@ class Menu extends Component {
             </Form>
             <br />
             <Button id='submit' type="submit" value="Submit" onClick={this.handleSubmit}>Submit </Button>
-            {errormessage}
             <div id='loadingButton' style={{display: 'none'}}>
                 <Button variant="primary" disabled>
                     <Spinner

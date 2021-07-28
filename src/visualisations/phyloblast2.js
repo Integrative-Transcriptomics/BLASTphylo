@@ -488,7 +488,7 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                     d.children = null;
 
                     // if nodes is going to be collapsed --> enable publication ready
-                    if(window.location.href.includes('phylo')){
+                    if(extraData !== null){
                         document.getElementById('public_ready_phylo').disabled = false;
                     }else{
                         document.getElementById('public_ready_taxa').disabled = false;
@@ -1045,7 +1045,7 @@ function publicationReady(){
         }
 
         // prevent double-click on publication ready
-        if(window.location.href.includes('phylo')){
+        if(extraInfo !== null){
             document.getElementById('public_ready_phylo').disabled = true;
         }else{
             document.getElementById('public_ready_taxa').disabled = true;

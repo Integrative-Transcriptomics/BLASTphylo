@@ -90,6 +90,7 @@ class ExportCsvData extends Component {
 
         // functions
         this.accessionOfData = this.accessionOfData.bind(this);
+        this.generateNewick = this.generateNewick.bind(this);
         this.makeTextFile = this.makeTextFile.bind(this);
     }
 
@@ -102,7 +103,7 @@ class ExportCsvData extends Component {
 
         return axios.post(path, formData)
          .then(function (response) {
-             console.log(response.data);
+             //console.log(response.data);
              return response.data
 
          })
@@ -121,7 +122,7 @@ class ExportCsvData extends Component {
         this.setState({downloadLink: window.URL.createObjectURL(data)});
     }
 
-    componentDidMount(){
+    generateNewick(){
         this.accessionOfData().then(data => {
             //console.log(data);
             if(data.data_type === 'table'){
@@ -132,7 +133,19 @@ class ExportCsvData extends Component {
                 this.setState({dataString: 'No data present'})
             }
         });
+    }
 
+    componentDidMount(){
+        this.generateNewick();
+
+    }
+
+    componentDidUpdate(prevProps){
+        //console.log(prevProps)
+        //console.log(this.props)
+        if(prevProps.filename !== this.props.filename){
+            this.generateNewick();
+        }
     }
 
 

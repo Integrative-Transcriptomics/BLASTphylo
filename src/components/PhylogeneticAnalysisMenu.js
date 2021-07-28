@@ -1,5 +1,5 @@
 // used libraries
-import React, {Component} from 'react';
+import React, {Component, useState} from 'react';
 import * as d3v6 from 'd3v6';
 import * as d3 from 'd3';
 import * as $ from "jquery";
@@ -23,14 +23,12 @@ import {showClades, publicationReady, chart} from '../visualisations/phyloblast2
 class PhylogeneticAnalysisMenu extends Component{
     constructor(props){
         super(props);
-
+        console.log(props)
         // set state for visualisations
         var treeData = this.props.data.tree;
-        if( Object.keys(this.props.data).length === 3){  // taxa-based
-            this.state = {tree: treeData, extra: this.props.data.extraInfo, ownInfo: null, actualTree: treeData, counter: 0};
-        }else{ // unique sequence-based
-            this.state = {tree: treeData, extra: [1], actualTree: treeData, counter: 0};
-        }
+        this.state = {tree: treeData, extra: this.props.data.extraInfo, ownInfo: null, actualTree: treeData, counter: 0};
+
+
 
         // own functions
         this.showAdditional = this.showAdditional.bind(this);
@@ -40,6 +38,16 @@ class PhylogeneticAnalysisMenu extends Component{
         this.handleReturn = this.handleReturn.bind(this);
 
     }
+
+
+
+    /***componentDidUpdate(prevProps){
+        console.log('Update')
+        console.log(prevProps)
+        console.log(this.props)
+        console.log('Update Ende')
+    }***/
+
 
     // show additional information for the taxa-based phylogeny
     showAdditional(event){
@@ -91,12 +99,12 @@ class PhylogeneticAnalysisMenu extends Component{
         document.getElementById('returnButton').style.display = 'none';
         const rank = taxonomyLevel.indexOf(this.state.rankSelect);
         d3v6.select('#tree_vis').remove();
-        const treeCopy = {...this.state.tree};
+        const treeCopy = {...this.props.data.tree};
 
         // update the visualizations
-        chart({'size': treeCopy['size']}, this.state.extra, rank, false, true, true);
+        chart({'size': treeCopy['size']}, this.props.data.extraInfo, rank, false, true, true);
         if(document.getElementById('infoSelection')){
-            showClades(this.state.extra[0], this.state.extra[1], null, null);
+            showClades(this.props.data.extraInfo[0], this.props.data.extraInfo[1], null, null);
         }
 
         // change visualisation settings
@@ -109,24 +117,22 @@ class PhylogeneticAnalysisMenu extends Component{
                                 .style('border-radius', '5px');
 
         let additionalInformation;
-        if (this.state.extra.length === 2){
+        if (this.props.phylogenyState === 'taxa'){
             additionalInformation = additionalCladeInformation(this.showAdditional, this.handleUploadAdditional);
         }
 
-        let phylogenyType, newickFilename;
+        let newickFilename;
 
-        if(window.location.href.includes('Unique')){
-            phylogenyType = 'unique sequence-based';
+        if(this.props.phylogenyState === 'seq'){
             newickFilename = 'unique_sequence_based_phylogeny.txt';
         }else{
-            phylogenyType = 'taxa-based';
             newickFilename = 'taxa_based_phylogeny.txt';
         }
 
         return(
             <div id='phylogeny'>
                 <div id='phylogenyMenu'>
-                    <h2>phylogenetic analysis - <i>{phylogenyType}</i></h2>
+                    <h2>                        </h2>
                     <Accordion >
                         {additionalInformation}
                         <Card>

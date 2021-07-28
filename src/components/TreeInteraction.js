@@ -20,8 +20,12 @@ var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phyl
 class TreeInteraction extends Component{
      constructor(props){
         super(props);
-
+        console.log(props)
         if(this.props.calculationMethod === 'taxa'){ // taxonomic Mapping
+            // remove old vis and tooltips
+            d3v6.select('#tree_vis').remove();
+            d3v6.select('#clade_vis').remove();
+
             this.state = {tree:  this.props.phyloData,
                       extra: null,
                       hitSelect: "-",
@@ -34,7 +38,7 @@ class TreeInteraction extends Component{
             d3v6.select('#tooltip').remove();
 
             var treeData = this.props.data.tree;
-            if( Object.keys(this.props.data).length === 3){ // taxa-based phylogeny
+            if(this.props.calculationMethod !== 'phyloUnique'){ // taxa-based phylogeny
                 this.state = {tree: treeData, extra: this.props.data.extraInfo, actualTree: treeData, counter: 0, rankSelect: null};
             }else{ // sequence based phylogeny
                 this.state = {tree: treeData, extra: [1], actualTree: treeData, counter: 0, rankSelect: null};
@@ -140,9 +144,10 @@ class TreeInteraction extends Component{
 
     // visualise the clade-focused visualisation (cladogram)
     d3Tree(){
+        d3v6.selectAll('#tree_vis').remove();
         const rank = this.state.rankSelect;
         const treeCopy = {...this.state.actualTree};
-        console.log(treeCopy)
+        //console.log(treeCopy)
         if(this.state.counter === 0){
             chart(treeCopy, this.state.extra, rank, false, true, false);
         }else{
@@ -162,6 +167,32 @@ class TreeInteraction extends Component{
     // hide the tooltip in 5 seconds
     showTooltip(event){
         setTimeout(function(){d3v6.select('#' + event.id).style("visibility","hidden");}, 5000);
+    }
+
+    componentDidMount(){
+        if (this.props.calculationMethod.includes('phylo')){
+            d3v6.select('#clade_vis').remove();
+            const tree = startTreevis(this.state.tree);
+            //console.log(tree);
+            this.setState({actualTree: {...tree}});
+            if (tree !== 0){
+                this.d3Tree();
+                this.setState({counter: 1})
+            }else{
+                d3v6.select('#tree').append('div').text('Found 0 hits. Return to the main page and try another phylogentic tree');
+            }
+        }
+
+    }
+    componentDidUpdate(prevProps){
+        console.log(this.props)
+        console.log(prevProps)
+        if (this.props.calculationMethod.includes('phylo')){
+            d3v6.select('#clade_vis').remove();
+            const tree = startTreevis(this.state.tree);
+            //console.log(tree);
+            this.d3Tree();
+        }
     }
 
     render(){
@@ -210,17 +241,6 @@ class TreeInteraction extends Component{
                 </div>
             );
         } else{ // tree interaction for phylogenetic analysis
-            if (this.state.counter === 0){
-                const tree = startTreevis(this.state.tree);
-                this.setState({actualTree: {...tree}});
-                if (tree !== 0){
-                    this.d3Tree();
-                }else{
-                    d3v6.select('#tree').append('div').text('Found 0 hits. Return to the main page and try another phylogentic tree');
-                }
-                this.setState({counter: 1});
-            }
-
             const renderDistanceTooltip = (props) => (
                     <Tooltip id="distance_tooltip" {... props}>
                          visualize sequence distances
@@ -246,6 +266,7 @@ class TreeInteraction extends Component{
         }
     }
 }
+
 
 
 export default TreeInteraction;

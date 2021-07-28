@@ -30,12 +30,12 @@ from ete3 import Tree  # handle trees
 
 
 # packages for Phylogeny calculation
-from external_tools import NCBIblastdbcmdCommandline as Blastdbcmd
+from server.external_tools import NCBIblastdbcmdCommandline as Blastdbcmd
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Align.Applications import MafftCommandline as Mafft
-from external_tools import FastTreeCommandline as FastTree
+from server.external_tools import FastTreeCommandline as FastTree
 
 
 # global variables 

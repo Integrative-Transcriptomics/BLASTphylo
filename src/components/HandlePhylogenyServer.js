@@ -1,12 +1,19 @@
 // used libraries
 import React, {Component} from 'react';
 import axios from 'axios';
+import * as d3v6 from 'd3v6';
 import {Spinner, Table} from 'react-bootstrap';
 
 
 class HandlePhylogenyServer extends Component{
     constructor(props){
         super(props);
+        console.log(props)
+        d3v6.select('#tree_vis').remove();
+        d3v6.select('#clade_vis').remove();
+        d3v6.select('#visualisation').style('border', '2px solid white')
+                                .style('border-radius', '5px');
+
     }
 
     // dependent on the given link information taxa-based or unique sequence-based phylogeny will calculated in the back end
@@ -16,8 +23,7 @@ class HandlePhylogenyServer extends Component{
         axios.post(path, null)
          .then(function (response) {
              //console.log(response.data);
-             self.props.changeComp('data', response.data);
-             self.props.changeComp('actual', 'phylogeny');
+             self.props.saveActualData(path, response.data);
          })
          .catch(error => {
             console.log('Error occurred')

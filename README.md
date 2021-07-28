@@ -19,19 +19,24 @@ command.
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and require [npm](https://www.npmjs.com/get-npm) (suggest: node v14.15.0, npm v6.14.8) and [python](https://www.python.org/) (suggest: v3.6.9) for the installation
 
-### Step 1: Installation of the required back-end python packages
+### Step 1: Create a venv in the parent directory of BLASTphylo
 
-Change in the `server` directory and run 
-#### `pip3 install -r requirements.txt`  
+#### `cd <path/to/BLASTphylo>`
+#### virtualenv --python=/usr/bin/python3.6 <your-venv>
+
+### Step2: Installation of the required back-end python packages
+
+#### `source <your-venv>/bin/activate`
+#### `pip3 install -r server/requirements.txt`  
+#### `pip install .`
 
 
-### Step 2: Installation of the front-end
+### Step 3: Installation of the front-end
 
-Change in the project directory and run 
 #### `npm install` 
 command will end with `found 3 vulnerabilities (2 moderate, 1 high)`
 
-### Step 3: Start BLASTphylo
+### Step 4: Start BLASTphylo
 
 Change in the project directory and run
 #### `npm run blastphylo`

@@ -24,22 +24,25 @@ class TaxonomicAnalysisMenu extends Component{
                       rankSelect: 'class',
                       tree: treeData};
 
-        if (treeData !== 0){
-            d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
-                                .style('border-radius', '5px');
-            document.getElementById('treeVis').style.height = '80vh';
-            chart(treeData, null, 6, true, true);
-        }else{ // if tree was empty show a message to make clear that the calculation worked but no hits were found
-            d3v6.select('#phyloblastAlert').remove();
-            d3v6.select('#tree').append('div').attr('id', 'phyloblastAlert')
-                    .text('Found 0 hits. Return to the main page and try another taxonomy');
-        }
-
         // functions
         this.showTooltip = this.showTooltip.bind(this);
         this.handleReturn = this.handleReturn.bind(this);
 
     }
+
+    componentDidMount(){
+        if (this.state.tree !== 0){
+            d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
+                                .style('border-radius', '5px');
+            document.getElementById('treeVis').style.height = '80vh';
+            chart(this.state.tree, null, 6, true, true);
+        }else{ // if tree was empty show a message to make clear that the calculation worked but no hits were found
+            d3v6.select('#phyloblastAlert').remove();
+            d3v6.select('#tree').append('div').attr('id', 'phyloblastAlert')
+                    .text('Found 0 hits. Return to the main page and try another taxonomy');
+        }
+    }
+
 
     // hide any tooltip in 5 seconds
     showTooltip(event){
@@ -71,30 +74,11 @@ class TaxonomicAnalysisMenu extends Component{
 
     render(){
 
-
         return(
             <div id='phyloblast'>
                 <div id='phyloblastMenu'>
-                    <h2>taxonomic analysis</h2>
+                    <h2>           </h2>
                     <Accordion defaultActiveKey='2'>
-                        <Card>
-                            <Accordion.Toggle as={Card.Header} eventKey='0'>
-                                phylogeny calculation
-                            </Accordion.Toggle>
-                            <Accordion.Collapse eventKey='0'>
-                                <Card.Body>
-                                    <Form inline>
-                                        Links will start the phylogeny calculation in a new tab. A detailed description of the difference between the phylogenies
-                                        can be found on the help page
-                                        <br/><br/><br/>
-                                     </Form>
-                                      <Nav className="flex-column">
-                                        <Nav.Link href="/phylogeny" target='_blank'>taxa-based phylogeny <BsBoxArrowUpRight size={20}/></Nav.Link>
-                                        <Nav.Link href="/phylogenyUnique" target='_blank'>unique sequence-based phylogeny <BsBoxArrowUpRight size={20} /></Nav.Link>
-                                      </Nav>
-                                </Card.Body>
-                            </Accordion.Collapse>
-                        </Card>
                         <Card>
                             <Accordion.Toggle as={Card.Header} eventKey='1'>
                                 download tree information

@@ -13,6 +13,8 @@ import {AiFillHome} from 'react-icons/ai';
 import './baseStyle.css';
 import Menu from './components/Menu.js';
 import Help from './components/Help.js';
+import DefaultScreen from './components/DefaultScreen.js';
+import Tabhandling from './components/Tabhandling.js';
 import HandlePhylogenyServer from './components/HandlePhylogenyServer.js';
 import TaxonomicAnalysisMenu from './components/TaxonomicAnalysisMenu.js';
 import PhylogeneticAnalysisMenu from './components/PhylogeneticAnalysisMenu.js';
@@ -20,42 +22,21 @@ import TreeInteraction from './components/TreeInteraction.js';
 import headerTree from './visualisations/header_tree.png';
 
 
-/*** #################################### IMPORTANT
-    1.
-        update of window.location.href for home/help links has to be updated if tool become online version
-    2.
-        at the moment tool is adapted to linux like file systems most likely don't work with Windows
-    3.
-        export of figures is limited by node number especially unique sequence based phylogeny
-
-***/
 
 class App extends Component {
 
     constructor(props){
         super(props);
 
-        // check if new Tab for phylogeny was "opened"
-        var actualWebpage = window.location.href.split('/');
-        console.log(actualWebpage)
-        if(actualWebpage[actualWebpage.length-1].includes('phylogeny')){
-            this.state = {isActualComponent: 'handlePhylogeny',
-                   data: actualWebpage[actualWebpage.length-1],
-                   error: null};
-        }else if(actualWebpage[actualWebpage.length-1] === 'help'){
-            this.state = {isActualComponent: 'help',
+
+        this.state = {isActualComponent: 'defaultScreen',
                    data: null,
                    error: null};
-        }else{
-            this.state = {isActualComponent: 'menu',
-                   data: null,
-                   error: null};
-        }
+
 
         // functions to handle view update, reset, help page and alert messages
         this.changeComp = this.changeComp.bind(this);
         this.handleMenuClick = this.handleMenuClick.bind(this);
-        this.handleAlert = this.handleAlert.bind(this);
     }
 
     // switch between the componets and allow data transfer
@@ -73,29 +54,18 @@ class App extends Component {
 
     // reset view to the menu page
     handleMenuClick(){
-        if(window.location.href.includes('phylogeny')){
-            window.location.href = 'http://localhost:3000/';
-        }
         this.setState({isActualComponent: 'menu'});
-    }
-
-    // close alert messages
-    handleAlert(){
-        document.getElementById("alert").style.display='none';
     }
 
 
 
     render() {
-        var alerts = null;
 
         const isActualComponent = this.state.isActualComponent;   // main div: menu or visualizations
         const data = this.state.data;
-        var userMenu = <div />;  // sub div: menus for the visualizations (export visualization, etc)
 
         //console.log(data)
         let actualComponent;
-        d3v6.select('#phyloblastAlert').remove();
 
         //Navbar tooltips
         const generalTooltip = function(name){ return(<Tooltip id='tooltip-bottom'>
@@ -105,29 +75,16 @@ class App extends Component {
 
         // switch view based on the isActualComponent state
         if (isActualComponent === 'help'){
-            d3v6.select('#visualisation').style('border', 'hidden');
             actualComponent = <Help />;
-        } else if (isActualComponent === 'phyloblast'){ // taxonomic Mapping
-            const copy = {...data[0]};
-            actualComponent = <TaxonomicAnalysisMenu phyloData={copy} queries={data[1]} changeComp={this.changeComp} />;
-            userMenu = <TreeInteraction phyloData={copy} queries={data[1]} calculationMethod={'taxa'}/>;
-
-        }else if (isActualComponent === 'handlePhylogeny'){ // handle data processing of the phylogenetic analysis
-            actualComponent = <HandlePhylogenyServer data={data} changeComp={this.changeComp} />;
-        }else if (isActualComponent === 'phylogeny'){ // visualize the phylogeny
-            actualComponent = <PhylogeneticAnalysisMenu data={data} changeComp={this.changeComp} />;
-            userMenu = <TreeInteraction data={data} calculationMethod={'phylo'} />;
+        } else if (isActualComponent === 'tabhandling'){ // taxonomic Mapping
+            actualComponent = <Tabhandling data={data} changeComp={this.changeComp} />;
         } else {
-            d3v6.select('#visualisation').style('border', 'hidden');
-            actualComponent = <Menu isActualComponent={isActualComponent} changeComp={this.changeComp} />;
+            actualComponent = <DefaultScreen isActualComponent={isActualComponent} changeComp={this.changeComp} />;
         }
         //console.log(this.state.isActualComponent)
 
-        if(this.state.error !== null){ // errors occurred during input
-            alerts = this.state.error.map((alertmessage) =>
-                <li><strong>Warning: </strong>{alertmessage.message}</li>);
 
-            return (
+        return (
                 <div className="App">
                     <header className="App-header">
                     <nav >
@@ -145,7 +102,7 @@ class App extends Component {
                                     </button>
                             </li>
                             <li id='link2'>
-                                    <a id='helpLink' href='/help' target='_blank' >
+                                    <a id='helpLink' href='/help' >
                                         <OverlayTrigger key='tooltip_help' placement='bottom'  overlay={generalTooltip('help')}>
                                         <BiHelpCircle style={{color: '#002060'}} size={25}/>
                                         </OverlayTrigger>
@@ -154,69 +111,9 @@ class App extends Component {
                         </ul>
                     </nav>
                     </header>
-                    <div className='App-body'>
-                        <div id="alert">
-                            <span class="closebtn" onClick={this.handleAlert}>&times;</span>
-                            <ul>
-                                {alerts}
-                            </ul>
-                        </div>
-                        {actualComponent}
-                        <div id="visualisation">
-                            <div id='treeInteraction'>
-                            {userMenu}
-                            </div>
-                            <div id='treeVis'>
-                                <div id="tree"></div>
-                                <div id="additionalInfo"></div>
-                            </div>
-                        </div>
-                    </div>
+                    {actualComponent}
                 </div>
-            );
-        }else{ // calculation can run with success
-            return (
-                <div className="App">
-                    <header className="App-header">
-                    <nav >
-                        <li id='headerName' >
-                            <h1 id='title'>BLASTphylo</h1>
-                            <h1 id='subtitle'>taxonomy <IoMdArrowDropleft /> blast result <IoMdArrowDropright /> phylogeny</h1>
-                        </li>
-                        <img src={headerTree} alt='headerPicture' id='headerPicture'/>
-                        <ul  style={{width:'80%'}} id='subMenu'>
-                            <li id='link1' >
-                                    <button id='menuLink' onClick={this.handleMenuClick} >
-                                        <OverlayTrigger key='tooltip_home' placement='bottom' overlay={generalTooltip('home')}>
-                                        <AiFillHome style={{color: '#002060'}} size={25}/>
-                                        </OverlayTrigger>
-                                    </button>
-                            </li>
-                            <li id='link2'>
-                                    <a id='helpLink' href='/help' target='_blank' >
-                                        <OverlayTrigger key='tooltip_help' placement='bottom'  overlay={generalTooltip('help')}>
-                                        <BiHelpCircle style={{color: '#002060'}} size={25}/>
-                                        </OverlayTrigger>
-                                    </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    </header>
-                    <div className='App-body'>
-                        {actualComponent}
-                        <div id="visualisation">
-                            <div id='treeInteraction'>
-                            {userMenu}
-                            </div>
-                            <div id='treeVis'>
-                                <div id="tree"></div>
-                                <div id="additionalInfo"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
+        );
     }
 }
 

@@ -18,7 +18,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from ete3 import Tree
-import processing_data
+from server.processing_data import translate_nodes, run_blastphylo, calculate_phylogeny, generate_blastphylo_output, generate_Newick_from_dict
 
 # flask server packages
 from flask import Flask, render_template, redirect, url_for, request, jsonify, make_response
@@ -115,10 +115,10 @@ def exportData():
 
         if len(d3_tree) > 0:
             if 'mapping.csv' in datatype:
-                table_tree = processing_data.generate_blastphylo_output(d3_tree, '', queries)
+                table_tree = generate_blastphylo_output(d3_tree, '', queries)
                 return {'data': table_tree, 'data_type': 'table'}
             elif 'newick_taxonomic' in datatype:
-                d3_newick = processing_data.generate_Newick_from_dict(d3_tree)
+                d3_newick = generate_Newick_from_dict(d3_tree)
                 d3_newick = d3_newick[:-1] + ';'
                 return {'data': d3_newick, 'data_type': 'newick'}
             elif 'taxa_based' in datatype:
@@ -136,7 +136,7 @@ def exportData():
 
 
 # search for taxon
-@app.route('/server/searchNcbiTaxa', methods=['POST', 'GET'])
+@app.route('/server/searchNcbiTaxa', methods=['POST'])
 def searchNcbiTaxa():
     if request.method == 'POST':
         searchquery = request.form['searchquery']
@@ -162,7 +162,7 @@ def phylogeny():
     global hit_seqs
     global taxa_newick
     print('Start taxa-based phylogeny calculation')
-    d3Tree, newick_phylogeny, phylum_info, acc_info = processing_data.calculate_phylogeny(hit_seqs, None, flask_tmp_dir, 'True',  False)
+    d3Tree, newick_phylogeny, phylum_info, acc_info = calculate_phylogeny(hit_seqs, None, flask_tmp_dir, 'True',  False)
     taxa_newick = newick_phylogeny
 
     return {'tree': d3Tree, 'newick': newick_phylogeny[:-1], 'extraInfo': [phylum_info, acc_info]}
@@ -173,17 +173,16 @@ def phylogenyUnique():
     global accs_seqs
     global unique_newick
     print('Start unique sequence-based phylogeny calculation')
-    d3_phylogeny, newick_phylogeny = processing_data.calculate_phylogeny(accs_seqs, None, flask_tmp_dir, 'True',  True)
+    d3_phylogeny, newick_phylogeny = calculate_phylogeny(accs_seqs, None, flask_tmp_dir, 'True',  True)
     unique_newick = newick_phylogeny
 
-    return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1]}
+    return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1], 'extraInfo': [0]}
 
 
 # data generation for taxonomic mapping
-@app.route('/server/menu', methods=['POST', 'GET'])
+@app.route('/server/menu', methods=['POST'])
 def menu():
     # remove all old files + set global variable
-    [os.remove(os.path.join('flask_tmp/', f)) for f in os.listdir('flask_tmp')]
 
 
     if request.method == 'POST':
@@ -195,6 +194,7 @@ def menu():
         tree_data = None
         tree_menu_selection = None
         error = []
+        protein = None
         print('Parameter of this run:')
 
         # Blast Search
@@ -237,7 +237,6 @@ def menu():
                 except:
                     blastResult = pd.read_csv(StringIO(protein), sep=',')
                 queries_np = blastResult.iloc[:,0].unique()
-                print(queries_np)
                 queries = queries_np.tolist()
                 if len(blastResult.columns) != 13:
                     error.append({'message': 'Uploaded BLAST result has to much/less columns. Check the help page for '
@@ -257,7 +256,8 @@ def menu():
             # check if given scientific names and taxon IDs are valid
             tree_taxa = tree_data.split(',')
             taxa = [taxon.split('|')[0] for taxon in tree_taxa]
-            taxaIDs = processing_data.translate_nodes(taxa)
+            taxaIDs = translate_nodes(taxa)
+            print(taxaIDs)
 
         # user defined taxonomy
         elif tree_menu_selection == '1':
@@ -294,7 +294,7 @@ def menu():
             # start processing of the data
             print('\nStart PhyloBlast')
             try:
-                d3_tree, hit_seqs, accs_seqs, number_of_queries = processing_data.run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
+                d3_tree, hit_seqs, accs_seqs, number_of_queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
                 #print(d3_tree)
 
                 # remove temporary files
