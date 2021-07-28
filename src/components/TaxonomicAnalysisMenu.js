@@ -19,10 +19,10 @@ class TaxonomicAnalysisMenu extends Component{
         super(props);
         console.log(props)
         // generation of the tree visualisation
-        var treeData = startTreevis(this.props.phyloData, this.props.queries);
-        this.state = {hitSelect: "2",
-                      rankSelect: 'class',
-                      tree: treeData};
+        //var treeData = startTreevis(this.props.data.tree, this.props.queries);
+        //console.log(treeData['size'])
+        this.state = {hitSelect: "-",
+                      rankSelect: 'class'};
 
         // functions
         this.showTooltip = this.showTooltip.bind(this);
@@ -31,11 +31,14 @@ class TaxonomicAnalysisMenu extends Component{
     }
 
     componentDidMount(){
-        if (this.state.tree !== 0){
+        d3v6.select('#tree_vis').remove();
+        d3v6.select('#clade_vis').remove();
+        if (this.props.data.tree !== 0){
             d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
                                 .style('border-radius', '5px');
             document.getElementById('treeVis').style.height = '80vh';
-            chart(this.state.tree, null, 6, true, true);
+            chart(startTreevis(this.props.data.actualTree, this.props.queries), null, 6, true, true);
+
         }else{ // if tree was empty show a message to make clear that the calculation worked but no hits were found
             d3v6.select('#phyloblastAlert').remove();
             d3v6.select('#tree').append('div').attr('id', 'phyloblastAlert')
@@ -55,8 +58,8 @@ class TaxonomicAnalysisMenu extends Component{
         document.getElementById('returnButton').style.display = 'none';
         const rank = taxonomyLevel.indexOf(document.getElementById('taxoRank').attributes.eventkey.value);
         d3v6.select('#tree_vis').remove();
-        const treeCopy = {...this.state.tree};
-
+        const treeCopy = {...this.props.data.tree};
+        console.log(treeCopy['size'])
         // update visualizations
         chart({'size': treeCopy['size']}, null, rank, false, true, true);
         if(!(taxonomyLevel.includes(treeCopy['value'][2]))){

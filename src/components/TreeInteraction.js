@@ -21,29 +21,7 @@ class TreeInteraction extends Component{
      constructor(props){
         super(props);
         console.log(props)
-        if(this.props.calculationMethod === 'taxa'){ // taxonomic Mapping
-            // remove old vis and tooltips
-            d3v6.select('#tree_vis').remove();
-            d3v6.select('#clade_vis').remove();
-
-            this.state = {tree:  this.props.phyloData,
-                      extra: null,
-                      hitSelect: "-",
-                      rankSelect: 'class',
-                      actualTree: this.props.phyloData};
-        }else{
-            // remove old vis and tooltips
-            d3v6.select('#tree_vis').remove();
-            d3v6.select('#hitbars').remove();
-            d3v6.select('#tooltip').remove();
-
-            var treeData = this.props.data.tree;
-            if(this.props.calculationMethod !== 'phyloUnique'){ // taxa-based phylogeny
-                this.state = {tree: treeData, extra: this.props.data.extraInfo, actualTree: treeData, counter: 0, rankSelect: null};
-            }else{ // sequence based phylogeny
-                this.state = {tree: treeData, extra: [1], actualTree: treeData, counter: 0, rankSelect: null};
-            }
-        }
+        this.state = {hitSelect: '-', rankSelect: 'class', counter: 0};
 
         // functions to handle the interactions and tooltips
         this.handleHits = this.handleHits.bind(this);
@@ -58,7 +36,7 @@ class TreeInteraction extends Component{
     handleHits(event){
         this.setState({hitSelect: event});
 
-        if(!(taxonomyLevel.includes(this.state.tree['value'][2]))){
+        if(!(taxonomyLevel.includes(this.props.data.tree['value'][2]))){
             hitBars(event);
         }else{
             stackBars(event);
@@ -112,7 +90,7 @@ class TreeInteraction extends Component{
         // update additional information if nodes will be collapsed
         if(document.getElementById('infoSelection')){
             //console.log('run showClades')
-            showClades(this.state.extra[0], this.state.extra[1], null, libTree);
+            showClades(this.props.data.extraInfo[0], this.props.data.extraInfo[1], null, libTree);
             // Select the node that will be observed for mutations
             const targetNode = document.getElementById('tree_vis');
 
@@ -124,7 +102,7 @@ class TreeInteraction extends Component{
                 // Use traditional 'for loops' for IE 11
                 for(const mutation of mutationsList) {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'height') {
-                        showClades(self.state.extra[0], self.state.extra[1], null, null);
+                        showClades(self.props.data.extraInfo[0], self.props.data.extraInfo[1], null, null);
                     }
                 }
             };
@@ -146,15 +124,15 @@ class TreeInteraction extends Component{
     d3Tree(){
         d3v6.selectAll('#tree_vis').remove();
         const rank = this.state.rankSelect;
-        const treeCopy = {...this.state.actualTree};
+        const treeCopy = {...this.props.data.actualTree};
         //console.log(treeCopy)
         if(this.state.counter === 0){
-            chart(treeCopy, this.state.extra, rank, false, true, false);
+            chart(treeCopy, this.props.data.extraInfo, null, false, true, false);
         }else{
-            chart({'size': treeCopy['size']}, this.state.extra, rank, false, true, false);
+            chart({'size': treeCopy['size']}, this.props.data.extraInfo, null, false, true, false);
         }
         if(document.getElementById('infoSelection')){
-            showClades(this.state.extra[0], this.state.extra[1], null, null);
+            showClades(this.props.data.extraInfo[0], this.props.data.extraInfo[1], null, null);
         }
 
         // change settings for cladogram
@@ -172,9 +150,8 @@ class TreeInteraction extends Component{
     componentDidMount(){
         if (this.props.calculationMethod.includes('phylo')){
             d3v6.select('#clade_vis').remove();
-            const tree = startTreevis(this.state.tree);
+            const tree = startTreevis(this.props.data.actualTree);
             //console.log(tree);
-            this.setState({actualTree: {...tree}});
             if (tree !== 0){
                 this.d3Tree();
                 this.setState({counter: 1})
@@ -185,11 +162,14 @@ class TreeInteraction extends Component{
 
     }
     componentDidUpdate(prevProps){
-        console.log(this.props)
-        console.log(prevProps)
+        //console.log(this.props)
+        //console.log(prevProps)
         if (this.props.calculationMethod.includes('phylo')){
             d3v6.select('#clade_vis').remove();
-            const tree = startTreevis(this.state.tree);
+            d3v6.select('#hitbars').remove();
+            d3v6.select('#tooltip').remove();
+
+            const tree = startTreevis(this.props.data.actualTree);
             //console.log(tree);
             this.d3Tree();
         }

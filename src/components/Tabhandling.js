@@ -105,11 +105,16 @@ class Tabhandling extends Component {
 
         // switch view based on the isActualComponent state
         if (isActualComponent === 'taxonomy'){ // taxonomic Mapping
-            const copy = {...taxonomicMapData[0]};
-            actualComponent = <TaxonomicAnalysisMenu phyloData={copy} queries={taxonomicMapData[1]}  />;
-            userMenu = <TreeInteraction data={{tree: copy}} queries={taxonomicMapData[1]} calculationMethod={'taxa'}/>;
+            const copy = {'tree': taxonomicMapData.tree, 'actualTree': taxonomicMapData.actualTree};
+            console.log(copy)
+            actualComponent = <TaxonomicAnalysisMenu data={copy} queries={taxonomicMapData.queries}  />;
+            userMenu = <TreeInteraction data={copy} queries={taxonomicMapData.queries} calculationMethod={'taxa'}/>;
 
         }else if (isActualComponent === 'handlePhylogeny'){ // handle data processing of the phylogenetic analysis
+            // remove old vis and tooltips
+            d3v6.select('#tree_vis').remove();
+            d3v6.select('#hitbars').remove();
+            d3v6.select('#tooltip').remove();
             actualComponent = <HandlePhylogenyServer data={this.state.phylogenyState} saveActualData={this.saveActualData} />;
         }else if (isActualComponent === 'phylogeny'){ // visualize the phylogeny
             //console.log(this.state.taxaPhyloData)

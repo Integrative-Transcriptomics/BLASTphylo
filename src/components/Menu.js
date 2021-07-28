@@ -101,7 +101,7 @@ class Menu extends Component {
                      if(document.getElementById('alert')){
                         document.getElementById('alert').remove();
                      }
-                     self.props.changeComp('data', [response.data.tree, response.data.queries]);
+                     self.props.changeComp('data', response.data);
                      self.props.changeComp('actual', 'tabhandling');
                  }else{
                      self.props.sendErrors(response.data.error);

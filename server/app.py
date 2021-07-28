@@ -9,6 +9,7 @@ import sys
 import json
 import os
 import shutil, re
+import copy
 
 # check menu inputs and preprocess them
 import pandas as pd
@@ -165,7 +166,8 @@ def phylogeny():
     d3Tree, newick_phylogeny, phylum_info, acc_info = calculate_phylogeny(hit_seqs, None, flask_tmp_dir, 'True',  False)
     taxa_newick = newick_phylogeny
 
-    return {'tree': d3Tree, 'newick': newick_phylogeny[:-1], 'extraInfo': [phylum_info, acc_info]}
+    return {'tree': d3Tree, 'newick': newick_phylogeny[:-1], 'extraInfo': [phylum_info, acc_info],
+            'actualTree': copy.deepcopy(d3Tree)}
 
 # unique sequence-based phylogeny
 @app.route('/server/phylogenyUnique', methods=['POST', 'GET'])
@@ -176,7 +178,8 @@ def phylogenyUnique():
     d3_phylogeny, newick_phylogeny = calculate_phylogeny(accs_seqs, None, flask_tmp_dir, 'True',  True)
     unique_newick = newick_phylogeny
 
-    return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1], 'extraInfo': [0]}
+    return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1], 'extraInfo': [0],
+            'actualTree': copy.deepcopy(d3_phylogeny)}
 
 
 # data generation for taxonomic mapping
@@ -303,11 +306,11 @@ def menu():
 
                 if len(d3_tree) > 0:
                     print('Root of the tree: ' + d3_tree['name'])
-                    return {'tree': d3_tree, 'error': None, 'queries': queries}
+                    return {'tree': d3_tree, 'error': None, 'queries': queries, 'actualTree': d3_tree}
                 else:
-                    return {'tree': None, 'error': None, 'queries': queries}
+                    return {'tree': None, 'error': None, 'queries': queries, 'actualTree': None}
             except:
-                return {'tree': None, 'error': None, 'queries': queries}
+                return {'tree': None, 'error': None, 'queries': queries, 'actualTree': None}
     else:
         return None
       
