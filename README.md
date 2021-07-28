@@ -21,25 +21,26 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ### Step 1: Create a venv in the parent directory of BLASTphylo
 
-#### `cd <path/to/BLASTphylo>`
-#### virtualenv --python=/usr/bin/python3.6 <your-venv>
+`cd <path/to/BLASTphylo>`
+`virtualenv --python=/usr/bin/python3.6 <your-venv>`
 
 ### Step2: Installation of the required back-end python packages
 
-#### `source <your-venv>/bin/activate`
-#### `pip3 install -r server/requirements.txt`  
-#### `pip install .`
+ `source <your-venv>/bin/activate`
+ `pip3 install -r server/requirements.txt`
+ `pip install .`
 
 
 ### Step 3: Installation of the front-end
 
-#### `npm install` 
+ `npm install` 
 command will end with `found 3 vulnerabilities (2 moderate, 1 high)`
 
 ### Step 4: Start BLASTphylo
 
 Change in the project directory and run
-#### `npm run blastphylo`
+ `npm run blastphylo`
+
 Make sure that all needed modules are installed before running the app.
 Runs the app and the server in the background.
 Open [http://localhost:3000](http://localhost:3000) to view BLASTphylos 
