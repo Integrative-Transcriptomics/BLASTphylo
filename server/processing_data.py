@@ -62,7 +62,6 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
     header = ['qacc', 'sacc', 'qstart', 'qend', 'sstart', 'send', 'slen', 'nident', 'evalue', 'pident', 'staxids', 'qcovhsp', 'sseq']
 
     header_basic = ['qacc', 'sacc', 'pident', 'alen', 'mm', 'g', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bit', 'm']
-
     if prot_file_type == "1": # input was csv file
         try:
             preFilter = pd.read_csv(StringIO(prot), sep='\t')
@@ -74,7 +73,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         else:
             preFilter.columns = header_basic
 
-        # filter for alignment identity, query coverage, subject coverage, evalue
+        ''''# filter for alignment identity, query coverage, subject coverage, evalue
         subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
         subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
 
@@ -82,7 +81,11 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 
         result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (float(min_query_cover))) & subjectCoverage & alignIdent]
 
-        print(result.shape)
+        print(result.shape)'''
+
+    elif (prot_file_type == '2') or (prot_file_type == '3'):
+        preFilter = pd.read_csv(prot, sep='\t')
+        preFilter.columns = header
 
     else: # input was a protein
         blast_output_columns = '6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovhsp sseq'
@@ -127,15 +130,15 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         print(stderr)
         preFilter = pd.read_csv('blast_result.csv', sep='\t', names=header)
 
-        # filter for alignment identity, query coverage, subject coverage, evalue
-        # evalue and query coverage are necessary given that BLAST stop when the first subject sequences exceed the threshold
-        subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
-        subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
+    # filter for alignment identity, query coverage, subject coverage, evalue
+    # evalue and query coverage are necessary given that BLAST stop when the first subject sequences exceed the threshold
+    subjectAlignedLength = abs(preFilter['send']-preFilter['sstart'])
+    subjectCoverage = (subjectAlignedLength/preFilter['slen']) > (int(min_subject_cover)/100)
 
-        alignIdent = preFilter['pident'] > (float(min_align_ident))
+    alignIdent = preFilter['pident'] > (float(min_align_ident))
 
-        result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (float(min_query_cover))) & subjectCoverage & alignIdent]
-        print(result.shape)
+    result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (float(min_query_cover))) & subjectCoverage & alignIdent]
+    print(result.shape)
 
     return result
 
@@ -155,7 +158,7 @@ def best_hit_scoring_function(row, score):
     subjectCoverage = abs(row['send']-row['sstart'])/row['slen']
     row_score = 0.25*(float(row['pident'])/100) + 0.25*float(row['evalue']) + 0.2*subjectCoverage + 0.2*(float(row['qcovhsp'])/100)
 
-    if score >= row_score:
+    if score > row_score:
         return score
     else:
         return row_score
@@ -914,13 +917,14 @@ def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         #try:
         print('Start filtering')
         filtered_blast, sequence_dic, uniqueAccs, number_of_queries = filter_blast_result(blast_result, taxid_tree_set)
+        print(number_of_queries)
         print('complete')
         '''except:
             sys.stderr.write('Filtering failed')
             return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)'''
     else:
         sys.stderr.write('Blast prefiltering lead to no hits')
-        return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)
+        return d3_tree, sequence_dic, uniqueAccs, number_of_queries
 
     if filtered_blast:
         #try:
@@ -928,13 +932,13 @@ def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
         d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
         #generate_blastphylo_output(d3_tree, out_dir, len(number_of_queries))
         print('complete')
-        return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)
+        return d3_tree, sequence_dic, uniqueAccs, number_of_queries
         ''''except:
             sys.stderr.write('Transfer in d3 compatible tree/newick failed')
             return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)'''
     else:
         sys.stderr.write('None of the BLAST hits were present in the tree')
-        return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)
+        return d3_tree, sequence_dic, uniqueAccs, number_of_queries
 
 
 ########################################################################################################################
@@ -946,6 +950,7 @@ def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
 '''
 def generate_tree_output(d3_tree, number_of_queries):
     global  normalization_dic
+
     if number_of_queries == 1:
         ncbi_nodes = normalization_dic[d3_tree['name']][1]
         percent_nodes = round((d3_tree['leaf_counter']/ncbi_nodes)*100, 2)
@@ -960,7 +965,7 @@ def generate_tree_output(d3_tree, number_of_queries):
         percent_nodes = round((d3_tree['leaf_counter']/ncbi_nodes)*100, 2)
         try:
             child_string = ','.join([str(val) for row in d3_tree['value'][:number_of_queries] for val in row])
-            return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][number_of_queries].replace(' ', '_') + ',' + child_string + ',' +\
+            return d3_tree['name'].replace(' ', '_') + ',' +  d3_tree['value'][number_of_queries].replace(' ', '_')  + ',' + child_string + ',' +\
                    str(d3_tree['leaf_counter']) + ',' + str(ncbi_nodes) + ',' + str(percent_nodes) + '\n' + '\n'.join([generate_tree_output(child, number_of_queries) for child in d3_tree['children']])
         except KeyError:
             child_string = ','.join([str(val) for row in d3_tree['value'][:number_of_queries] for val in row])
@@ -973,10 +978,10 @@ def generate_tree_output(d3_tree, number_of_queries):
     outdir:             path to folder 
     number_of_queries:  number of input queries
 '''
-def generate_blastphylo_output(tree, outdir, number_of_queries):
+def generate_blastphylo_output(tree, number_of_queries):
     global normalization_dic
 
-    if number_of_queries == 1:
+    if len(number_of_queries) == 1:
         query_string = '#hits,#subtree_hits,#nodesTree,#nodesNCBI,%nodes'
     else:
         query_header = [query+'#hits,'+ query+'#subtree' for query in number_of_queries]
@@ -987,12 +992,8 @@ def generate_blastphylo_output(tree, outdir, number_of_queries):
     with open(json_file, 'r') as f:
         normalization_dic = json.load(f)
 
-
     table_tree = 'Sci_Name,rank,' + query_string + '\n' + generate_tree_output(tree, len(number_of_queries))
     return table_tree
-    #tree_out = outdir + 'taxonomicMapping.csv'
-    #with open(tree_out, 'w') as w:
-     #   w.write(table_tree)
 
 
 ''' Generate Newick string from dictionary like tree

@@ -30,6 +30,7 @@ class TaxonomicAnalysisMenu extends Component{
 
     }
 
+
     componentDidMount(){
         d3v6.select('#tree_vis').remove();
         d3v6.select('#clade_vis').remove();
@@ -37,7 +38,8 @@ class TaxonomicAnalysisMenu extends Component{
             d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
                                 .style('border-radius', '5px');
             document.getElementById('treeVis').style.height = '80vh';
-            chart(startTreevis(this.props.data.actualTree, this.props.queries), null, 6, true, true);
+
+            chart(startTreevis(this.props.data.tree, this.props.queries), null, 6, true, true, true);
 
         }else{ // if tree was empty show a message to make clear that the calculation worked but no hits were found
             d3v6.select('#phyloblastAlert').remove();
@@ -58,10 +60,13 @@ class TaxonomicAnalysisMenu extends Component{
         document.getElementById('returnButton').style.display = 'none';
         const rank = taxonomyLevel.indexOf(document.getElementById('taxoRank').attributes.eventkey.value);
         d3v6.select('#tree_vis').remove();
-        const treeCopy = {...this.props.data.tree};
+        const treeCopy = {...this.props.data.actualTree};
         console.log(treeCopy['size'])
+
         // update visualizations
         chart({'size': treeCopy['size']}, null, rank, false, true, true);
+
+
         if(!(taxonomyLevel.includes(treeCopy['value'][2]))){
                 hitBars(document.getElementById('barChart').attributes.eventkey.value);
         }else{
@@ -81,7 +86,7 @@ class TaxonomicAnalysisMenu extends Component{
             <div id='phyloblast'>
                 <div id='phyloblastMenu'>
                     <h2>           </h2>
-                    <Accordion defaultActiveKey='2'>
+                    <Accordion defaultActiveKey='1'>
                         <Card>
                             <Accordion.Toggle as={Card.Header} eventKey='1'>
                                 download tree information

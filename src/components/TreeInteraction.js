@@ -124,12 +124,17 @@ class TreeInteraction extends Component{
     d3Tree(){
         d3v6.selectAll('#tree_vis').remove();
         const rank = this.state.rankSelect;
-        const treeCopy = {...this.props.data.actualTree};
-        //console.log(treeCopy)
+        //chart(treeCopy, this.props.data.extraInfo, null, true, true, true);
         if(this.state.counter === 0){
-            chart(treeCopy, this.props.data.extraInfo, null, false, true, false);
+            const treeCopy = {...this.props.data.actualTree};
+            console.log(treeCopy['size'])
+            chart(treeCopy, this.props.data.extraInfo, null, true, true, false);
         }else{
-            chart({'size': treeCopy['size']}, this.props.data.extraInfo, null, false, true, false);
+            const treeCopy = {...this.props.data.actualTree};
+            var sizeOriginal = this.props.data.tree['size'][0];
+            treeCopy['size'][0] = sizeOriginal;
+            console.log(treeCopy['size'])
+            chart(treeCopy, this.props.data.extraInfo, null, false, true, true);
         }
         if(document.getElementById('infoSelection')){
             showClades(this.props.data.extraInfo[0], this.props.data.extraInfo[1], null, null);
@@ -137,7 +142,7 @@ class TreeInteraction extends Component{
 
         // change settings for cladogram
         document.getElementById('treeVis').style.height = '80vh'
-        if(this.state.counter > 0){
+        if(document.getElementById('public_ready_phylo')){
             document.getElementById('public_ready_phylo').disabled = false;
         }
     }
@@ -146,6 +151,7 @@ class TreeInteraction extends Component{
     showTooltip(event){
         setTimeout(function(){d3v6.select('#' + event.id).style("visibility","hidden");}, 5000);
     }
+
 
     componentDidMount(){
         if (this.props.calculationMethod.includes('phylo')){
@@ -158,18 +164,20 @@ class TreeInteraction extends Component{
             }else{
                 d3v6.select('#tree').append('div').text('Found 0 hits. Return to the main page and try another phylogentic tree');
             }
+
         }
 
     }
+
     componentDidUpdate(prevProps){
         //console.log(this.props)
         //console.log(prevProps)
-        if (this.props.calculationMethod.includes('phylo')){
+        if ((this.props.calculationMethod !== prevProps.calculationMethod) &&
+        (this.props.calculationMethod.includes('phylo'))){
             d3v6.select('#clade_vis').remove();
             d3v6.select('#hitbars').remove();
             d3v6.select('#tooltip').remove();
 
-            const tree = startTreevis(this.props.data.actualTree);
             //console.log(tree);
             this.d3Tree();
         }

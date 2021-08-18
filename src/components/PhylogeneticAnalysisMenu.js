@@ -23,10 +23,10 @@ import {showClades, publicationReady, chart} from '../visualisations/phyloblast2
 class PhylogeneticAnalysisMenu extends Component{
     constructor(props){
         super(props);
-        console.log(props)
+        //console.log(props)
         // set state for visualisations
         var treeData = this.props.data.tree;
-        this.state = {tree: treeData, extra: this.props.data.extraInfo, ownInfo: null, actualTree: treeData, counter: 0};
+        this.state = { ownInfo: null, counter: 0};
 
 
 
@@ -36,22 +36,36 @@ class PhylogeneticAnalysisMenu extends Component{
         this.convertCSVtoJson = this.convertCSVtoJson.bind(this);
         this.showTooltip = this.showTooltip.bind(this);
         this.handleReturn = this.handleReturn.bind(this);
+        this.handleTabChange = this.handleTabChange.bind(this);
+
+    }
+
+    /****componentDidMount(){
+        if (this.props.phylogenyState === 'taxa'){
+            console.log(this.props.phylogenyState)
+            document.getElementById('phylogenyTab').addEventListener('click', this.handleTabChange);
+        }else if (this.props.phylogenyState === 'seq'){
+            document.getElementById('phylogenyUniqueTab').addEventListener('click', this.handleTabChange);
+        }
+    }***/
+
+    handleTabChange(){
+        console.log('handle Tab change')
+        this.handleReturn('Tabchange');
+    }
+
+    componentDidUpdate(prevProps){
+        if( (this.props.calculationMethod !== prevProps.calculationMethod) &&
+        (document.getElementById('infoSelection'))){
+            showClades(this.props.data.extraInfo[0], this.props.data.extraInfo[1], null, null);
+        }
 
     }
 
 
-
-    /***componentDidUpdate(prevProps){
-        console.log('Update')
-        console.log(prevProps)
-        console.log(this.props)
-        console.log('Update Ende')
-    }***/
-
-
     // show additional information for the taxa-based phylogeny
     showAdditional(event){
-        showClades(this.state.extra[0], this.state.extra[1], this.state.ownInfo, null);
+        showClades(this.props.data.extraInfo[0], this.props.data.extraInfo[1], this.state.ownInfo, null);
     }
 
     // convert the given additional information in a json object for better handling in d3
@@ -100,9 +114,14 @@ class PhylogeneticAnalysisMenu extends Component{
         const rank = taxonomyLevel.indexOf(this.state.rankSelect);
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.props.data.tree};
-
+        console.log(treeCopy['size'])
         // update the visualizations
         chart({'size': treeCopy['size']}, this.props.data.extraInfo, rank, false, true, true);
+        /***if(event === 'Tabchange'){
+            chart(treeCopy, this.props.data.extraInfo, rank, false, true, true);
+        }else{
+            chart({'size': treeCopy['size']}, this.props.data.extraInfo, rank, false, true, true);
+        }***/
         if(document.getElementById('infoSelection')){
             showClades(this.props.data.extraInfo[0], this.props.data.extraInfo[1], null, null);
         }
@@ -133,7 +152,7 @@ class PhylogeneticAnalysisMenu extends Component{
             <div id='phylogeny'>
                 <div id='phylogenyMenu'>
                     <h2>                        </h2>
-                    <Accordion >
+                    <Accordion defaultActiveKey='1'>
                         {additionalInformation}
                         <Card>
                             <Accordion.Toggle as={Card.Header} eventKey='1'>

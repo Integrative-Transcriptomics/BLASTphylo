@@ -12,7 +12,8 @@ class SearchBar extends Component{
         super(props);
         this.state = {taxon: '',
                       matching_taxa: [],
-                      htmlSize: 0}
+                      htmlSize: 0,
+                      spinnerStyle: 0}
 
 
         //own functions
@@ -23,9 +24,10 @@ class SearchBar extends Component{
 
     // access server and search for matching pattern
     searchBacteria(event){
+        this.setState({spinnerStyle: 1});
+        console.log(event)
         var self = this;
         var path = 'server/searchNcbiTaxa'
-        document.getElementById('searchSpinner').style.opacity = 1;
 
         if(event !== ''){
             const formData = new FormData();
@@ -41,7 +43,7 @@ class SearchBar extends Component{
                     console.log(error);
                 })
         }
-        document.getElementById('searchSpinner').style.opacity = 0;
+        this.setState({spinnerStyle: 0});
 
 
     }
@@ -54,13 +56,16 @@ class SearchBar extends Component{
     handleSelection(event){
         console.log(event);
 
-        var oldValue = document.getElementById('taxa').value;
-        document.getElementById('taxa').value = oldValue.concat(event.target.value).concat(',');
 
+        if(this.state.taxon.length > 0){
+            var oldValue = document.getElementById('taxa').value;
+            document.getElementById('taxa').value = oldValue.concat(event.target.value).concat(',');
+        }
     }
 
     // visualize a rough run time expectation
     render(){
+        var spinnerStyle = this.state.spinnerStyle;
         var matching_taxa = this.state.matching_taxa;
 
         var MakeItem = function(X){
@@ -78,17 +83,16 @@ class SearchBar extends Component{
                         <SearchField
                             placeholder='Search for bacteria'
                             onEnter={this.searchBacteria}
+                            onSearchClick={this.searchBacteria}
                             onChange={this.handleInputChange}
                             searchText={this.state.taxon}
                        />
-                        <Spinner
+                       <Spinner style={{opacity:spinnerStyle}}
                             id='searchSpinner'
-                            as="span"
                             animation="border"
                             size="sm"
                             role="status"
-                            aria-hidden="true"
-                        />
+                       />
                </div>
                <Form.Control as='select' htmlSize={this.state.htmlSize} id='SearchResult' onClick={this.handleSelection} >
                     {matching_taxa.map(MakeItem)}

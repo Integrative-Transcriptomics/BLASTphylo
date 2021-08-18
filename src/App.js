@@ -29,7 +29,7 @@ class App extends Component {
         super(props);
 
 
-        this.state = {isActualComponent: 'defaultScreen',
+        this.state = {isActualComponent: 'menu',
                    data: null,
                    error: null};
 
@@ -37,6 +37,7 @@ class App extends Component {
         // functions to handle view update, reset, help page and alert messages
         this.changeComp = this.changeComp.bind(this);
         this.handleMenuClick = this.handleMenuClick.bind(this);
+        this.handleHelpClick = this.handleHelpClick.bind(this);
     }
 
     // switch between the componets and allow data transfer
@@ -55,6 +56,10 @@ class App extends Component {
     // reset view to the menu page
     handleMenuClick(){
         this.setState({isActualComponent: 'menu'});
+    }
+
+    handleHelpClick(){
+        this.setState({isActualComponent: 'help'});
     }
 
 
@@ -102,11 +107,11 @@ class App extends Component {
                                     </button>
                             </li>
                             <li id='link2'>
-                                    <a id='helpLink' href='/help' >
+                                    <button id='helpLink' onClick={this.handleHelpClick}>
                                         <OverlayTrigger key='tooltip_help' placement='bottom'  overlay={generalTooltip('help')}>
                                         <BiHelpCircle style={{color: '#002060'}} size={25}/>
                                         </OverlayTrigger>
-                                    </a>
+                                    </button>
                             </li>
                         </ul>
                     </nav>

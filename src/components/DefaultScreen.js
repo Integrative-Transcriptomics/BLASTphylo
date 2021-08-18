@@ -41,9 +41,14 @@ class DefaultScreen extends Component {
         var alerts = null;
         var errormessage = <div />;
         d3v6.select('#phyloblastAlert').remove();
+        let actualComponent
 
-        const actualComponent = <Menu changeComp={this.props.changeComp} sendErrors={this.handleErrorMessages}/>;
 
+        if(this.props.isActualComponent === 'menu'){
+            actualComponent = <Menu changeComp={this.props.changeComp} sendErrors={this.handleErrorMessages}/>;
+        } else if(this.props.isActualComponent === 'help'){
+            actualComponent = <Help changeComp={this.props.changeComp} />;
+        }
 
         if(this.state.error !== null){ // errors occurred during input
             alerts = this.state.error.map((alertmessage) =>

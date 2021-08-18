@@ -109,6 +109,7 @@ def exportData():
     global queries
     global taxa_newick
     global unique_newick
+    print(queries)
 
     if request.method == 'POST':
         print(request.form['datatype'])
@@ -116,7 +117,7 @@ def exportData():
 
         if len(d3_tree) > 0:
             if 'mapping.csv' in datatype:
-                table_tree = generate_blastphylo_output(d3_tree, '', queries)
+                table_tree = generate_blastphylo_output(d3_tree, queries)
                 return {'data': table_tree, 'data_type': 'table'}
             elif 'newick_taxonomic' in datatype:
                 d3_newick = generate_Newick_from_dict(d3_tree)
@@ -246,6 +247,11 @@ def menu():
                                              'more details.'})
                     protein = None
                 print('Data input: CSV table')
+            elif protein_file_type == '2':
+                protein = actual_dir + '/test_example/mapping_example/blast_result_sada.csv'
+            elif protein_file_type == '3':
+                protein = actual_dir + '/test_example/comparison_example/blast_result_mpsA_B.csv'
+
 
 
         # tree
@@ -297,10 +303,14 @@ def menu():
             # start processing of the data
             print('\nStart PhyloBlast')
             try:
-                d3_tree, hit_seqs, accs_seqs, number_of_queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
+                d3_tree, hit_seqs, accs_seqs, queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
                 #print(d3_tree)
+                if protein_file_type == '2':
+                    queries = ['sada']
+                elif protein_file_type == '3':
+                    queries = ['mpasA', 'mpsB']
 
-                # remove temporary files
+                # remove temporary filesvalue
                 if protein_file_type == '0':
                     temp_prot_file.close()
 

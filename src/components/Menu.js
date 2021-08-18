@@ -56,7 +56,11 @@ class Menu extends Component {
     handleSubmit(){
         const formData = new FormData();
         var error = [];
-         if (this.state.protein === ''){
+         if ((this.state.protein_file_type === '2') || (this.state.protein_file_type === '3') ){
+            formData.append('fasta_file', null);
+            formData.append('fasta_filename', this.state.protein_file_type);
+         }
+         else if (this.state.protein === ''){
             var protFileContent = this.protFileInput.current.files[0];
             console.log(protFileContent)
             if(typeof protFileContent === 'undefined'){
@@ -119,6 +123,7 @@ class Menu extends Component {
 
     // Handle changes in the parameter settings
     handleChange(event) {
+        console.log(event.target.name)
         if (event.target.name === 'blast'){
             this.setState({blasttype: event.target.id})
         }
@@ -127,6 +132,10 @@ class Menu extends Component {
         }
         else if (event.target.name === "file_type"){
             this.setState({protein_file_type: event.target.value});
+            if((event.target.value === '2') || (event.target.value === '3')){
+                document.getElementById('taxa').value = 'Bacteria|subtree';
+                this.setState({tree_data: '2|subtree'});
+            }
         }
         else if (event.target.name === "tree_menu"){
             this.setState({tree_menu_selection: event.target.value});
@@ -232,6 +241,8 @@ class Menu extends Component {
                     <Form.Control as='select' id='file_type' name='file_type' onChange={this.handleChange}>
                         <option value="0">Fasta file</option>
                         <option value="1">BLAST result</option>
+                        <option value="2">Test example: Mapping</option>
+                        <option value="3">Test example: Comparison</option>
                     </Form.Control>
                     <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['protFile'])}>
                         <BiHelpCircle style={{color: 'blue', 'margin': '0px 10px 0px 5px'}}/>

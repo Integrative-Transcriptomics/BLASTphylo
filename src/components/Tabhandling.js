@@ -37,27 +37,27 @@ class Tabhandling extends Component {
     handleTabSwitch(event){
         console.log(event);
         if(event === 'phylogeny'){
-            this.setState({isActualComponent: 'handlePhylogeny'});
-            this.setState({phylogenyState: event});
-            /****if(this.state.taxaPhyloData){
+            //this.setState({isActualComponent: 'handlePhylogeny'});
+            //this.setState({phylogenyState: event});
+            if(this.state.taxaPhyloData){
                 //console.log(this.state.taxaPhyloData)
                 this.setState({isActualComponent: event});
                 this.setState({phylogenyState: null});
             }else{
                 this.setState({isActualComponent: 'handlePhylogeny'});
                 this.setState({phylogenyState: event});
-            }****/
+            }
         }else if(event === 'phylogenyUnique'){
-            this.setState({isActualComponent: 'handlePhylogeny'});
-            this.setState({phylogenyState: event});
-            /***if(this.state.seqPhyloData){
+            //this.setState({isActualComponent: 'handlePhylogeny'});
+            //this.setState({phylogenyState: event});
+            if(this.state.seqPhyloData){
                 //console.log(this.state.seqPhyloData)
                 this.setState({isActualComponent: event});
                 this.setState({phylogenyState: null});
             }else{
                 this.setState({isActualComponent: 'handlePhylogeny'});
                 this.setState({phylogenyState: event});
-            }***/
+            }
         }else if(event === 'taxonomy'){
             this.setState({isActualComponent: event});
         }else{
@@ -105,7 +105,7 @@ class Tabhandling extends Component {
 
         // switch view based on the isActualComponent state
         if (isActualComponent === 'taxonomy'){ // taxonomic Mapping
-            const copy = {'tree': taxonomicMapData.tree, 'actualTree': taxonomicMapData.actualTree};
+            const copy = {'tree': {...taxonomicMapData.tree}, 'extraInfo': [0], 'actualTree': {...taxonomicMapData.actualTree}};
             console.log(copy)
             actualComponent = <TaxonomicAnalysisMenu data={copy} queries={taxonomicMapData.queries}  />;
             userMenu = <TreeInteraction data={copy} queries={taxonomicMapData.queries} calculationMethod={'taxa'}/>;
