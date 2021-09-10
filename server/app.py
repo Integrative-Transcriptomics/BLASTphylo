@@ -19,7 +19,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from ete3 import Tree
-from server.processing_data import translate_nodes, run_blastphylo, calculate_phylogeny, generate_blastphylo_output, generate_Newick_from_dict
+from processing_data import translate_nodes, run_blastphylo, calculate_phylogeny, generate_blastphylo_output, generate_Newick_from_dict
 
 # flask server packages
 from flask import Flask, render_template, redirect, url_for, request, jsonify, make_response
@@ -83,7 +83,7 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
     return valid_pro_seq, query_header
 
 # start server
-app = Flask(__name__, static_folder='../build', static_url_path='/')
+app = Flask(__name__)
 
 # global parameter for the run and for the export of the data
 hit_seqs = {}
@@ -95,10 +95,6 @@ unique_newick = ''
 
 
 ######################################################################################################################## connection to the front end
-# start the flask server
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
 
 
 
