@@ -14,7 +14,7 @@ import SearchBar from './SearchBar.js'
 // constant dictionary for help messages
 const helpMessages = {
     'blasttype': ['BLAST search', 'Select the BLAST search you want to use. Dependent on the selection the given sequence will be checked for usability'],
-    'prot': ['Sequence', 'Enter query sequence without white spaces in the text area'],
+    'prot': ['Sequence', 'Enter query sequence without white spaces in the text area. It has to have a header line starting with >'],
     'protFile': ['FastA files', 'Either a sequence or already calculated BLAST result with the columns: qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq'],
     'NCBI': ['NCBI taxonomy', 'Enter comma-separated list of scientific names or taxonomic IDs. Addition of \'|subtree\' will select complete subtree. Check https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi for more information' ],
     'ownTaxa': ['Newick string', 'Enter a newick string in the text area or upload a text file which contain a newick string.'],

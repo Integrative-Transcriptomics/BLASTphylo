@@ -62,12 +62,10 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
     regNuc = "^[ACTG]*$"
 
     split_input = textfieldinput.split('>')
-
     for fasta in split_input:
         if len(fasta) > 0:
             split_fasta = fasta.split('\n')
             seq = ''.join(split_fasta[1:]).replace('\r', '')
-
             if blast_type == 'blastp':  # check for valid protein sequence
                 valid_pro_seq = re.search(regAA, seq)
             elif blast_type == 'blastx' or blast_type == 'blastn': # check for valid nucleotid sequence
@@ -77,7 +75,9 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
                 query_header.append(split_fasta[0])
                 fastas.append(SeqRecord(Seq(seq), id=split_fasta[0], description=''))
             else:
-                return valid_pro_seq
+                return valid_pro_seq, 'no header'
+        else:
+            continue
     SeqIO.write(fastas, outdir, "fasta")
     print(query_header)
     return valid_pro_seq, query_header

@@ -954,20 +954,20 @@ def generate_tree_output(d3_tree, number_of_queries):
     if number_of_queries == 1:
         ncbi_nodes = normalization_dic[d3_tree['name']][1]
         percent_nodes = round((d3_tree['leaf_counter']/ncbi_nodes)*100, 2)
-        try:
+        if 'children' in d3_tree.keys() and len(d3_tree['children']) >= 1:
             return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][1].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][0][:2]]) + ',' + \
                    str(d3_tree['leaf_counter']) + ',' + str(ncbi_nodes) + ',' + str(percent_nodes) +'\n' + '\n'.join([generate_tree_output(child, number_of_queries) for child in d3_tree['children']])
-        except KeyError:
+        else:
             return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][1].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][0][:2]]) + ',' + \
                    str(d3_tree['leaf_counter']) + ',' + str(ncbi_nodes) + ',' + str(percent_nodes)
     else:
         ncbi_nodes = normalization_dic[d3_tree['name']][1]
         percent_nodes = round((d3_tree['leaf_counter']/ncbi_nodes)*100, 2)
-        try:
+        if 'children' in d3_tree.keys() and len(d3_tree['children']) >= 1:
             child_string = ','.join([str(val) for row in d3_tree['value'][:number_of_queries] for val in row])
             return d3_tree['name'].replace(' ', '_') + ',' +  d3_tree['value'][number_of_queries].replace(' ', '_')  + ',' + child_string + ',' +\
                    str(d3_tree['leaf_counter']) + ',' + str(ncbi_nodes) + ',' + str(percent_nodes) + '\n' + '\n'.join([generate_tree_output(child, number_of_queries) for child in d3_tree['children']])
-        except KeyError:
+        else:
             child_string = ','.join([str(val) for row in d3_tree['value'][:number_of_queries] for val in row])
             return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][number_of_queries].replace(' ', '_') + ',' + child_string + ',' + \
                    str(d3_tree['leaf_counter']) + ',' + str(ncbi_nodes) + ',' + str(percent_nodes)
