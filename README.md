@@ -28,7 +28,6 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
  `source <your-venv>/bin/activate` <br>
  `pip3 install -r server/requirements.txt` <br>
- `pip install .`
 
 
 ### Step 3: Installation of the front-end
