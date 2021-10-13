@@ -13,6 +13,7 @@
     "d3-flextree": "^2.1.1",
     "d3v6": "npm:d3@^6.3.0",
     "dom-to-image": "^2.6.0",
+    "dom-to-pdf": "^0.2.2",
     "jquery": "^3.5.1",
     "lodash": "^4.17.20",
     "phylotree": "github:jenmuell/phylotree.js",

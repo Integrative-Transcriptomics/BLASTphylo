@@ -16,6 +16,7 @@ class ExportTreeImage extends Component{
         super(props);
         this.exportJPEG = this.exportJPEG.bind(this);
         this.exportSVG = this.exportSVG.bind(this);
+        //this.exportPDF = this.exportPDF.bind(this);
     }
 
     exportJPEG(){
@@ -36,6 +37,36 @@ class ExportTreeImage extends Component{
             .then(function (dataUrl) {
                 var link = document.createElement('a');
                 link.download = figureName;
+                link.href = dataUrl;
+                link.click();
+                link.remove();
+                element.style.border = borderStyle;
+        });
+        element.style.height = '80vh';
+    }
+
+        exportPDF(){
+        var domToPdf = require('dom-to-pdf');
+        var element = document.getElementById('treeVis');
+        console.log(element)
+        var borderStyle = element.style.border;
+        element.style.border = 'none';
+        // labeling of the tree
+        if(window.location.href.includes('phylogeny')){
+            var options = {
+                filename: 'phylogeny.pdf'
+            }
+        }
+        else{
+            var options = {
+                filename: 'taxonomicmapping.pdf'
+            }
+        }
+
+        domToPdf(element, options)
+            .then(function (dataUrl) {
+                var link = document.createElement('a');
+                link.download = options['filename'];
                 link.href = dataUrl;
                 link.click();
                 link.remove();

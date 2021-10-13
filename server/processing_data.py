@@ -92,7 +92,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 
         # switch beteen the blasttypes
         if blast_type == 'blastp':
-            blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, num_alignments=1000,
+            blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, max_target_seqs=100000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
                               outfmt=blast_output_columns, out='blast_result.csv')
         elif blast_type == 'blastx':
