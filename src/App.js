@@ -19,7 +19,7 @@ import HandlePhylogenyServer from './components/HandlePhylogenyServer.js';
 import TaxonomicAnalysisMenu from './components/TaxonomicAnalysisMenu.js';
 import PhylogeneticAnalysisMenu from './components/PhylogeneticAnalysisMenu.js';
 import TreeInteraction from './components/TreeInteraction.js';
-import headerTree from './visualisations/header_tree.png';
+import headerTree from './visualisations/blastphylo_logo3.svg';
 
 
 
@@ -40,7 +40,7 @@ class App extends Component {
         this.handleHelpClick = this.handleHelpClick.bind(this);
     }
 
-    // switch between the componets and allow data transfer
+    // switch between the components and allow data transfer
     changeComp(stateName, stateValue){
         if(stateName === 'actual'){
             this.setState({isActualComponent: stateValue});
@@ -93,11 +93,7 @@ class App extends Component {
                 <div className="App">
                     <header className="App-header">
                     <nav >
-                        <li id='headerName' >
-                            <h1 id='title'>BLASTphylo</h1>
-                            <h1 id='subtitle'>taxonomy <IoMdArrowDropleft /> blast result <IoMdArrowDropright /> phylogeny</h1>
-                        </li>
-                        <img src={headerTree} alt='headerPicture' id='headerPicture'/>
+                        <img src={headerTree} alt='headerPicture' id='headerPicture' width="20%"/>
                         <ul  style={{width:'80%'}} id='subMenu'>
                             <li id='link1' >
                                     <button id='menuLink' onClick={this.handleMenuClick} >

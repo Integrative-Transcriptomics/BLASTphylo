@@ -591,14 +591,17 @@ def translate_nodes(tree_nodes):
     number_of_queries:      number of input queries 
 '''
 def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean, number_of_queries):
+    print('transfer_tree_function')
     d3_tree = {}
     if ncbi_boolean == '0':
-        d3_tree = wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, 30, number_of_queries)
+        #d3_tree, d3_no_hit_tree = wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, 30, number_of_queries)
+        print('ncbi tree')
     elif ncbi_boolean == '1':
         d3_tree = wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, 30, number_of_queries)
     else:
         sys.stderr.write('check the input again')
     return d3_tree
+
 
 
 ''' generate tree and transfer it into d3 format
@@ -607,15 +610,19 @@ def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean, number_of_que
     branch_length:          default branch length (unique sequence-based phylogeny need more space)
     number_of_queries:      number of input queries  
 '''
+
 def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_length, number_of_queries):
 
     ncbi = NCBITaxa()  # setup NCBI database
-
+    print('ncbi object', ncbi)
     # get rank information for all taxa in filtered blast result
     taxa_keys = filtered_blast_result.keys()
     tree = ncbi.get_topology(taxa_keys)
     treeTaxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
     treeRanks = ncbi.get_rank(list(treeTaxIDs))
+
+    # get rank information for all taxa not in filtered blast result
+
 
     if len(taxa_keys) == 1: # tree only contains root
         root_value = [[filtered_blast_result[int(tree.name)][i], 0] for i in range(number_of_queries)]
@@ -889,6 +896,7 @@ min_hit_cover:              minimal hit coverage (percentage)
 out_dir:	   
 '''
 def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_align_ident, min_query_cover,  min_hit_cover, out_dir):
+    print('works_until_here')
     d3_tree = {}
     sequence_dic = {}
     uniqueAccs = {}
@@ -928,7 +936,7 @@ def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
 
     if filtered_blast:
         #try:
-        print('Start conversion')
+        print('Start conversion now')
         d3_tree = transfer_tree_in_d3(tree, filtered_blast, tree_menu, len(number_of_queries))
         #generate_blastphylo_output(d3_tree, out_dir, len(number_of_queries))
         print('complete')

@@ -132,7 +132,7 @@ class PhylogeneticAnalysisMenu extends Component{
     }
 
     render(){
-        d3v6.select('#visualisation').style('border', '2px solid #5e66b4')
+        d3v6.select('#visualisation').style('border', '2px solid #4d9660')
                                 .style('border-radius', '5px');
 
         let additionalInformation;
@@ -151,14 +151,13 @@ class PhylogeneticAnalysisMenu extends Component{
         return(
             <div id='phylogeny'>
                 <div id='phylogenyMenu'>
-                    <h2>                        </h2>
-                    <Accordion defaultActiveKey='1'>
+                    <Accordion>
                         {additionalInformation}
                         <Card>
-                            <Accordion.Toggle as={Card.Header} eventKey='1'>
-                                download tree information
+                            <Accordion.Toggle as={Card.Header} eventKey='0'>
+                                DOWNLOAD
                             </Accordion.Toggle>
-                            <Accordion.Collapse eventKey='1'>
+                            <Accordion.Collapse eventKey='0'>
                                 <Card.Body>
                                     Different export options for the tree visualization. The <b>publication ready</b> option will remove the
                                     white spaces between the nodes of the cladogram and visualizes the full tree as static visualization.<br/>
@@ -186,10 +185,10 @@ class PhylogeneticAnalysisMenu extends Component{
 function additionalCladeInformation(showAdditional, handleUploadAdditional){
     return(
         <Card>
-            <Accordion.Toggle as={Card.Header} eventKey='0'>
-                visualize additional clade information
+            <Accordion.Toggle as={Card.Header} eventKey='1'>
+                METADATA
             </Accordion.Toggle>
-            <Accordion.Collapse eventKey='0'>
+            <Accordion.Collapse eventKey='1'>
                 <Card.Body>
                     Visualize additional information for each node as heat map on the right of the tree. The heat map will be included in
                     the exported visualization. <br/><br/>

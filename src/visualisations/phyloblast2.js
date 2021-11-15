@@ -24,6 +24,9 @@ var rightmostnode = null;
 var hitSelection = '-';
 var phyloTreetree = null;
 var query_header = null;
+var branchLength = 0;
+var treeRankWidth = 0; // store width of tree based on selected rank
+var treeTextWidth = 0; // store max width of tree leaves text
 
 // constants for the visualization layout
 const flextree = require('d3-flextree').flextree;
@@ -178,15 +181,17 @@ function expand(d, b){
 // ############################################################  main visualisation
 // main visualisation of the tree
 function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclickInteraction, returnFromStatic) {
-    //console.log(clicked_nodes)
-
+    console.log('on chart function is called')
+    console.log('clicks');
+    console.log(clicked_nodes);
+    console.log(onclickInteraction);
     // reset global variables if new taxonomic Mapping should be visualized
     if(firstVisualisationOfTree){
         hitSelection = '-';
         clicked_nodes = {};
     }
 
-    var branchLength = data['size'][1];
+    branchLength = data['size'][1];
     const duration = 750;
     let i = 0;
     if(Object.keys(data).length > 1){
@@ -270,6 +275,20 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
         }
     });
 
+//    root.descendants().reverse().forEach(function(d){
+//            if(d.children){
+//                d.data._size = d.data.size.slice();
+//                d.data.size[0] = d3v6.sum(d.children, function(child){return child.data.size[0];});
+//                d.data.size[0] = d.data.size[0] + 10;
+//            }else if(d._children){
+//                d.data._size = d.data.size.slice();
+//                d.data.size[0] = 15;
+//            }
+//        });
+//        rootHeight = root.data.size[0];
+//        treeHeight = rootHeight + margin.top + margin.bottom;
+//        document.getElementById('treeVis').style.height = String(treeHeight).concat('px');
+
     // publication ready tree visualisation have no onclickInteractions
     // --> resize the node to their actual child size
     if(!(onclickInteraction)){
@@ -297,8 +316,8 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
         treeHeight = rootHeight + margin.top + margin.bottom ;
     }
 
-    //              max tree depth                 max label             spaces
-    var width = (root.height * branchLength) +  (max_name_length*6) + 6 + margin.left ;
+
+
 
 
 
@@ -308,6 +327,35 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
             .attr('id', 'tree_vis')
       		.style("font", "10px sans-serif")
      		.style("user-select", "none")
+
+    // compute width of text in SVG beforehand to align the barplot directly next to the tree
+    var actualDepth = d3v6.max(root.leaves(), function(n){return n.depth;});
+    console.log('actual depth', actualDepth);
+    var leaveNames = [];
+    root.leaves().forEach(d => leaveNames.push(d.data.name));
+    var textWidth = []
+
+    svg.append('g')
+    .selectAll('.dummyText')     // declare a new CSS class 'dummyText'
+    .data(leaveNames)
+    .enter()                     // create new element
+    .append("text")              // add element to class
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "10px")
+    //.attr("opacity", 0.0)      // not really necessary
+    .text(function(d) { return d})
+    .each(function(d,i) {
+        var thisWidth = this.getComputedTextLength()
+        textWidth.push(thisWidth)
+        this.remove() // remove them just after displaying them
+    })
+
+    max_name_length = d3v6.max(textWidth);
+    console.log(max_name_length);
+        //              max tree depth                 max label             spaces
+    var width = (actualDepth * branchLength) +  (max_name_length) + 20 ;
+    treeRankWidth = (actualDepth * branchLength);
+    treeTextWidth = max_name_length;
 
     var g = svg
         .attr("width", width)
@@ -328,7 +376,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
     function update(source) {
         // Assigns the x and y position to the nodes
         treeData = flexLayout(root);
-
         // define the positions of the axis and labels for the additional visualizations (bar chart or heat map)
         leftmostnode = treeData;
 	    rightmostnode = treeData;
@@ -477,9 +524,12 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
         }
 
 	    function click(event, d) {
+	        console.log(clicked_nodes.Bacillales);
             if(onclickInteraction){
-                if (d.children) {
+                if (d.children) {   // node is going to be collapsed
+                    console.log('if case');
                     clicked_nodes[d.data.name] = 0;  // node is collapsed
+                    console.log(clicked_nodes.Bacillales);
                     d3v6.select('#nodetext' + d.id).attr('fill', 'black')
                                 .attr("x",  12)
                                 .attr("text-anchor", "start")
@@ -488,15 +538,16 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                     d.children = null;
 
                     // if nodes is going to be collapsed --> enable publication ready
-                    if(extraData !== null){
-                        document.getElementById('public_ready_phylo').disabled = false;
-                    }else{
-                        document.getElementById('public_ready_taxa').disabled = false;
-                    }
+//                    if(extraData !== null){
+//                        document.getElementById('public_ready_phylo').disabled = false;
+//                    }else{
+//                        document.getElementById('public_ready_taxa').disabled = false;
+//                    }
 
                 }else if(!(d.children) && !(d._children) && extraData != null && Object.keys(extraData).length === 1){ // link to NCBI for unqiue phylogeny
                     window.open('https://www.ncbi.nlm.nih.gov/protein/'.concat(d.data.name), '_blank');
-                } else {
+                } else {    // not is going to be expanded
+                    console.log('else case');
                     clicked_nodes[d.data.name] = 1;  // node is not collapsed
                     d3v6.select('#nodetext' + d.id).attr('fill', d =>  d.children || d._children ? 'transparent' : 'black')
                                              .text(d =>  d.children || d._children ? 'p' : d.data.name);
@@ -505,7 +556,7 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                 }
                 update(d);
 
-                console.log(hitSelection)
+                console.log(hitSelection);
                 if (extraData === null){   // taxonomic mapping
                     if(taxonomyLevel.includes(d.data.value[2]) || d.data.value[2] === 'no rank'){
                         stackBars(hitSelection);
@@ -565,18 +616,50 @@ function hitBars(value){
     // general SVG element
     var hitbars = d3v6.select('#additionalInfo')
            .append('svg')
+//           .attr('transform', 'translate(' + 50 + ',' + 0 + ')')
            .attr('id', 'hitbars')
-           .attr("width", svgWidth+margin.left+margin.right)
-           .attr("height", treeHeight)
            .style("font", "10px sans-serif")
            .style("overflow","visible")
            .style("user-select", "none");
 
+    // compute width of text in SVG beforehand to align the barplot directly next to the tree
+    var currentDepth = d3v6.max(treeData.leaves(), function(n){return n.depth;});
+    //console.log('actual depth', actualDepth);
+    var leaveNames = [];
+    treeData.leaves().forEach(d => leaveNames.push(d.data.name));
+    var textWidth = []
+
+    hitbars.append('g')
+        .selectAll('.dummyText')     // declare a new CSS class 'dummyText'
+        .data(leaveNames)
+        .enter()                     // create new element
+        .append("text")              // add element to class
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "10px")
+        //.attr("opacity", 0.0)      // not really necessary
+        .text(function(d) { return d})
+        .each(function(d,i) {
+            var thisWidth = this.getComputedTextLength()
+            textWidth.push(thisWidth)
+            this.remove() // remove them just after displaying them
+        })
+
+    var max_name_length = d3v6.max(textWidth);
+        //              max tree depth
+    var currentWidth = (currentDepth * branchLength);
+    var barPlotShift = currentWidth-treeRankWidth+max_name_length-treeTextWidth;
+
+//    hitbars.append('g')
+//        .attr('transform', 'translate(' + 200 + ',' + 0 + ')')
+//    hitbars.append('g')
+//        .attr("width", svgWidth+margin.left+margin.right)
+//        .attr("height", treeHeight)
+
     // axis
     hitbars.append('g')
-             .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
-             .call(d3v6.axisTop(scaleX)
-                    .ticks(ticksStep, 'f'));
+         .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
+         .call(d3v6.axisTop(scaleX)
+                .ticks(ticksStep, 'f'));
 
     // visualize no bars if the max. hit value is 0
     if(max_hit === 0){
@@ -585,7 +668,7 @@ function hitBars(value){
 
     // bars
     hitbars.append('g')
-            .attr('transform', `translate(` + margin.left + `,${treeHeight/2})`)
+            .attr('transform', `translate(` + (margin.left+barPlotShift) +  `,${treeHeight/2})`)
             .selectAll('.bars')
             .data(nodes)
             .enter()
@@ -602,7 +685,7 @@ function hitBars(value){
     // append a axis to the bottom of the tree if it is larger as the display
     if((rightmostnode.y-leftmostnode.y) >= (window.innerHeight*0.8)){
         hitbars.append('g')
-                 .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2+rightmostnode.y+barheight) + ')')
+                 .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2+rightmostnode.y+barheight) + ')')
                  .call(d3v6.axisBottom(scaleX)
                         .ticks(ticksStep, 'f'));
     }
@@ -651,15 +734,40 @@ function stackBars(value){
     var hitbars = d3v6.select('#additionalInfo')
            .append('svg')
            .attr('id', 'hitbars')
-           .attr("width", svgWidth+margin.left+margin.right)
-           .attr("height", treeHeight)
            .style("font", "10px sans-serif")
            .style("overflow","visible")
            .style("user-select", "none");
 
+    // compute width of text in SVG beforehand to align the barplot directly next to the tree
+    var currentDepth = d3v6.max(treeData.leaves(), function(n){return n.depth;});
+    //console.log('actual depth', actualDepth);
+    var leaveNames = [];
+    treeData.leaves().forEach(d => leaveNames.push(d.data.name));
+    var textWidth = [];
+
+    hitbars.append('g')
+        .selectAll('.dummyText')     // declare a new CSS class 'dummyText'
+        .data(leaveNames)
+        .enter()                     // create new element
+        .append("text")              // add element to class
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "10px")
+        //.attr("opacity", 0.0)      // not really necessary
+        .text(function(d) { return d})
+        .each(function(d,i) {
+            var thisWidth = this.getComputedTextLength()
+            textWidth.push(thisWidth)
+            this.remove() // remove them just after displaying them
+        })
+
+    var max_name_length = d3v6.max(textWidth);
+        //              max tree depth
+    var currentWidth = (currentDepth * branchLength);
+    var barPlotShift = currentWidth-treeRankWidth+max_name_length-treeTextWidth;
+
     // x-Axis
     hitbars.append('g')
-             .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
+             .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
              .call(d3v6.axisTop(scaleX)
                     .ticks(ticksStep, 'f'));
 
@@ -679,7 +787,7 @@ function stackBars(value){
 
     // generate the bars
     hitbars.append("g")
-        .attr('transform', `translate(` + margin.left + `,${treeHeight/2})`)
+        .attr('transform', `translate(` + (margin.left+barPlotShift) + `,${treeHeight/2})`)
         .selectAll(".stackData")
         .data(stackedData)
         .enter()
@@ -706,7 +814,7 @@ function stackBars(value){
         .enter()
         .append("g")
         .attr("class", "legend")
-        .attr('transform', 'translate(' + margin.left + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')');
+        .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')');
 
 
    legend.append("rect")
@@ -1015,6 +1123,7 @@ function collapseTree(rank){
     console.log('run collapse')
     var taxonLevel = taxonomyLevel.indexOf(rank);
     d3v6.select('#tree_vis').remove();
+    console.log('size', treeVis['size']);
     chart(treeVis, null, taxonLevel, false, true, false); // update main visualization
 
     if(taxonomyLevel.includes(treeVis['value'][1]) || (treeVis['value'][1] === 'no rank')){ // update bar chart
@@ -1029,7 +1138,7 @@ function collapseTree(rank){
 // remove all white spaces between nodes of the actual tree
 function publicationReady(){
     if((previousTaxonomicLevel !== taxonomyLevel.length -1) || (Object.keys(clicked_nodes).length > 0)){
-        document.getElementById('returnButton').style.display = 'block'; // enable reset to dynamic visualisation
+        //document.getElementById('returnButton').style.display = 'block'; // enable reset to dynamic visualisation
         d3v6.select('#tree_vis').remove();
 
         chart(treeVis, extraInfo, previousTaxonomicLevel, false, false, false); // update main visualization
@@ -1037,7 +1146,7 @@ function publicationReady(){
         if (extraInfo === null){ // udate additional visualizations
             if(taxonomyLevel.includes(treeVis.value[1])){
                 hitBars(hitSelection);
-            }else{
+            } else{
                 stackBars(hitSelection);
             }
         } else if (document.getElementById('clade_vis')){
@@ -1048,7 +1157,6 @@ function publicationReady(){
         if(extraInfo !== null){
             document.getElementById('public_ready_phylo').disabled = true;
         }else{
-            document.getElementById('public_ready_taxa').disabled = true;
             document.getElementById('collapse_menu').disabled = true; // disable rank selection
         }
     }

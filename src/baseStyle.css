@@ -9,7 +9,7 @@ body {
 }
 
 .App-body {
-  padding: 0px 10% 40px 10%;
+  padding: 20px 10% 40px 10%;
 }
 
 .App-header {
@@ -39,7 +39,7 @@ body {
   border: none;
   color: #377ba8;
   text-decoration: none;
-  background: white;
+  background: #f2f0ed;
   padding: 20px 10px;
   text-align: center;
   font-size: 1em;
@@ -65,13 +65,13 @@ body {
 
 /* Website header styling */
 .App-header nav {
-  background: white;
+  background: #f2f0ed;
   width: 100%;
   display: flex;
   align-items: center;
-  padding: 10px 0.5rem;
-  border-bottom: solid 0.3em  #377ba8;
+  padding: 2px 0.5rem;
 }
+
 .App-header nav h1, #title {
   flex: auto;
   margin: 0px 15px;
@@ -79,19 +79,16 @@ body {
 
 .App-header nav, .App-header h1, #title{
   text-decoration: none;
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.5rem;
 }
 
 .App-header nav, .App-header ul  {
   display: flex;
   list-style: none;
-  margin: 0 ;
-  padding: 0;
+  padding: 5px 20px 5px 30px;
 }
 
-#headerPicture {
-  opacity: 0.4;
-}
+
 
 #headerName {
    width: 30%
@@ -107,7 +104,6 @@ body {
 
 
 .App-header nav ul li a, .App-header nav ul li span, .App-header header .action {
-  width: 100%;
   display: block;
   padding: 0.5rem;
 }
@@ -168,10 +164,15 @@ body {
 }
 
 /* Help page style */
+#helpInfo{
+  margin: 20px 40px 20px 40px;
+}
+
 #helpInfo img {
   max-width: 100%;
   max-height: 100%;
 }
+
 
 .helpHeader {
   border-bottom: 2px solid lightgray;

@@ -304,7 +304,6 @@ def menu():
             print('\nStart PhyloBlast')
             try:
                 d3_tree, hit_seqs, accs_seqs, queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
-                #print(d3_tree)
                 if protein_file_type == '2':
                     queries = ['sada']
                 elif protein_file_type == '3':

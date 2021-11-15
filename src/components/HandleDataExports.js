@@ -75,7 +75,7 @@ class ExportTreeImage extends Component{
         element.style.height = '80vh';
     }
 
-        exportSVG(){
+    exportSVG(){
         var element = document.getElementById('treeVis');
         console.log(element)
         var borderStyle = element.style.border;
@@ -109,7 +109,57 @@ class ExportTreeImage extends Component{
    }
 }
 
+function exportSVG(){
+    var element = document.getElementById('treeVis');
+    console.log(element)
+    var borderStyle = element.style.border;
+    element.style.border = 'none';
+    // labeling of the tree
+    var figureName = '';
+    if(window.location.href.includes('phylogeny')){
+        figureName = 'phylogeny';
+    }else{
+        figureName = 'taxonomicmapping';
+    }
 
+    domtoimage.toSvg(element, { quality: 1, bgcolor: 'white',
+                                        style:{overflow:'visible'} })
+        .then(function (dataUrl) {
+            var link = document.createElement('a');
+            link.download = figureName;
+            link.href = dataUrl;
+            link.click();
+            link.remove();
+            element.style.border = borderStyle;
+    });
+    element.style.height = '80vh';
+}
+
+function exportJPEG(){
+    var element = document.getElementById('treeVis');
+    console.log(element)
+    var borderStyle = element.style.border;
+    element.style.border = 'none';
+    // labeling of the tree
+    var figureName = '';
+    if(window.location.href.includes('phylogeny')){
+        figureName = 'phylogeny';
+    }else{
+        figureName = 'taxonomicmapping';
+    }
+
+    domtoimage.toJpeg(element, { quality: 1, bgcolor: 'white',
+                                        style:{overflow:'visible'} })
+        .then(function (dataUrl) {
+            var link = document.createElement('a');
+            link.download = figureName;
+            link.href = dataUrl;
+            link.click();
+            link.remove();
+            element.style.border = borderStyle;
+    });
+    element.style.height = '80vh';
+}
 
 // export data as CSV file
 class ExportCsvData extends Component {
@@ -201,4 +251,4 @@ class ExportCsvData extends Component {
 
 }
 
-export {ExportTreeImage, ExportCsvData};
+export {ExportTreeImage, ExportCsvData, exportSVG, exportJPEG};

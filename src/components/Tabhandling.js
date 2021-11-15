@@ -135,13 +135,13 @@ class Tabhandling extends Component {
                     <div className='Tabhandling'>
                         <Nav variant='tabs' defaultActiveKey='taxonomy' onSelect={this.handleTabSwitch}>
                             <Nav.Item>
-                                <Nav.Link id='taxonomyTab' eventKey='taxonomy'>taxonomic Mapping</Nav.Link>
+                                <Nav.Link id='taxonomyTab' eventKey='taxonomy'>TAXONOMIC MAPPING</Nav.Link>
                             </Nav.Item>
                             <Nav.Item>
-                                <Nav.Link id='phylogenyTab' eventKey='phylogeny'>taxa-centered Phylogeny</Nav.Link>
+                                <Nav.Link id='phylogenyTab' eventKey='phylogeny'>TAXA-CENTERED PHYLOGENY</Nav.Link>
                             </Nav.Item>
                             <Nav.Item>
-                                <Nav.Link id='phylogenyUniqueTab' eventKey='phylogenyUnique'>sequence-centered Phylogeny</Nav.Link>
+                                <Nav.Link id='phylogenyUniqueTab' eventKey='phylogenyUnique'>SEQUENCE-CENTERED PHYLOGENY</Nav.Link>
                             </Nav.Item>
                         </Nav>
                         <div className='App-body'>

@@ -1,7 +1,7 @@
 
 
 #phyloblastMenu{
-  margin: 0px 0px 10px 0px;
+  margin: 10px 0px 10px 0px;
 }
 
 #phyloblastMenu label {
@@ -9,17 +9,66 @@
  margin-right: 5px;
 }
 
-.mr-auto button:hover, #public_ready_taxa:hover, #csvDataExport:hover, #phyloblastMenu #txtDataExport:hover{
-  background: #377ba8;
+/* download menu */
+
+.card{
+  width: 31%;
+  /*float: right;*/
+}
+
+.card-header{
+  background-color: white;
+  border: white;
+}
+
+.card-body{
+  /*border: solid 1px #fcb42d;*/
 }
 
 
 
+/* tree window */
+/* rank selection*/
+#collapse_menu.dropdown-toggle.btn.btn-primary{
+  background-color: #fcb42d;
+  border:transparent;
+}
+
+/* barplot selection*/
+#tree_menu.dropdown-toggle.btn.btn-primary{
+  background-color: #fcb42d;
+  border:transparent;
+}
+
+/* selected values for tax rank and bar chart*/
+#selectedValues.form-inline{
+  background-color: #ffd17a;
+}
+
+.btn-toolbar{
+  background-color: #ffd17a;
+}
+
+.selectedValues {
+  margin: 0 10px 0 10px;
+}
+
+#selectedValues {
+  padding: 0 5px 0 5px;
+}
+
+
+
+/* buttons in dropdown menu downloads*/
 .mr-auto button, #public_ready_taxa, #csvDataExport, #phyloblastMenu #txtDataExport {
   margin: 5px 5px 0 10px;
   background: #6ea9d0;
   color: white;
   text-decoration: none;
+}
+
+.mr-auto button:hover, #public_ready_taxa:hover, #csvDataExport:hover, #phyloblastMenu #txtDataExport:hover{
+  background: #377ba8;
 }
 
 
@@ -33,7 +82,7 @@
 }
 
 #phyloblastMenu button {
-  margin: 5px 0 0 10px;
+  margin: 5px 5px 5px 10px;
 }
 
 #taxaPhylo:hover, #uniquePhylo:hover{
@@ -51,21 +100,42 @@
  border: solid 1.5px white;
 }
 
-.selectedValues {
-  margin: 0 10px 0 10px;
-}
-
-#selectedValues {
-  background: lightgray;
-  padding: 0 5px 0 5px;
-}
-
 #public_ready_taxa:disabled:hover {
   background: #cadfed;
 }
 
 #public_ready_taxa:disabled {
   background: #cadfed;
+}
+
+
+.nav-tabs{
+  padding-top: 10px;
+  background-color:#f2f0ed;
+  /*border-bottom: 1px solid #495057;*/
+}
+
+
+.nav-tabs .nav-link {
+  border: 1px solid transparent;
+  color: lightgrey;
+}
+
+.tab-content{
+    background-color:#f2f0ed;
+    color:#fff;
+    padding:5px
+}
+
+.nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    /*border-color: #495057 #495057 #fff;*/
+}
+
+.nav-link:hover{
+  color: #495057;
+  background-color: #f7f7f5;
 }
 
 /***
@@ -85,5 +155,4 @@
   border: 1.5px solid #5175ab;
 }
 ***/
-
 

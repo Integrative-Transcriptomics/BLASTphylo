@@ -7,7 +7,7 @@ import {AiOutlineArrowLeft} from 'react-icons/ai';
 
 // own components and style sheets
 import './phyloblastStyle.css';
-import {ExportTreeImage, ExportCsvData} from './HandleDataExports.js';
+import {ExportTreeImage, ExportCsvData, exportSVG, exportJPEG} from './HandleDataExports.js';
 
 
 // own visualisations
@@ -22,12 +22,14 @@ class TaxonomicAnalysisMenu extends Component{
         //var treeData = startTreevis(this.props.data.tree, this.props.queries);
         //console.log(treeData['size'])
         this.state = {hitSelect: "-",
-                      rankSelect: 'class'};
+                      rankSelect: 'class',
+                      treeExportFormat: 'svgSelect'};
 
         // functions
         this.showTooltip = this.showTooltip.bind(this);
         this.handleReturn = this.handleReturn.bind(this);
-
+        this.exportTree = this.exportTree.bind(this);
+        this.handleTreeExportFormat = this.handleTreeExportFormat.bind(this);
     }
 
 
@@ -35,7 +37,7 @@ class TaxonomicAnalysisMenu extends Component{
         d3v6.select('#tree_vis').remove();
         d3v6.select('#clade_vis').remove();
         if (this.props.data.tree !== 0){
-            d3v6.select('#visualisation').style('border', '2px solid #69a2c9')
+            d3v6.select('#visualisation').style('border', '2px solid #fcb42d')
                                 .style('border-radius', '5px');
             document.getElementById('treeVis').style.height = '80vh';
 
@@ -57,8 +59,8 @@ class TaxonomicAnalysisMenu extends Component{
     // restore old tree state if publication ready was clicked
     handleReturn(event){
         var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
-        document.getElementById('returnButton').style.display = 'none';
-        const rank = taxonomyLevel.indexOf(document.getElementById('taxoRank').attributes.eventkey.value);
+        //document.getElementById('returnButton').style.display = 'none';
+        const rank = this.state.rankSelect;
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.props.data.actualTree};
         console.log(treeCopy['size'])
@@ -68,16 +70,31 @@ class TaxonomicAnalysisMenu extends Component{
 
 
         if(!(taxonomyLevel.includes(treeCopy['value'][2]))){
-                hitBars(document.getElementById('barChart').attributes.eventkey.value);
+                hitBars(this.state.hitSelect);
         }else{
-                stackBars(document.getElementById('barChart').attributes.eventkey.value);
+                stackBars(this.state.hitSelect);
         }
 
         // change visualisation settings
         document.getElementById('treeVis').style.height = '80vh';
-        document.getElementById('public_ready_taxa').disabled = false;
         document.getElementById('collapse_menu').disabled = false;
     }
+
+    exportTree(){
+        if (this.state.treeExportFormat === "svgSelect") {
+            exportSVG();
+        }
+        if (this.state.treeExportFormat === "jpegSelect") {
+            exportJPEG();
+        }
+    }
+
+    handleTreeExportFormat(event){
+        console.log(event.target.id);
+        this.setState({treeExportFormat: event.target.id});
+    }
+
+
 
 
     render(){
@@ -85,24 +102,31 @@ class TaxonomicAnalysisMenu extends Component{
         return(
             <div id='phyloblast'>
                 <div id='phyloblastMenu'>
-                    <h2>           </h2>
-                    <Accordion defaultActiveKey='1'>
+                    <Accordion>
                         <Card>
-                            <Accordion.Toggle as={Card.Header} eventKey='1'>
-                                download tree information
+                            <Accordion.Toggle as={Card.Header} eventKey='0'>
+                                DOWNLOAD
                             </Accordion.Toggle>
-                            <Accordion.Collapse eventKey='1'>
+                            <Accordion.Collapse eventKey='0'>
                                 <Card.Body>
-                                    Different export options for the taxonomic tree including the bar chart. The <b>publication ready</b> option will remove the
-                                    white spaces between the nodes and visualizes the full tree as static visualization. <br/>
-                                    The <b>unlock publication ready</b> button unlocks the static visualization. <br/><br/>
-                                    <Nav className='mr-auto'>
-                                        <button id="public_ready_taxa"  onClick={publicationReady}>publication ready</button>
-                                        <ExportTreeImage />
-                                        <ExportCsvData dataName='taxonomic Mapping' filename='taxonomic_mapping.csv' />
-                                        <ExportCsvData dataName='Newick string' filename='newick_taxonomic_mapping.txt' />
-                                        <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
-                                    </Nav>
+                                    <div class="d-flex align-items-center flex-row">
+                                        <button class="btn btn-primary" onClick={this.exportTree}>EXPORT VIEW</button>
+
+
+                                        <Form inline>
+                                            <Form.Check inline type={'radio'} name='treeExportOptions' id='svgSelect' label={'SVG'} onChange={this.handleTreeExportFormat} defaultChecked/>
+                                            <Form.Check inline type={'radio'} name='treeExportOptions' id='jpegSelect' label={'JPEG'} onChange={this.handleTreeExportFormat} />
+                                        </Form>
+
+
+                                    </div>
+                                    <div class="d-flex align-items-center flex-row">
+                                        <button class="btn btn-primary">DOWNLOAD <br/> TAXONOMIC <br/> MAPPING</button>
+                                    </div>
+                                    <div class="d-flex align-items-center flex-row">
+                                        <button class="btn btn-primary">DOWNLOAD <br/> NEWICK STRING</button>
+                                    </div>
+
                                 </Card.Body>
                             </Accordion.Collapse>
                         </Card>
@@ -110,9 +134,31 @@ class TaxonomicAnalysisMenu extends Component{
                     <br></br>
                 </div>
             </div>
-
         );
     }
 }
 
 export default TaxonomicAnalysisMenu;
+                                    /*<Nav className='mr-auto'>
+                                        <button id="public_ready_taxa"  onClick={publicationReady}>publication ready</button>
+                                        <ExportTreeImage />
+                                        <ExportCsvData dataName='taxonomic Mapping' filename='taxonomic_mapping.csv' />
+                                        <ExportCsvData dataName='Newick string' filename='newick_taxonomic_mapping.txt' />
+                                        <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
+                                    </Nav>*/
+/*<Accordion>
+                <Accordion.Item eventKey='0'>
+                    <Accordion.Header>
+                        DOWNLOAD
+                    </Accordion.Header>
+                    <Accordion.Body>
+                        <Nav className='mr-auto'>
+                            <button id="public_ready_taxa"  onClick={publicationReady}>publication ready</button>
+                            <ExportTreeImage />
+                            <ExportCsvData dataName='taxonomic Mapping' filename='taxonomic_mapping.csv' />
+                            <ExportCsvData dataName='Newick string' filename='newick_taxonomic_mapping.txt' />
+                            <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
+                        </Nav>
+                    </Accordion.Body>
+                </Accordion.Item>
+            </Accordion>*/

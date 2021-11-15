@@ -9,7 +9,7 @@ import {ButtonToolbar, ButtonGroup, Button, DropdownButton, Dropdown, Tooltip, O
 import {AiOutlineNodeCollapse, AiOutlineBarChart, AiOutlineArrowLeft} from 'react-icons/ai';
 
 // own visualisations
-import { hitBars, collapseTree, chart, startTreevis, showClades, stackBars} from '../visualisations/phyloblast2.js';
+import { hitBars, collapseTree, chart, startTreevis, showClades, stackBars, publicationReady} from '../visualisations/phyloblast2.js';
 
 
 // constant for taxonomic ranks
@@ -21,13 +21,17 @@ class TreeInteraction extends Component{
      constructor(props){
         super(props);
         console.log(props)
-        this.state = {hitSelect: '-', rankSelect: 'class', counter: 0};
+        this.state = {hitSelect: '-',
+                      rankSelect: 'class',
+                      counter: 0,
+                      publicationReady: false};
 
         // functions to handle the interactions and tooltips
         this.handleHits = this.handleHits.bind(this);
         this.handleRanks = this.handleRanks.bind(this);
         this.distTree = this.distTree.bind(this);
         this.d3Tree = this.d3Tree.bind(this);
+        this.handlePublicationReady = this.handlePublicationReady.bind(this);
     }
 
 
@@ -42,21 +46,60 @@ class TreeInteraction extends Component{
             stackBars(event);
         }
     }
+    handleReturn(event){
+        var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
+        //document.getElementById('returnButton').style.display = 'none';
+        const rank = taxonomyLevel.indexOf(this.state.rankSelect);
+        console.log('handleReturn', rank);
 
+        d3v6.select('#tree_vis').remove();
+        const treeCopy = {...this.props.data.actualTree};
+
+        // update visualizations
+        chart({'size': treeCopy['size']}, null, rank, false, true, true);
+
+
+        if(!(taxonomyLevel.includes(treeCopy['value'][2]))){
+                hitBars(this.state.hitSelect);
+        }else{
+                stackBars(this.state.hitSelect);
+        }
+
+        // change visualisation settings
+        document.getElementById('treeVis').style.height = '80vh';
+        document.getElementById('collapse_menu').disabled = false;
+    }
     // handle 'collapse to' interaction
     handleRanks(event){
-        if(!(document.getElementById('public_ready_taxa').disabled)){
+        if(!this.state.publicationReady){
             document.getElementById('collapse_menu').disabled = false;
             this.setState({rankSelect: event});
+            console.log(this.state.rankSelect);
             collapseTree(event);
             console.log(event);
 
             // no white space on the strain level --> disable publication ready
-            if(event === 'strain'){
-                document.getElementById('public_ready_taxa').disabled = true;
-            }else{
-                document.getElementById('public_ready_taxa').disabled = false;
-            }
+//            if(event === 'strain'){
+//                document.getElementById('public_ready_taxa').disabled = true;
+//            }else{
+//                document.getElementById('public_ready_taxa').disabled = false;
+//            }
+        }
+    }
+
+    handlePublicationReady(){
+        console.log('print publicationReady state', this.state.publicationReady);
+        console.log(document.getElementById("publicationReady"));
+        if (!this.state.publicationReady){
+            publicationReady();
+            this.setState({publicationReady: !this.state.publicationReady});
+        }
+        else {
+            console.log('else');
+            console.log(this.state.publicationReady);
+            console.log(document.getElementById("publicationReady"));
+            this.handleReturn();
+            this.setState({publicationReady: !this.state.publicationReady});
         }
     }
 
@@ -183,6 +226,8 @@ class TreeInteraction extends Component{
         }
     }
 
+
+
     render(){
 
         if(this.props.calculationMethod === 'taxa'){ // tree interaction for taxonomic mapping
@@ -207,22 +252,30 @@ class TreeInteraction extends Component{
                     <ButtonToolbar aria-label='Toolbar with button groups'>
                         <ButtonGroup className='mr-2' aria-label='First group'>
                             <OverlayTrigger placement='top'  overlay={renderCollapseTooltip} onEnter={this.showTooltip}>
-                            <DropdownButton onSelect={this.handleRanks} as={ButtonGroup} title={<AiOutlineNodeCollapse size={25}/>} id='collapse_menu'>
+                            <DropdownButton onSelect={this.handleRanks} as={ButtonGroup} eventKey={this.state.rankSelect} title={<span> <AiOutlineNodeCollapse size={30}/> {this.state.rankSelect} </span>} id='collapse_menu'>
                                 {taxonomyLevel.map(MakeItem)}
                             </DropdownButton>
                             </OverlayTrigger>
                             <OverlayTrigger placement='top' overlay={renderBarchartTooltip} onEnter={this.showTooltip}>
                             <DropdownButton onSelect={this.handleHits} eventKey={this.state.hitSelect}
-                            as={ButtonGroup} title={<AiOutlineBarChart size={25}/>} id='tree_menu'>
+                            as={ButtonGroup} title={<span> <AiOutlineBarChart size={30}/> {this.state.hitSelect} </span>} id='tree_menu'>
                                 <Dropdown.Item eventKey='-'>none</Dropdown.Item>
                                 <Dropdown.Item eventKey='node hits'>node hits</Dropdown.Item>
                                 <Dropdown.Item eventKey='subtree hits'>subtree hits</Dropdown.Item>
                             </DropdownButton>
                             </OverlayTrigger>
-                            <Form id='selectedValues' inline>
-                                <Form className='selectedValues' id='taxoRank' eventKey={this.state.rankSelect}><i>taxonomic Rank: {this.state.rankSelect}</i></Form>
-                                <Form className='selectedValues' id='barChart' eventKey={this.state.hitSelect}><i>bar chart: {this.state.hitSelect}</i></Form>
-                            </Form>
+                        </ButtonGroup>
+                        <ButtonGroup className='mr-2' aria-label='Second group'>
+                            <div class="d-flex align-items-center flex-row" as={ButtonGroup}>
+                                        <Form>
+                                            <Form.Check
+                                            type="switch"
+                                            id="publicationReady"
+                                            label="PUBLICATION READY"
+                                            onChange={this.handlePublicationReady}
+                                            />
+                                        </Form>
+                            </div>
                         </ButtonGroup>
                     </ButtonToolbar>
 
@@ -241,13 +294,15 @@ class TreeInteraction extends Component{
             );
             return(
                 <div id='treeInteraction'>
-                <ButtonToolbar aria-label='Toolbar with button groups'>
-                    <OverlayTrigger placement='top' overlay={renderCladeTooltip} onEnter={this.showTooltip}>
-                    <Button id='cladogram' eventKey='cladogramButton' onClick={this.d3Tree}>Cladogram</Button>
-                    </OverlayTrigger>
-                    <OverlayTrigger placement='top' overlay={renderDistanceTooltip} onEnter={this.showTooltip}>
-                    <Button id='phylogram' eventKey='phylogramButton' onClick={this.distTree}>Phylogram</Button>
-                    </OverlayTrigger>
+                <ButtonToolbar id="phylogenybar" aria-label='Toolbar with button groups'>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" eventKey='cladogramButton' onClick={this.d3Tree} type="radio" name="inlineRadioOptions" id="cladogram" checked></input>
+                            <label class="form-check-label" for="inlineRadio1">CLADOGRAM</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" eventKey='phylogramButton' onClick={this.distTree} type="radio" name="inlineRadioOptions" id="phylogram" ></input>
+                            <label class="form-check-label" for="inlineRadio2">PHYLOGRAM</label>
+                        </div>
                 </ButtonToolbar>
                 </div>
             );
