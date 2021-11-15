@@ -328,6 +328,9 @@ def menu():
 
 # start flask server
 if __name__ == '__main__':
-    app.run()
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    app.run(host=os.getenv('IP', '0.0.0.0'),
+            port=int(os.getenv('PORT', 5000)))
 
 
