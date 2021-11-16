@@ -896,7 +896,7 @@ min_hit_cover:              minimal hit coverage (percentage)
 out_dir:	   
 '''
 def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_align_ident, min_query_cover,  min_hit_cover, out_dir):
-    print('works_until_here')
+    print(prot_data, prot_file_type, tree_data, tree_menu, blast_type, eValue, min_align_ident, min_query_cover, min_hit_cover, out_dir)
     d3_tree = {}
     sequence_dic = {}
     uniqueAccs = {}
