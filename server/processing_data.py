@@ -459,13 +459,13 @@ def unique_phylogeny_data(tree, uniqueAccs):
     needTaxIDs:     boolean
 '''
 def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
+    print(tree_input, ncbi_boolean, needTaxIDs)
     tree = None
     roots = ''  # ncbi taxonomy can begin with more than one 'root'
     tree_taxIDs = set()
 
     if ncbi_boolean == '0': # NCBI taxonomy
         roots, tree_taxIDs = translate_string_in_taxa(tree_input)
-
     elif ncbi_boolean == '1': # own taxonomic phylogeny
         tree = Tree(tree_input, format=8)
         tree_taxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
@@ -594,8 +594,7 @@ def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean, number_of_que
     print('transfer_tree_function')
     d3_tree = {}
     if ncbi_boolean == '0':
-        #d3_tree, d3_no_hit_tree = wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, 30, number_of_queries)
-        print('ncbi tree')
+        d3_tree = wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, 30, number_of_queries)
     elif ncbi_boolean == '1':
         d3_tree = wrapper_transfer_own_tree(tree, filtered_blast_result, ncbi_boolean, 30, number_of_queries)
     else:
@@ -614,7 +613,7 @@ def transfer_tree_in_d3(tree, filtered_blast_result, ncbi_boolean, number_of_que
 def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_length, number_of_queries):
 
     ncbi = NCBITaxa()  # setup NCBI database
-    print('ncbi object', ncbi)
+    #print('ncbi object', ncbi)
     # get rank information for all taxa in filtered blast result
     taxa_keys = filtered_blast_result.keys()
     tree = ncbi.get_topology(taxa_keys)
@@ -630,6 +629,7 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
         return {'size': [15, branch_length], 'name': tree.sci_name, 'value': root_value, 'leaf_counter': 1}
 
     else: # iterate recursive over children
+        print('else')
         root_children = list(
             filter(None, [transfer_tree(child, filtered_blast_result, treeRanks, ncbi_boolean, branch_length, number_of_queries) for child in tree.get_children()]))
 
@@ -654,7 +654,6 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
         else:
             [root_value[i].append(subtree_hits[i]) for i in range(number_of_queries)]
             root_value.append(treeRanks[int(tree.name)])
-
         return {'size': [root_size, branch_length], 'name': tree.sci_name, 'children': root_children,
                 'value': root_value, 'leaf_counter': leaf_counter}
 
@@ -906,6 +905,7 @@ def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     #try:
     print('Start Tree calculation')
     tree, taxid_tree_set, entrez_query = read_tree_input(tree_data, tree_menu, True)
+
     print('complete')
     '''except:
         sys.stderr.write('Tree calculation failed')
@@ -919,7 +919,7 @@ def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     '''except:
         sys.stderr.write('Blast run failed')
         return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)'''
-
+    print(blast_result)
     # filtering
     if blast_result.size > 0:
         #try:

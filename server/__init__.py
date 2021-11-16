@@ -304,7 +304,6 @@ def menu():
             print('\nStart PhyloBlast')
             try:
                 d3_tree, hit_seqs, accs_seqs, queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
-                print(d3_tree)
                 if protein_file_type == '2':
                     queries = ['sada']
                 elif protein_file_type == '3':
@@ -328,9 +327,9 @@ def menu():
 
 # start flask server
 if __name__ == '__main__':
-    app.run()
-    # app.run()
-    # app.run(host=os.getenv('IP', '0.0.0.0'),
-    #         port=int(os.getenv('PORT', 5000)))
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    app.run(host=os.getenv('IP', '0.0.0.0'),
+            port=int(os.getenv('PORT', 5000)))
 
 
