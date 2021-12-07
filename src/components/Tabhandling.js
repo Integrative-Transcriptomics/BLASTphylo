@@ -15,9 +15,7 @@ import PhylogeneticAnalysisMenu from './PhylogeneticAnalysisMenu.js';
 import TreeInteraction from './TreeInteraction.js';
 
 
-
-
-class Tabhandling extends Component {
+    class Tabhandling extends Component {
 
     constructor(props){
         super(props);
@@ -92,8 +90,7 @@ class Tabhandling extends Component {
 
 
     render() {
-
-
+        console.log('this.props.data', this.props.data)
         var isActualComponent = this.state.isActualComponent;
         const taxonomicMapData = this.state.taxonomicMapData;
         var userMenu = <div />;  // sub div: menus for the visualizations (export visualization, etc)
@@ -105,7 +102,7 @@ class Tabhandling extends Component {
 
         // switch view based on the isActualComponent state
         if (isActualComponent === 'taxonomy'){ // taxonomic Mapping
-            const copy = {'tree': {...taxonomicMapData.tree}, 'extraInfo': [0], 'actualTree': {...taxonomicMapData.actualTree}};
+            const copy = {'tree': {...taxonomicMapData.tree}, 'noHitTree':{...taxonomicMapData.noHitTree}, 'extraInfo': [0], 'actualTree': {...taxonomicMapData.actualTree}};
             console.log(copy)
             actualComponent = <TaxonomicAnalysisMenu data={copy} queries={taxonomicMapData.queries}  />;
             userMenu = <TreeInteraction data={copy} queries={taxonomicMapData.queries} calculationMethod={'taxa'}/>;

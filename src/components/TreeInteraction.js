@@ -20,11 +20,12 @@ var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phyl
 class TreeInteraction extends Component{
      constructor(props){
         super(props);
-        console.log(props)
+        console.log('Tree interaction props', props)
         this.state = {hitSelect: '-',
                       rankSelect: 'class',
                       counter: 0,
-                      publicationReady: false};
+                      publicationReady: false,
+                      noHitTree: false};
 
         // functions to handle the interactions and tooltips
         this.handleHits = this.handleHits.bind(this);
@@ -32,6 +33,7 @@ class TreeInteraction extends Component{
         this.distTree = this.distTree.bind(this);
         this.d3Tree = this.d3Tree.bind(this);
         this.handlePublicationReady = this.handlePublicationReady.bind(this);
+        this.handleNoHit = this.handleNoHit.bind(this);
     }
 
 
@@ -55,6 +57,9 @@ class TreeInteraction extends Component{
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.props.data.actualTree};
 
+        if (this.state.noHitTree==true){
+            chart(this.props.data.actualTree, null, rank, true, false, false);
+        }
         // update visualizations
         chart({'size': treeCopy['size']}, null, rank, false, true, true);
 
@@ -87,6 +92,19 @@ class TreeInteraction extends Component{
         }
     }
 
+    handleNoHit(){
+        if (!this.state.noHitTree){
+            d3v6.select('#tree_vis').remove();
+            console.log(this.props.data);
+            chart(this.props.data.noHitTree, false, this.state.rankSelect, true, false, false);
+            this.setState({noHitTree: !this.state.noHitTree});
+        }
+        else {
+            this.handleReturn();
+            this.setState({noHitTree: !this.state.noHitTree});
+        }
+    }
+
     handlePublicationReady(){
         console.log('print publicationReady state', this.state.publicationReady);
         console.log(document.getElementById("publicationReady"));
@@ -95,7 +113,6 @@ class TreeInteraction extends Component{
             this.setState({publicationReady: !this.state.publicationReady});
         }
         else {
-            console.log('else');
             console.log(this.state.publicationReady);
             console.log(document.getElementById("publicationReady"));
             this.handleReturn();
@@ -273,6 +290,18 @@ class TreeInteraction extends Component{
                                             id="publicationReady"
                                             label="PUBLICATION READY"
                                             onChange={this.handlePublicationReady}
+                                            />
+                                        </Form>
+                            </div>
+                        </ButtonGroup>
+                        <ButtonGroup className='mr-2' aria-label='Third group'>
+                            <div class="d-flex align-items-center flex-row" as={ButtonGroup}>
+                                        <Form>
+                                            <Form.Check
+                                            type="switch"
+                                            id="noHitToggle"
+                                            label="SHOW TAXA WITHOUT HITS"
+                                            onChange={this.handleNoHit}
                                             />
                                         </Form>
                             </div>

@@ -188,7 +188,6 @@ def phylogenyUnique():
 def menu():
     # remove all old files + set global variable
 
-
     if request.method == 'POST':
         global hit_seqs
         global accs_seqs
@@ -266,7 +265,6 @@ def menu():
             tree_taxa = tree_data.split(',')
             taxa = [taxon.split('|')[0] for taxon in tree_taxa]
             taxaIDs = translate_nodes(taxa)
-            print(taxaIDs)
 
         # user defined taxonomy
         elif tree_menu_selection == '1':
@@ -281,7 +279,6 @@ def menu():
                 error.append({'message': 'Uploaded tree file contain a BLASTphylo incompatible format. Newick string need labels for all nodes.'})
                 tree_data = None
 
-        print(tree_data)
 
         # filter parameter
         eValue = request.form['eValue']
@@ -303,11 +300,11 @@ def menu():
             # start processing of the data
             print('\nStart PhyloBlast')
             try:
-                d3_tree, hit_seqs, accs_seqs, queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
+                d3_tree, d3_no_hit_tree, hit_seqs, accs_seqs, queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
                 if protein_file_type == '2':
                     queries = ['sada']
                 elif protein_file_type == '3':
-                    queries = ['mpasA', 'mpsB']
+                    queries = ['mpasA', 'mpsB', 'mpsC']
 
                 # remove temporary filesvalue
                 if protein_file_type == '0':
@@ -315,11 +312,11 @@ def menu():
 
                 if len(d3_tree) > 0:
                     print('Root of the tree: ' + d3_tree['name'])
-                    return {'tree': d3_tree, 'error': None, 'queries': queries, 'actualTree': d3_tree}
+                    return {'tree': d3_tree, 'noHitTree': d3_no_hit_tree, 'error': None, 'queries': queries, 'actualTree': d3_tree}
                 else:
-                    return {'tree': None, 'error': None, 'queries': queries, 'actualTree': None}
+                    return {'tree': None, 'noHitTree': None, 'error': None, 'queries': queries, 'actualTree': None}
             except:
-                return {'tree': None, 'error': None, 'queries': queries, 'actualTree': None}
+                return {'tree': None, 'noHitTree': None, 'error': None, 'queries': queries, 'actualTree': None}
     else:
         return None
       

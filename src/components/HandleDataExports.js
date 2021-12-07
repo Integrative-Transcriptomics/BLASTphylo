@@ -32,7 +32,7 @@ class ExportTreeImage extends Component{
             figureName = 'taxonomicmapping';
         }
 
-        domtoimage.toJpeg(element, { quality: 1, bgcolor: 'white',
+        domtoimage.toPng(element, { quality: 1, bgcolor: 'white',
                                             style:{overflow:'visible'} })
             .then(function (dataUrl) {
                 var link = document.createElement('a');
@@ -104,7 +104,7 @@ class ExportTreeImage extends Component{
    render(){
         return(<div id='treeImageExport'>
                <button id="export_svg" onClick={this.exportSVG}>export tree as svg <BsBoxArrowUpRight size={20}/> </button>
-               <button id="export_pdf" onClick={this.exportJPEG}>export tree as jpeg <BsBoxArrowUpRight size={20}/> </button>
+               <button id="export_jpeg" onClick={this.exportJPEG}>export tree as jpeg <BsBoxArrowUpRight size={20}/> </button>
                </div>);
    }
 }
@@ -148,8 +148,8 @@ function exportJPEG(){
         figureName = 'taxonomicmapping';
     }
 
-    domtoimage.toJpeg(element, { quality: 1, bgcolor: 'white',
-                                        style:{overflow:'visible'} })
+    domtoimage.toPng(element, { quality: 1, bgcolor: 'white',
+                                        style:{overflow:'visible'}})
         .then(function (dataUrl) {
             var link = document.createElement('a');
             link.download = figureName;

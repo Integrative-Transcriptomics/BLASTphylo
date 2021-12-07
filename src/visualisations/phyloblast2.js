@@ -190,7 +190,7 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
         hitSelection = '-';
         clicked_nodes = {};
     }
-
+    console.log('data', data)
     branchLength = data['size'][1];
     const duration = 750;
     let i = 0;
