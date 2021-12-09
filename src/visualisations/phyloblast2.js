@@ -575,8 +575,14 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
 
 }
 
-
-
+function normalizedTaxaCount(node){
+    if (node.children || node._children){
+        var taxa_leaves = getNumberOfLeaves(node.data, 0);
+        var taxa_ncbi_leaves = ncbi_normalisation[node.data.name][1];
+        var percentage_taxa = (taxa_leaves/parseInt(taxa_ncbi_leaves))*100;
+        return percentage_taxa;
+    } else {return 0}
+}
 
 // ******************************** Bar charts   ***************************
 
@@ -585,38 +591,16 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
 // show hit values based on the actual state of the tree
 function hitBars(value){
     hitSelection = value;
+    console.log(hitSelection)
     var barheight = 7;
 
-    var hitValue = null;
-    if (value === 'node hits'){  // shown node bars
-	    hitValue = 0;
-    } else if (value === 'subtree hits'){
-        hitValue = 1;
-    } else {
-        d3v6.select('#hitbars')
-             .remove();
-        return
-    }
 
     d3v6.select('#hitbars')
         .remove();
 
-    var nodes = treeData.descendants();
-    var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue];});
-
-    // define the number of ticks for the axis
-    var ticksStep = 0;
-    if((max_hit >=  1000) || (max_hit <= 10)){
-        ticksStep = 5;
-    }else {
-        ticksStep = 10;
-    }
-    var scaleX = d3v6.scaleLinear().domain([0, max_hit]).range([0, svgWidth]);
-
     // general SVG element
     var hitbars = d3v6.select('#additionalInfo')
            .append('svg')
-//           .attr('transform', 'translate(' + 50 + ',' + 0 + ')')
            .attr('id', 'hitbars')
            .style("font", "10px sans-serif")
            .style("overflow","visible")
@@ -649,45 +633,128 @@ function hitBars(value){
     var currentWidth = (currentDepth * branchLength);
     var barPlotShift = currentWidth-treeRankWidth+max_name_length-treeTextWidth;
 
-//    hitbars.append('g')
-//        .attr('transform', 'translate(' + 200 + ',' + 0 + ')')
-//    hitbars.append('g')
-//        .attr("width", svgWidth+margin.left+margin.right)
-//        .attr("height", treeHeight)
+    console.log(value);
+    if (value !== 'covered taxa'){
+        var hitValue = null;
+        if (value === 'node hits'){  // shown node bars
+            hitValue = 0;
+        } else if (value === 'subtree hits'){
+            hitValue = 1;
+        } else {
+            d3v6.select('#hitbars')
+                 .remove();
+            return
+        }
 
-    // axis
-    hitbars.append('g')
-         .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
-         .call(d3v6.axisTop(scaleX)
-                .ticks(ticksStep, 'f'));
+        var nodes = treeData.descendants();
+        var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue];});
 
-    // visualize no bars if the max. hit value is 0
-    if(max_hit === 0){
-        return
-    }
+        console.log('if case');
+        // define the number of ticks for the axis
+        var ticksStep = 0;
+        if((max_hit >=  1000) || (max_hit <= 10)){
+            ticksStep = 5;
+        }else {
+            ticksStep = 10;
+        }
+        var scaleX = d3v6.scaleLinear().domain([0, max_hit]).range([0, svgWidth]);
 
-    // bars
-    hitbars.append('g')
-            .attr('transform', `translate(` + (margin.left+barPlotShift) +  `,${treeHeight/2})`)
-            .selectAll('.bars')
-            .data(nodes)
-            .enter()
-            .append('rect')
-            .attr('class', 'bars')
-            .attr('transform', function(d) { return 'translate(0,' + (d.y-4) + ')';})
-   	        .attr('fill',  d => d.children  ? "transparent" : "#377ba8")
-	        .attr("width", function(d){ return scaleX(d.data.value[0][hitValue]);})
-	        .attr("height", barheight)
-            .on("mouseover", function(d, i){showTooltip(i, false, null);})
-            .on("mouseout", function(d, i){hideTooltip(i, false, 4);})
-            .on("mousemove", function(d, i){moveTooltip(i, false);});
 
-    // append a axis to the bottom of the tree if it is larger as the display
-    if((rightmostnode.y-leftmostnode.y) >= (window.innerHeight*0.8)){
+
+        // axis
         hitbars.append('g')
-                 .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2+rightmostnode.y+barheight) + ')')
-                 .call(d3v6.axisBottom(scaleX)
-                        .ticks(ticksStep, 'f'));
+             .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
+             .call(d3v6.axisTop(scaleX)
+                    .ticks(ticksStep, 'f'));
+
+        // visualize no bars if the max. hit value is 0
+        if(max_hit === 0){
+            return
+        }
+
+        // bars
+        hitbars.append('g')
+                .attr('transform', `translate(` + (margin.left+barPlotShift) +  `,${treeHeight/2})`)
+                .selectAll('.bars')
+                .data(nodes)
+                .enter()
+                .append('rect')
+                .attr('class', 'bars')
+                .attr('transform', function(d) { return 'translate(0,' + (d.y-4) + ')';})
+                .attr('fill',  d => d.children ? "transparent" : "#377ba8")
+                .attr("width", function(d){ return scaleX(d.data.value[0][hitValue]);})
+                .attr("height", barheight)
+                .on("mouseover", function(d, i){showTooltip(i, false, null);})
+                .on("mouseout", function(d, i){hideTooltip(i, false, 4);})
+                .on("mousemove", function(d, i){moveTooltip(i, false);});
+
+        // append a axis to the bottom of the tree if it is larger as the display
+        if((rightmostnode.y-leftmostnode.y) >= (window.innerHeight*0.8)){
+            hitbars.append('g')
+                     .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2+rightmostnode.y+barheight) + ')')
+                     .call(d3v6.axisBottom(scaleX)
+                            .ticks(ticksStep, 'f'));
+        }
+
+    } else{
+
+        var nodes = treeData.descendants();
+        console.log('else case');
+        // compute bar values of represented taxa
+        var taxaCounts = []
+        nodes.forEach(function(d){
+            taxaCounts.push(normalizedTaxaCount(d));
+        });
+        console.log(taxaCounts);
+
+        var maxTaxaCount = d3v6.max(taxaCounts);
+        var ticksStep = 0;
+        if((maxTaxaCount >=  100) || (maxTaxaCount <= 10)){
+            ticksStep = 5;
+        }else {
+            ticksStep = 10;
+        }
+        var scaleX = d3v6.scaleLinear().domain([0, maxTaxaCount]).range([0, svgWidth]);
+
+        // axis
+        hitbars.append('g')
+             .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
+             .call(d3v6.axisTop(scaleX)
+                    .ticks(ticksStep, 'f'));
+
+        hitbars.append("text")
+              .attr('transform', 'translate(' + (margin.left+barPlotShift+0.5*svgWidth) + ',' + (treeHeight/2-4*barheight+leftmostnode.y) + ')')
+              .style("text-anchor", "middle")
+              .text("covered taxa in %");
+
+        // visualize no bars if the max. hit value is 0
+        if(maxTaxaCount === 0){
+            return
+        }
+
+        // bars
+        hitbars.append('g')
+                .attr('transform', `translate(` + (margin.left+barPlotShift) +  `,${treeHeight/2})`)
+                .selectAll('.bars')
+                .data(nodes)
+                .enter()
+                .append('rect')
+                .attr('class', 'bars')
+                .attr('transform', function(d) { return 'translate(0,' + (d.y-4) + ')';})
+                .attr('fill',  d => d.children ? "transparent" : "#377ba8")
+                .attr("width", function(d){ return scaleX(normalizedTaxaCount(d));})
+                .attr("height", barheight)
+                .on("mouseover", function(d, i){showTooltip(i, false, null);})
+                .on("mouseout", function(d, i){hideTooltip(i, false, 4);})
+                .on("mousemove", function(d, i){moveTooltip(i, false);});
+
+        // append a axis to the bottom of the tree if it is larger as the display
+        if((rightmostnode.y-leftmostnode.y) >= (window.innerHeight*0.8)){
+            hitbars.append('g')
+                     .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2+rightmostnode.y+barheight) + ')')
+                     .call(d3v6.axisBottom(scaleX)
+                            .ticks(ticksStep, 'f'));
+        }
     }
 }
 

@@ -67,7 +67,6 @@ class TaxonomicAnalysisMenu extends Component{
         const rank = this.state.rankSelect;
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.props.data.actualTree};
-        console.log(treeCopy['size'])
 
         // update visualizations
         chart({'size': treeCopy['size']}, null, rank, false, true, true);
@@ -94,7 +93,6 @@ class TaxonomicAnalysisMenu extends Component{
     }
 
     handleTreeExportFormat(event){
-        console.log(event.target.id);
         this.setState({treeExportFormat: event.target.id});
     }
 

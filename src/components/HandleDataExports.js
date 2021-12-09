@@ -21,7 +21,6 @@ class ExportTreeImage extends Component{
 
     exportJPEG(){
         var element = document.getElementById('treeVis');
-        console.log(element)
         var borderStyle = element.style.border;
         element.style.border = 'none';
         // labeling of the tree
@@ -48,7 +47,6 @@ class ExportTreeImage extends Component{
         exportPDF(){
         var domToPdf = require('dom-to-pdf');
         var element = document.getElementById('treeVis');
-        console.log(element)
         var borderStyle = element.style.border;
         element.style.border = 'none';
         // labeling of the tree
@@ -77,7 +75,6 @@ class ExportTreeImage extends Component{
 
     exportSVG(){
         var element = document.getElementById('treeVis');
-        console.log(element)
         var borderStyle = element.style.border;
         element.style.border = 'none';
         // labeling of the tree
@@ -130,7 +127,6 @@ class ExportCsvData extends Component {
         var path = 'server/exportData';
         const formData = new FormData();
         formData.append("datatype", this.props.filename);
-        console.log(this.props)
 
         return axios.post(path, formData)
          .then(function (response) {
@@ -146,7 +142,6 @@ class ExportCsvData extends Component {
     }
 
     makeTextFile(dataString){
-        console.log(dataString);
         const data = new Blob([dataString], {type: 'text/plain'});
 
         if (this.state.downloadLink !== '') window.URL.revokeObjectURL(this.state.downloadLink);
@@ -155,7 +150,6 @@ class ExportCsvData extends Component {
 
     generateNewick(){
         this.accessionOfData().then(data => {
-            console.log(data.data_type);
             if(data.data_type === 'table'){
                 this.setState({dataString: data['data']});
             }else if(data.data_type === 'newick'){
@@ -173,7 +167,6 @@ class ExportCsvData extends Component {
 
     componentDidUpdate(prevProps){
         //console.log(prevProps)
-        console.log(this.props)
         if(prevProps.filename !== this.props.filename){
             this.generateNewick();
         }

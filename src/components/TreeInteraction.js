@@ -279,6 +279,7 @@ class TreeInteraction extends Component{
                                 <Dropdown.Item eventKey='-'>none</Dropdown.Item>
                                 <Dropdown.Item eventKey='node hits'>node hits</Dropdown.Item>
                                 <Dropdown.Item eventKey='subtree hits'>subtree hits</Dropdown.Item>
+                                <Dropdown.Item eventKey='covered taxa'>covered taxa</Dropdown.Item>
                             </DropdownButton>
                             </OverlayTrigger>
                         </ButtonGroup>
