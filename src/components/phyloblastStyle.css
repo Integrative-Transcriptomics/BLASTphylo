@@ -60,15 +60,12 @@
 
 
 /* buttons in dropdown menu downloads*/
-.mr-auto button, #public_ready_taxa, #csvDataExport, #phyloblastMenu #txtDataExport {
-  margin: 5px 5px 0 10px;
-  background: #6ea9d0;
+.btn.btn.primary, #public_ready_taxa, #csvDataExport, #phyloblastMenu #txtDataExport {
+  background: transparent;
   color: white;
-  text-decoration: none;
 }
 
 .mr-auto button:hover, #public_ready_taxa:hover, #csvDataExport:hover, #phyloblastMenu #txtDataExport:hover{
-  background: #377ba8;
 }
 
 
@@ -85,6 +82,11 @@
   margin: 5px 5px 5px 10px;
 }
 
+a.btn.btn-primary {
+  margin: 5px 5px 5px 10px;
+}
+
+
 #taxaPhylo:hover, #uniquePhylo:hover{
  color: white;
  width: 100%;
@@ -98,14 +100,6 @@
  color: white;
  background: #377ba8;
  border: solid 1.5px white;
-}
-
-#public_ready_taxa:disabled:hover {
-  background: #cadfed;
-}
-
-#public_ready_taxa:disabled {
-  background: #cadfed;
 }
 
 

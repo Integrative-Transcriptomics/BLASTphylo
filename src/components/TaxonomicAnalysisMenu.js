@@ -1,6 +1,8 @@
 // used libraries
 import React, {Component} from 'react';
 import * as d3v6 from 'd3v6';
+import {CSVLink} from 'react-csv';
+import axios from 'axios';
 import {Nav, Accordion, Card, Tooltip, OverlayTrigger, Button, Form} from 'react-bootstrap';
 import {BsBoxArrowUpRight} from "react-icons/bs";
 import {AiOutlineArrowLeft} from 'react-icons/ai';
@@ -23,13 +25,15 @@ class TaxonomicAnalysisMenu extends Component{
         //console.log(treeData['size'])
         this.state = {hitSelect: "-",
                       rankSelect: 'class',
-                      treeExportFormat: 'svgSelect'};
+                      treeExportFormat: 'svgSelect',
+                      dataToDownload: ''};
 
         // functions
         this.showTooltip = this.showTooltip.bind(this);
         this.handleReturn = this.handleReturn.bind(this);
         this.exportTree = this.exportTree.bind(this);
         this.handleTreeExportFormat = this.handleTreeExportFormat.bind(this);
+        this.exportTaxonomicMapping = this.exportTaxonomicMapping.bind(this);
     }
 
 
@@ -94,7 +98,16 @@ class TaxonomicAnalysisMenu extends Component{
         this.setState({treeExportFormat: event.target.id});
     }
 
+    exportTaxonomicMapping(){
+        var data_to_download = 'Hello';
+        this.setState({ dataToDownload: data_to_download }, () => {
+         // click the CSVLink component to trigger the CSV download
+        this.csvLink.link.click()
+      })
+    }
 
+    exportNewickString(){
+    }
 
 
     render(){
@@ -112,20 +125,15 @@ class TaxonomicAnalysisMenu extends Component{
                                     <div class="d-flex align-items-center flex-row">
                                         <button class="btn btn-primary" onClick={this.exportTree}>EXPORT VIEW</button>
 
-
                                         <Form inline>
                                             <Form.Check inline type={'radio'} name='treeExportOptions' id='svgSelect' label={'SVG'} onChange={this.handleTreeExportFormat} defaultChecked/>
                                             <Form.Check inline type={'radio'} name='treeExportOptions' id='jpegSelect' label={'JPEG'} onChange={this.handleTreeExportFormat} />
                                         </Form>
 
+                                    </div>
 
-                                    </div>
-                                    <div class="d-flex align-items-center flex-row">
-                                        <button class="btn btn-primary">DOWNLOAD <br/> TAXONOMIC <br/> MAPPING</button>
-                                    </div>
-                                    <div class="d-flex align-items-center flex-row">
-                                        <button class="btn btn-primary">DOWNLOAD <br/> NEWICK STRING</button>
-                                    </div>
+                                    <ExportCsvData dataName='taxonomic Mapping' filename='taxonomic_mapping.csv' />
+                                    <ExportCsvData dataName='Newick string' filename='newick_taxonomic_mapping.txt' />
 
                                 </Card.Body>
                             </Accordion.Collapse>

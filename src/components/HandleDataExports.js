@@ -109,6 +109,145 @@ class ExportTreeImage extends Component{
    }
 }
 
+// export data as CSV file
+class ExportCsvData extends Component {
+    constructor(props){
+        super(props);
+        this.state = {dataString: '',
+                      downloadLink: '',
+                      setDownloadLink: ''};
+
+        // functions
+        this.accessionOfData = this.accessionOfData.bind(this);
+        this.generateNewick = this.generateNewick.bind(this);
+        this.makeTextFile = this.makeTextFile.bind(this);
+        this.exportTaxonomicMapping = this.exportTaxonomicMapping.bind(this);
+
+    }
+
+    // get data from server
+    accessionOfData(){
+        var path = 'server/exportData';
+        const formData = new FormData();
+        formData.append("datatype", this.props.filename);
+        console.log(this.props)
+
+        return axios.post(path, formData)
+         .then(function (response) {
+             //console.log(response.data);
+             return response.data
+
+         })
+         .catch(error => {
+            console.log('Error occurred')
+            //console.log(error);
+         })
+
+    }
+
+    makeTextFile(dataString){
+        console.log(dataString);
+        const data = new Blob([dataString], {type: 'text/plain'});
+
+        if (this.state.downloadLink !== '') window.URL.revokeObjectURL(this.state.downloadLink);
+        this.setState({downloadLink: window.URL.createObjectURL(data)});
+    }
+
+    generateNewick(){
+        this.accessionOfData().then(data => {
+            console.log(data.data_type);
+            if(data.data_type === 'table'){
+                this.setState({dataString: data['data']});
+            }else if(data.data_type === 'newick'){
+                this.makeTextFile(data['data']);
+            }else{
+                this.setState({dataString: 'No data present'})
+            }
+        });
+    }
+
+    componentDidMount(){
+        this.generateNewick();
+
+    }
+
+    componentDidUpdate(prevProps){
+        //console.log(prevProps)
+        console.log(this.props)
+        if(prevProps.filename !== this.props.filename){
+            this.generateNewick();
+        }
+    }
+
+    exportTaxonomicMapping(){
+         this.setState({}, () => {
+         // click the CSVLink component to trigger the CSV download
+         this.csvLink.link.click()
+      })
+    }
+
+
+
+    render(){
+        const exportedData = this.props.dataName;
+        const filenameExportedData = this.props.filename;
+
+        if(filenameExportedData.includes('.csv')){
+
+            return(
+                <div>
+                    <div class="d-flex align-items-center flex-row">
+                        <button class="btn btn-primary" onClick={this.exportTaxonomicMapping}>DOWNLOAD <br/> TAXONOMIC <br/> MAPPING
+                        <AiOutlineDownload size={20}/> </button>
+                    </div>
+                    <div>
+                    <CSVLink
+                        id='csvDataExport'
+                        data={this.state.dataString}
+                        filename={filenameExportedData}
+                        className="hidden"
+                        ref={(r) => this.csvLink = r}
+                        target="_blank"/>
+                    </div>
+                </div>
+//                <button><CSVLink id='csvDataExport' data={this.state.dataString} filename={filenameExportedData} enclosingCharacter={'\''}>
+//                    download {exportedData} <AiOutlineDownload  size={20}/>
+//                </CSVLink></button>
+                );
+        }else{
+//            return(
+//                <div>
+//                    <div class="d-flex align-items-center flex-row">
+//                        <button class="btn btn-primary" onClick={this.exportTaxonomicMapping}>DOWNLOAD <br/> NEWICK STRING<br/> </button>
+//                    </div>
+//                    <div>
+//                    <CSVLink
+//                        id='txtDataExport'
+//                        data={this.state.dataString}
+//                        filename={filenameExportedData}
+//                        className="hidden"
+//                        ref={(r) => this.csvLink = r}
+//                        target="_blank"/>
+//                    </div>
+//                </div>
+//                <button><CSVLink id='csvDataExport' data={this.state.dataString} filename={filenameExportedData} enclosingCharacter={'\''}>
+//                    download {exportedData} <AiOutlineDownload  size={20}/>
+//                </CSVLink></button>
+//                );
+            return(
+                    <div class="d-flex align-items-center flex-row">
+                        <a class="btn btn-primary" role="button" download={filenameExportedData} href={this.state.downloadLink}>
+                            DOWNLOAD <br/> NEWICK <br/> STRING
+                            <AiOutlineDownload size={20}/>
+                        </a>
+                    </div>
+                );
+
+        }
+    }
+
+}
+
 function exportSVG(){
     var element = document.getElementById('treeVis');
     console.log(element)
@@ -161,94 +300,5 @@ function exportJPEG(){
     element.style.height = '80vh';
 }
 
-// export data as CSV file
-class ExportCsvData extends Component {
-    constructor(props){
-        super(props);
-        this.state = {dataString: '',
-                      downloadLink: '',
-                      setDownloadLink: ''};
-
-        // functions
-        this.accessionOfData = this.accessionOfData.bind(this);
-        this.generateNewick = this.generateNewick.bind(this);
-        this.makeTextFile = this.makeTextFile.bind(this);
-    }
-
-    // get data from server
-    accessionOfData(){
-        var path = 'server/exportData';
-        const formData = new FormData();
-        formData.append("datatype", this.props.filename);
-        console.log(this.props)
-
-        return axios.post(path, formData)
-         .then(function (response) {
-             //console.log(response.data);
-             return response.data
-
-         })
-         .catch(error => {
-            console.log('Error occurred')
-            //console.log(error);
-         })
-
-    }
-
-    makeTextFile(dataString){
-        //console.log(dataString)
-        const data = new Blob([dataString], {type: 'text/plain'});
-
-        if (this.state.downloadLink !== '') window.URL.revokeObjectURL(this.state.downloadLink);
-        this.setState({downloadLink: window.URL.createObjectURL(data)});
-    }
-
-    generateNewick(){
-        this.accessionOfData().then(data => {
-            //console.log(data);
-            if(data.data_type === 'table'){
-                this.setState({dataString: data['data']});
-            }else if(data.data_type === 'newick'){
-                this.makeTextFile(data['data']);
-            }else{
-                this.setState({dataString: 'No data present'})
-            }
-        });
-    }
-
-    componentDidMount(){
-        this.generateNewick();
-
-    }
-
-    componentDidUpdate(prevProps){
-        //console.log(prevProps)
-        //console.log(this.props)
-        if(prevProps.filename !== this.props.filename){
-            this.generateNewick();
-        }
-    }
-
-
-    render(){
-        const exportedData = this.props.dataName;
-        const filenameExportedData = this.props.filename;
-
-        if(filenameExportedData.includes('.csv')){
-
-            return(
-                <button><CSVLink id='csvDataExport' data={this.state.dataString} filename={filenameExportedData} enclosingCharacter={'\''}>
-                    download {exportedData} <AiOutlineDownload  size={20}/>
-                </CSVLink></button>);
-        }else{
-            return(
-                <button><a id='txtDataExport' download={filenameExportedData} href={this.state.downloadLink}>
-                    download {exportedData} <AiOutlineDownload size={20}/>
-                </a></button>);
-
-        }
-    }
-
-}
 
 export {ExportTreeImage, ExportCsvData, exportSVG, exportJPEG};
