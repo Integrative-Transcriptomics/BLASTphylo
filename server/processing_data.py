@@ -128,7 +128,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
         #print(stdout)
         blast_data = StringIO(stdout)
         print(stderr)
-        preFilter = pd.read_csv('blast_result.csv', sep='\t', names=header)
+        preFilter = pd.read_csv(blast_data, sep='\t', names=header)
 
     # filter for alignment identity, query coverage, subject coverage, evalue
     # evalue and query coverage are necessary given that BLAST stop when the first subject sequences exceed the threshold
