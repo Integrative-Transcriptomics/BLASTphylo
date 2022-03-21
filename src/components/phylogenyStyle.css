@@ -21,21 +21,6 @@
  border: solid 1.5px white;
 }
 
-#phylogenyMenu li:hover, #txtDataExport:hover{
-  background: #5e66b4;
-  text-decoration: none;
-}
-
-#phylogenyMenu button, #public_ready_phylo, #txtDataExport {
-  background: #8e93ca;
-  color: white;
-
-}
-
-#phylogenyMenu button:hover, #public_ready_phylo:hover {
-  background: #5e66b4;
-}
-
 
 #phylogenyMenu h2{
  padding: 2px 0 2px 20px;
@@ -44,6 +29,10 @@
  color: white;
  background: #5e66b4;
  border: solid 1.5px white;
+}
+
+#phylogenyMenu button {
+  margin: 5px 5px 5px 10px;
 }
 
 #additionalInfo .labels {

@@ -53,6 +53,7 @@ try:
 except:
     print('Run ncbi_taxonomy_normalisation.py to generate json file')
 
+
 # generate fasta file from textfield input and check for amino acid sequence (can handle any number of queries)
 def generate_fasta_from_input(textfieldinput, outdir, blast_type):
     fastas = []
@@ -79,7 +80,7 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
             else:
                 return valid_pro_seq
     SeqIO.write(fastas, outdir, "fasta")
-    print(query_header)
+    #print(query_header)
     return valid_pro_seq, query_header
 
 # start server
@@ -142,7 +143,7 @@ def exportData():
 def searchNcbiTaxa():
     if request.method == 'POST':
         searchquery = request.form['searchquery']
-        print(searchquery)
+        #print(searchquery)
         ncbi_taxa_file = actual_dir + '/data/searchbar_entries.json'
 
         with open(ncbi_taxa_file, 'r') as f:
@@ -217,7 +218,7 @@ def menu():
             else:
                 error.append({'message': 'Protein sequence(s) contain irregular amino acids'})
                 protein = None
-            print(protein)
+            #print(protein)
 
         protein_file_type = ''
         if len(protein_seq) == 0:
@@ -230,7 +231,7 @@ def menu():
                 temp_prot_file.write(protein_data)
                 temp_prot_file.read()
                 protein = temp_prot_file.name
-                print(protein)
+                #print(protein)
                 print('Sequence from file')
             elif protein_file_type == '1': # blast result csv file
                 protein_data = request.files['fasta_file'].read().decode('utf-8')
@@ -304,7 +305,7 @@ def menu():
                 if protein_file_type == '2':
                     queries = ['sada']
                 elif protein_file_type == '3':
-                    queries = ['mpasA', 'mpsB', 'mpsC']
+                    queries = ['mpasA', 'mpsB']
 
                 # remove temporary filesvalue
                 if protein_file_type == '0':

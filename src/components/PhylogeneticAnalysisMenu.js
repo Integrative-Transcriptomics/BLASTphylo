@@ -13,7 +13,8 @@ import '../../node_modules/phylotree/phylotree.css'
 
 // own components and style sheets
 import './phylogenyStyle.css';
-import {ExportTreeImage, ExportCsvData} from './HandleDataExports.js'
+import {ExportTreeImage, ExportCsvData, exportSVG, exportJPEG} from './HandleDataExports.js';
+
 
 
 // own visualisations
@@ -26,7 +27,8 @@ class PhylogeneticAnalysisMenu extends Component{
         //console.log(props)
         // set state for visualisations
         var treeData = this.props.data.tree;
-        this.state = { ownInfo: null, counter: 0};
+        this.state = {ownInfo: null, counter: 0,
+                      treeExportFormat: 'svgSelect'};
 
 
 
@@ -37,6 +39,8 @@ class PhylogeneticAnalysisMenu extends Component{
         this.showTooltip = this.showTooltip.bind(this);
         this.handleReturn = this.handleReturn.bind(this);
         this.handleTabChange = this.handleTabChange.bind(this);
+        this.exportTree = this.exportTree.bind(this);
+        this.handleTreeExportFormat = this.handleTreeExportFormat.bind(this);
 
     }
 
@@ -131,6 +135,19 @@ class PhylogeneticAnalysisMenu extends Component{
         document.getElementById('public_ready_phylo').disabled = false;
     }
 
+    exportTree(){
+    if (this.state.treeExportFormat === "svgSelect") {
+        exportSVG();
+        }
+    if (this.state.treeExportFormat === "jpegSelect") {
+        exportJPEG();
+        }
+    }
+
+    handleTreeExportFormat(event){
+        this.setState({treeExportFormat: event.target.id});
+    }
+
     render(){
         d3v6.select('#visualisation').style('border', '2px solid #4d9660')
                                 .style('border-radius', '5px');
@@ -159,15 +176,18 @@ class PhylogeneticAnalysisMenu extends Component{
                             </Accordion.Toggle>
                             <Accordion.Collapse eventKey='0'>
                                 <Card.Body>
-                                    Different export options for the tree visualization. The <b>publication ready</b> option will remove the
-                                    white spaces between the nodes of the cladogram and visualizes the full tree as static visualization.<br/>
-                                    The <b>unlock publication ready</b> button unlocks the static visualization. <br/><br/>
-                                    <Nav className='mr-auto'>
-                                        <button id="public_ready_phylo" onClick={publicationReady}>publication ready</button>
-                                        <ExportTreeImage />
-                                        <ExportCsvData dataName='Newick string' filename={newickFilename} />
-                                        <button eventKey='returnButton' id='returnButton' onClick={this.handleReturn} style={{display: 'none'}}>unlock publication ready</button>
-                                    </Nav>
+                                     <div class="d-flex align-items-center flex-row">
+                                        <button class="btn btn-primary" onClick={this.exportTree}>EXPORT VIEW</button>
+
+                                        <Form inline>
+                                            <Form.Check inline type={'radio'} name='treeExportOptions' id='svgSelect' label={'SVG'} onChange={this.handleTreeExportFormat} defaultChecked/>
+                                            <Form.Check inline type={'radio'} name='treeExportOptions' id='jpegSelect' label={'JPEG'} onChange={this.handleTreeExportFormat} />
+                                        </Form>
+
+                                    </div>
+
+                                    <ExportCsvData dataName='Newick string' filename={newickFilename} />
+
                                 </Card.Body>
                             </Accordion.Collapse>
                         </Card>

@@ -11,6 +11,8 @@ import "../../node_modules/phylotree/src/main";
 
 // global variables
 import ncbi_normalisation from '../data/ncbi_normalisation.json'
+//import ncbi_normalisation_species from '../data/ncbi_normalisation_species.json'
+//import ncbi_normalisation_genus from '../data/archaea_ncbi_normalisation_genus.json'
 var clicked_nodes = {};  // clicked nodes and their state (collapsed or not)
 
 // stored variables for the general information of the first visualization of the tree --> used for the return and publication ready function
@@ -584,6 +586,65 @@ function normalizedTaxaCount(node){
     } else {return 0}
 }
 
+function getNumberOfLeavesStacks(node, count, query){
+    if(node.children){
+        count = count + d3v6.sum(node.children, function(child){return getNumberOfLeavesStacks(child,  count, query);})
+        return count;
+    }else{
+        if (node.value[query][0] != 0){
+            return 1;
+        }
+    }
+}
+
+function normalizedTaxaCountStack(node, query){
+    if (node.children || node._children){
+        var taxa_leaves = getNumberOfLeavesStacks(node.data, 0, query);
+        var taxa_ncbi_leaves = ncbi_normalisation[node.data.name][1];
+        var percentage_taxa = (taxa_leaves/parseInt(taxa_ncbi_leaves))*100;
+        return percentage_taxa;
+    } else {return 0}
+}
+
+
+function getNumberOfSpecies(node, count){
+    if(node.value[1]==='genus'){
+        return 1;
+    }else{
+        if(node.children){
+            count = count + d3v6.sum(node.children, function(child){return getNumberOfSpecies(child,  count);})
+            return count;
+        }
+        else{
+            return 0;
+        }
+    }
+}
+
+
+function SpeciesCounts(node){
+    return getNumberOfSpecies(node.data, 0);
+}
+
+//function normalizedSpeciesCount(node) {
+//    if (node.children || node._children){
+//        var speciesCounts = getNumberOfSpecies(node.data, 0);
+//        try{
+//            var normalizationSpeciesCount = ncbi_normalisation_genus[node.data.name][1];
+//        }
+//        catch{
+//            var normalizationSpeciesCount = 1;
+//        }
+//        if (normalizationSpeciesCount == 0) {
+//            var percentage_taxa = 0;
+//        }
+//        else {var percentage_taxa = (speciesCounts/parseInt(normalizationSpeciesCount))*100;}
+//
+//        return percentage_taxa;
+//
+//    }else {return 0};
+//}
+
 // ******************************** Bar charts   ***************************
 
 
@@ -591,7 +652,6 @@ function normalizedTaxaCount(node){
 // show hit values based on the actual state of the tree
 function hitBars(value){
     hitSelection = value;
-    console.log(hitSelection)
     var barheight = 7;
 
 
@@ -667,6 +727,11 @@ function hitBars(value){
              .call(d3v6.axisTop(scaleX)
                     .ticks(ticksStep, 'f'));
 
+        hitbars.append("text")
+             .attr('transform', 'translate(' + (margin.left+barPlotShift+0.5*svgWidth) + ',' + (treeHeight/2-4*barheight+leftmostnode.y) + ')')
+             .style("text-anchor", "middle")
+             .text(value);
+
         // visualize no bars if the max. hit value is 0
         if(max_hit === 0){
             return
@@ -696,8 +761,17 @@ function hitBars(value){
                             .ticks(ticksStep, 'f'));
         }
 
-    } else{
+    }
+//    else { //covered taxa (species)
+//        var nodes = treeData.descendants();
+//        var taxaCounts = [];
+//        nodes.forEach(function(d){
+//            taxaCounts.push(normalizedSpeciesCount(d));
+//        });
+//        console.log('speciesCounts', taxaCounts);
 
+
+    else{ // covered taxa (strains)
         var nodes = treeData.descendants();
         console.log('else case');
         // compute bar values of represented taxa
@@ -725,7 +799,7 @@ function hitBars(value){
         hitbars.append("text")
               .attr('transform', 'translate(' + (margin.left+barPlotShift+0.5*svgWidth) + ',' + (treeHeight/2-4*barheight+leftmostnode.y) + ')')
               .style("text-anchor", "middle")
-              .text("covered taxa in %");
+              .text("covered strains in %");
 
         // visualize no bars if the max. hit value is 0
         if(maxTaxaCount === 0){
@@ -742,7 +816,7 @@ function hitBars(value){
                 .attr('class', 'bars')
                 .attr('transform', function(d) { return 'translate(0,' + (d.y-4) + ')';})
                 .attr('fill',  d => d.children ? "transparent" : "#377ba8")
-                .attr("width", function(d){ return scaleX(normalizedTaxaCount(d));})
+                .attr("width", function(d){ return scaleX(normalizedTaxaCount(d));})    // or normalizedSpeciesCount(d)
                 .attr("height", barheight)
                 .on("mouseover", function(d, i){showTooltip(i, false, null);})
                 .on("mouseout", function(d, i){hideTooltip(i, false, 4);})
@@ -762,40 +836,9 @@ function stackBars(value){
     hitSelection = value;
     var barheight = 7;
 
-    var hitValue = null;
-    if (value === 'node hits'){  // show node bars
-	    hitValue = 0;
-    } else if (value === 'subtree hits'){
-        hitValue = 1;
-    } else {
-        d3v6.select('#hitbars')
-            .remove();
-        return
-    }
+
     d3v6.select('#hitbars')
         .remove();
-
-    var nodes = treeData.descendants();
-    var stacks = [];
-    var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue] + d.data.value[1][hitValue];});
-
-    nodes.forEach(function(d){
-        var stack_dict = {};
-        stack_dict['node'] = d;
-        stack_dict[query_header[0]] = d.data.value[0][hitValue];
-        stack_dict[query_header[1]] = d.data.value[1][hitValue];
-        stacks.push(stack_dict);
-    });
-
-    // define ticks of the axis
-    var ticksStep = 0;
-    if((max_hit >=  1000) || (max_hit <= 10)){
-        ticksStep = 5;
-    }else {
-        ticksStep = 10;
-    }
-
-    var scaleX = d3v6.scaleLinear().domain([0, max_hit]).range([0, svgWidth-50]);
 
     // general SVG element
     var hitbars = d3v6.select('#additionalInfo')
@@ -812,7 +855,7 @@ function stackBars(value){
     treeData.leaves().forEach(d => leaveNames.push(d.data.name));
     var textWidth = [];
 
-    hitbars.append('g')
+     hitbars.append('g')
         .selectAll('.dummyText')     // declare a new CSS class 'dummyText'
         .data(leaveNames)
         .enter()                     // create new element
@@ -832,71 +875,216 @@ function stackBars(value){
     var currentWidth = (currentDepth * branchLength);
     var barPlotShift = currentWidth-treeRankWidth+max_name_length-treeTextWidth;
 
-    // x-Axis
-    hitbars.append('g')
-             .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
-             .call(d3v6.axisTop(scaleX)
-                    .ticks(ticksStep, 'f'));
+    if (value !== 'covered taxa'){
+        var hitValue = null;
+        if (value === 'node hits'){  // show node bars
+            hitValue = 0;
+        } else if (value === 'subtree hits'){
+            hitValue = 1;
+        } else {
+            d3v6.select('#hitbars')
+                .remove();
+            return
+        }
+        var nodes = treeData.descendants();
+        var stacks = [];
+        var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue] + d.data.value[1][hitValue];});
 
-    // visualize no bars if the max. hit value is 0
-    if(max_hit === 0){
-        return
+        nodes.forEach(function(d){
+            var stack_dict = {};
+            stack_dict['node'] = d;
+            stack_dict[query_header[0]] = d.data.value[0][hitValue];
+            stack_dict[query_header[1]] = d.data.value[1][hitValue];
+            stacks.push(stack_dict);
+        });
+
+        // define ticks of the axis
+        var ticksStep = 0;
+        if((max_hit >=  1000) || (max_hit <= 10)){
+            ticksStep = 5;
+        }else {
+            ticksStep = 10;
+        }
+
+        var scaleX = d3v6.scaleLinear().domain([0, max_hit]).range([0, svgWidth-50]);
+
+        // x-Axis
+        hitbars.append('g')
+                 .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
+                 .call(d3v6.axisTop(scaleX)
+                        .ticks(ticksStep, 'f'));
+        hitbars.append("text")
+              .attr('transform', 'translate(' + (margin.left+barPlotShift+0.5*svgWidth) + ',' + (treeHeight/2-4*barheight+leftmostnode.y) + ')')
+              .style("text-anchor", "middle")
+              .text(value);
+
+        // visualize no bars if the max. hit value is 0
+        if(max_hit === 0){
+            return
+        }
+
+
+        // colors of the segment, domain parameter need to be adapted for more than 2 queries
+        var colors = d3v6.scaleOrdinal().domain(query_header).range(d3v6.schemeTableau10);
+
+        // stack each value of the subgroup above each other
+        var stack = d3v6.stack().keys(query_header);
+        var stackedData = stack(stacks);
+        //console.log(stackedData)
+
+        // generate the bars
+        hitbars.append("g")
+            .attr('transform', `translate(` + (margin.left+barPlotShift) + `,${treeHeight/2})`)
+            .selectAll(".stackData")
+            .data(stackedData)
+            .enter()
+            .append("g")
+            // loop over taxa
+            .attr("class", 'stackData')
+            .attr("fill", function(d,i){return colors(d.key);})
+            .selectAll("rect")
+            // loop over proteins
+            .data(function(d){return d;})
+            .enter()
+            .append("rect")
+            .attr('class', d => d.key)
+            .attr('opacity', function(d,i){if(stacks[i].node.children){return 0;}
+                                          else{return 1;}})
+            .attr('x', function(d){return scaleX(d[0]);})
+            .attr('y', function(d,i) {return stacks[i].node.y-4;})
+            .attr("width", function(d,i){return scaleX(d[1]) - scaleX(d[0]);})
+            .attr("height", barheight);
+
+        // legend of for the stack colors
+        var legend = hitbars.selectAll(".legend")
+            .data(query_header)
+            .enter()
+            .append("g")
+            .attr("class", "legend")
+            .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')');
+
+
+       legend.append("rect")
+            .attr("x", svgWidth-40)
+            .attr("y", function(d,i){return i*19;})
+            .attr("width", barheight*2)
+            .attr("height", barheight*2)
+            .style("fill", function(d){return colors(d); });
+
+       legend.append("text")
+            .attr("x", svgWidth-20)
+            .attr("y", function(d,i){return i*19+barheight;})
+            .attr("dy", ".35em")
+            .style("text-anchor", "start")
+            .text(function(d, i){ return d; });
     }
 
+    else{
+        console.log('else case')
+        var nodes = treeData.descendants();
+        var stacks = [];
+        var stacksSum = [];
+//        var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue] + d.data.value[1][hitValue];});
 
-    // colors of the segment, domain parameter need to be adapted for more than 2 queries
-    var colors = d3v6.scaleOrdinal().domain(query_header).range(d3v6.schemeTableau10);
+        nodes.forEach(function(d){
+            var stack_dict = {};
+            var query_0 = 0;
+            var query_1 = 0;
+            stack_dict['node'] = d;
+            query_0 = normalizedTaxaCountStack(d, 0);
+            query_1 = normalizedTaxaCountStack(d, 1);
+            stack_dict[query_header[0]] = query_0;
+            stack_dict[query_header[1]] = query_1;
+            stacksSum.push(query_0 + query_1)
+            stacks.push(stack_dict);
+        });
+        console.log('stacks', stacks);
+        console.log(stacksSum);
 
-    // stack each value of the subgroup above each other
-    var stack = d3v6.stack().keys(query_header);
-    var stackedData = stack(stacks);
-    //console.log(stackedData)
+        var maxTaxaCount = d3v6.max(stacksSum);
+        console.log('maxhit', maxTaxaCount);
 
-    // generate the bars
-    hitbars.append("g")
-        .attr('transform', `translate(` + (margin.left+barPlotShift) + `,${treeHeight/2})`)
-        .selectAll(".stackData")
-        .data(stackedData)
-        .enter()
-        .append("g")
-        // loop over taxa
-        .attr("class", 'stackData')
-        .attr("fill", function(d,i){return colors(d.key);})
-        .selectAll("rect")
-        // loop over proteins
-        .data(function(d){return d;})
-        .enter()
-        .append("rect")
-        .attr('class', d => d.key)
-        .attr('opacity', function(d,i){if(stacks[i].node.children){return 0;}
-                                      else{return 1;}})
-        .attr('x', function(d){return scaleX(d[0]);})
-        .attr('y', function(d,i) {return stacks[i].node.y-4;})
-        .attr("width", function(d,i){return scaleX(d[1]) - scaleX(d[0]);})
-        .attr("height", barheight);
+        // define ticks of the axis
+        var ticksStep = 0;
+        if((maxTaxaCount >=  100) || (maxTaxaCount <= 10)){
+            ticksStep = 5;
+        }else {
+            ticksStep = 10;
+        }
 
-    // legend of for the stack colors
-    var legend = hitbars.selectAll(".legend")
-        .data(query_header)
-        .enter()
-        .append("g")
-        .attr("class", "legend")
-        .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')');
+        var scaleX = d3v6.scaleLinear().domain([0, maxTaxaCount]).range([0, svgWidth-50]);
+        console.log(scaleX);
+
+        // x-Axis
+        hitbars.append('g')
+                 .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')')
+                 .call(d3v6.axisTop(scaleX)
+                        .ticks(ticksStep, 'f'));
+        hitbars.append("text")
+              .attr('transform', 'translate(' + (margin.left+barPlotShift+0.5*svgWidth) + ',' + (treeHeight/2-4*barheight+leftmostnode.y) + ')')
+              .style("text-anchor", "middle")
+              .text("covered strains in %");
+
+        // visualize no bars if the max. hit value is 0
+        if(maxTaxaCount === 0){
+            return
+        }
 
 
-   legend.append("rect")
-        .attr("x", svgWidth-40)
-        .attr("y", function(d,i){return i*19;})
-        .attr("width", barheight*2)
-        .attr("height", barheight*2)
-        .style("fill", function(d){return colors(d); });
+        // colors of the segment, domain parameter need to be adapted for more than 2 queries
+        var colors = d3v6.scaleOrdinal().domain(query_header).range(d3v6.schemeTableau10);
 
-   legend.append("text")
-        .attr("x", svgWidth-20)
-        .attr("y", function(d,i){return i*19+barheight;})
-        .attr("dy", ".35em")
-        .style("text-anchor", "start")
-        .text(function(d, i){ return d; });
+        // stack each value of the subgroup above each other
+        var stack = d3v6.stack().keys(query_header);
+        var stackedData = stack(stacks);
+        //console.log(stackedData)
+
+        // generate the bars
+        hitbars.append("g")
+            .attr('transform', `translate(` + (margin.left+barPlotShift) + `,${treeHeight/2})`)
+            .selectAll(".stackData")
+            .data(stackedData)
+            .enter()
+            .append("g")
+            // loop over taxa
+            .attr("class", 'stackData')
+            .attr("fill", function(d,i){return colors(d.key);})
+            .selectAll("rect")
+            // loop over proteins
+            .data(function(d){return d;})
+            .enter()
+            .append("rect")
+            .attr('class', d => d.key)
+            .attr('opacity', function(d,i){if(stacks[i].node.children){return 0;}
+                                          else{return 1;}})
+            .attr('x', function(d){return scaleX(d[0]);})
+            .attr('y', function(d,i) {return stacks[i].node.y-4;})
+            .attr("width", function(d,i){return scaleX(d[1]) - scaleX(d[0]);})
+            .attr("height", barheight);
+
+        // legend of for the stack colors
+        var legend = hitbars.selectAll(".legend")
+            .data(query_header)
+            .enter()
+            .append("g")
+            .attr("class", "legend")
+            .attr('transform', 'translate(' + (margin.left+barPlotShift) + ',' + (treeHeight/2-barheight+leftmostnode.y) + ')');
+
+
+       legend.append("rect")
+            .attr("x", svgWidth-40)
+            .attr("y", function(d,i){return i*19;})
+            .attr("width", barheight*2)
+            .attr("height", barheight*2)
+            .style("fill", function(d){return colors(d); });
+
+       legend.append("text")
+            .attr("x", svgWidth-20)
+            .attr("y", function(d,i){return i*19+barheight;})
+            .attr("dy", ".35em")
+            .style("text-anchor", "start")
+            .text(function(d, i){ return d; })
+    }
 }
 
 
@@ -1220,12 +1408,12 @@ function publicationReady(){
             showClades(extraInfo[0], extraInfo[1], ownAddInfo, null);
         }
 
-        // prevent double-click on publication ready
-        if(extraInfo !== null){
-            document.getElementById('public_ready_phylo').disabled = true;
-        }else{
-            document.getElementById('collapse_menu').disabled = true; // disable rank selection
-        }
+//        // prevent double-click on publication ready
+//        if(extraInfo !== null){
+//            document.getElementById('publicationReady').disabled = true;
+//        }else{
+//            document.getElementById('collapse_menu').disabled = true; // disable rank selection
+//        }
     }
 
 

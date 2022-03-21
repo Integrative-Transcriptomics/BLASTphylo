@@ -22,6 +22,7 @@ from io import StringIO
 from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
 from Bio.Blast.Applications import NcbiblastxCommandline as Blastx
 from Bio.Blast.Applications import NcbiblastnCommandline as Blastn
+from Bio.Blast.Applications import NcbitblastnCommandline as TblastN
 
 from ete3 import NCBITaxa  # NCBI taxonomy (localy stored, require ~300MB)
 #ncbi.update_taxonomy_database() # update actual NCBI taxonomy version
@@ -92,7 +93,7 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
 
         # switch beteen the blasttypes
         if blast_type == 'blastp':
-            blastp_cline = Blastp(cmd=blast_type, remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, max_target_seqs=100000,
+            blastp_cline = Blastp(cmd='blastp', remote=True, query=prot, db='nr', evalue=eValue, max_hsps=1, max_target_seqs=100000,
                               qcov_hsp_perc=min_query_cover, entrez_query='\'' + entrez_query + '\'',
                               outfmt=blast_output_columns, out='blast_result.csv')
         elif blast_type == 'blastx':
@@ -186,7 +187,7 @@ def filter_blast_result(blast_record, tree_tax_IDs):
             taxIDlist = [row['staxids']]
         else:
             taxIDlist = row['staxids'].split(';')
-
+        #print('taxIDlist', taxIDlist)
         for start_taxa in taxIDlist:
             if int(start_taxa) in tree_tax_IDs:
                 uniqueAccs[row['sacc']] = [row['sseq'], len(taxIDlist)]
@@ -465,6 +466,7 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
 
     if ncbi_boolean == '0': # NCBI taxonomy
         roots, tree_taxIDs = translate_string_in_taxa(tree_input)
+        print('roots, treetaxids', roots)
     elif ncbi_boolean == '1': # own taxonomic phylogeny
         tree = Tree(tree_input, format=8)
         tree_taxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
@@ -497,7 +499,7 @@ def translate_string_in_taxa(taxonomy):
 
     i = 0
     while i < len(taxonomy):
-        #print(root)
+        print(taxonomy[i])
         if taxonomy[i] == '|':
             if taxonomy[i+1] == '!':   # input was taxa|!(....)
                 previous_symbol = '!'
@@ -506,9 +508,9 @@ def translate_string_in_taxa(taxonomy):
                 while taxonomy[j] != ')':     # iterate over inner nodes
                     not_option += taxonomy[j]
                     j = j + 1
-                #print(not_option)
+                print('not_option', not_option)
                 not_regular, not_taxa = translate_string_in_taxa(not_option)  # evaluate subexpression
-
+                print('not regular', not_regular,'not taxa', not_taxa)
                 rootID, rootName = translate_node(root, 0)
                 root_descendents =  ncbi.get_descendant_taxa(rootID, intermediate_nodes=True)
                 root_descendents.append(rootID)
@@ -525,8 +527,11 @@ def translate_string_in_taxa(taxonomy):
                 i = j+1
 
             elif taxonomy[i+1:i+8] == 'subtree':   # input was taxa|subtree
+                print('subtree')
+                print(root)
                 #print('extract subtree')
                 rootID, rootName = translate_node(root, 0)
+                print(rootID, rootName)
                 tree_taxa.update(set(ncbi.get_descendant_taxa(rootID, intermediate_nodes=True)))
                 tree_taxa.update(set([rootID]))
                 regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN]'              # important have to be ID
@@ -538,6 +543,7 @@ def translate_string_in_taxa(taxonomy):
         elif taxonomy[i] == ',':  # check next list element
             if len(root) > 0:  # input was  taxa,
                 rootID, rootName = translate_node(root, 0)
+                print(rootID, rootName)
                 regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN] OR '
                 tree_taxa.update(set([rootID]))
                 root = ''
@@ -550,7 +556,7 @@ def translate_string_in_taxa(taxonomy):
             else:
                 root += taxonomy[i]
             i += 1
-
+        #print(tree_taxa)
     if len(root) > 0:   # add last element of the list
         rootID, rootName = translate_node(root, 0)
         regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN]'
@@ -671,7 +677,18 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
     # get rank information for all taxa in filtered blast result
     taxa_keys = filtered_blast_result.keys()
     #print(taxa_keys)
-    tree = ncbi.get_topology(taxa_keys)
+
+    # get complete lineage of blast hit taxa
+    taxa_lineages = []
+    for i in taxa_keys:
+        taxa_lineages.extend(ncbi.get_lineage(i))
+    taxa_keys_lineage = list(set(taxa_lineages))
+    taxa_keys_lineage.remove(131567)
+    print(taxa_keys_lineage)
+
+    tree_lineage = ncbi.get_topology(taxa_keys_lineage)
+    #print(tree_lineage.get_ascii(attributes=["sci_name"]))
+    tree = ncbi.get_topology(taxa_keys_lineage)
     #print('tree sci name', tree.sci_name)
     treeTaxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
     treeRanks = ncbi.get_rank(list(treeTaxIDs))
@@ -980,13 +997,12 @@ def run_blastphylo(prot_data, prot_file_type, tree_data, tree_menu, blast_type, 
     '''except:
         sys.stderr.write('Blast run failed')
         return d3_tree, sequence_dic, uniqueAccs, len(number_of_queries)'''
-    print(blast_result)
+    # print(blast_result)
     # filtering
     if blast_result.size > 0:
         #try:
         print('Start filtering')
         filtered_blast, sequence_dic, uniqueAccs, number_of_queries = filter_blast_result(blast_result, taxid_tree_set)
-        print(number_of_queries)
         print('complete')
         '''except:
             sys.stderr.write('Filtering failed')
@@ -1026,7 +1042,10 @@ def generate_tree_output(d3_tree, number_of_queries):
     global  normalization_dic
 
     if number_of_queries == 1:
-        ncbi_nodes = normalization_dic[d3_tree['name']][1]
+        try:
+            ncbi_nodes = normalization_dic[d3_tree['name']][1]
+        except KeyError:
+            ncbi_nodes = 1
         percent_nodes = round((d3_tree['leaf_counter']/ncbi_nodes)*100, 2)
         try:
             return d3_tree['name'].replace(' ', '_') + ',' + d3_tree['value'][1].replace(' ', '_') + ',' + ','.join([str(val) for val in d3_tree['value'][0][:2]]) + ',' + \

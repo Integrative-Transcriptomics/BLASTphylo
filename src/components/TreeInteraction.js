@@ -72,7 +72,7 @@ class TreeInteraction extends Component{
 
         // change visualisation settings
         document.getElementById('treeVis').style.height = '80vh';
-        document.getElementById('collapse_menu').disabled = false;
+        //document.getElementById('collapse_menu').disabled = false;
     }
     // handle 'collapse to' interaction
     handleRanks(event){
@@ -176,7 +176,7 @@ class TreeInteraction extends Component{
 
         // change settings for phylogram
         document.getElementById('treeVis').style.height = '80vh';
-        document.getElementById('public_ready_phylo').disabled = true;
+        document.getElementById('publicationReadyPhylo').disabled = true;
 
     }
 
@@ -184,6 +184,8 @@ class TreeInteraction extends Component{
     d3Tree(){
         d3v6.selectAll('#tree_vis').remove();
         const rank = this.state.rankSelect;
+        document.getElementById('publicationReadyPhylo').disabled = false;
+
         //chart(treeCopy, this.props.data.extraInfo, null, true, true, true);
         if(this.state.counter === 0){
             const treeCopy = {...this.props.data.actualTree};
@@ -325,14 +327,22 @@ class TreeInteraction extends Component{
             return(
                 <div id='treeInteraction'>
                 <ButtonToolbar id="phylogenybar" aria-label='Toolbar with button groups'>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" eventKey='cladogramButton' onClick={this.d3Tree} type="radio" name="inlineRadioOptions" id="cladogram" checked></input>
-                            <label class="form-check-label" for="inlineRadio1">CLADOGRAM</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" eventKey='phylogramButton' onClick={this.distTree} type="radio" name="inlineRadioOptions" id="phylogram" ></input>
-                            <label class="form-check-label" for="inlineRadio2">PHYLOGRAM</label>
-                        </div>
+                        <Form inline>
+                            <Form.Check inline type={'radio'} name='treeVisualizationOptions' id='cladogram' label={'CLADOGRAM'} onChange={this.d3Tree} defaultChecked/>
+                            <Form.Check inline type={'radio'} name='treeVisualizationOptions' id='phylogram' label={'PHYLOGRAM'} onChange={this.distTree} />
+                        </Form>
+                        <ButtonGroup className='mr-2' aria-label='Second group'>
+                            <div class="d-flex align-items-center flex-row" as={ButtonGroup}>
+                                        <Form>
+                                            <Form.Check
+                                            type="switch"
+                                            id="publicationReadyPhylo"
+                                            label="PUBLICATION READY"
+                                            onChange={this.handlePublicationReady}
+                                            />
+                                        </Form>
+                            </div>
+                        </ButtonGroup>
                 </ButtonToolbar>
                 </div>
             );
