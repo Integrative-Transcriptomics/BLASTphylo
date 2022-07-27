@@ -297,18 +297,7 @@ class TreeInteraction extends Component{
                                         </Form>
                             </div>
                         </ButtonGroup>
-                        <ButtonGroup className='mr-2' aria-label='Third group'>
-                            <div class="d-flex align-items-center flex-row" as={ButtonGroup}>
-                                        <Form>
-                                            <Form.Check
-                                            type="switch"
-                                            id="noHitToggle"
-                                            label="SHOW TAXA WITHOUT HITS"
-                                            onChange={this.handleNoHit}
-                                            />
-                                        </Form>
-                            </div>
-                        </ButtonGroup>
+
                     </ButtonToolbar>
 
                 </div>
@@ -354,3 +343,15 @@ class TreeInteraction extends Component{
 
 export default TreeInteraction;
 
+/*<ButtonGroup className='mr-2' aria-label='Third group'>
+                            <div class="d-flex align-items-center flex-row" as={ButtonGroup}>
+                                        <Form>
+                                            <Form.Check
+                                            type="switch"
+                                            id="noHitToggle"
+                                            label="SHOW TAXA WITHOUT HITS"
+                                            onChange={this.handleNoHit}
+                                            />
+                                        </Form>
+                            </div>
+                        </ButtonGroup>*/

@@ -1,6 +1,6 @@
 ##/***
 # * BLASTphylo
-# * @author jennifer mueller
+# * @authors Jennifer Müller, Susanne Zabel
 # *
 # ***/
 
@@ -23,35 +23,24 @@ from server.processing_data import translate_nodes, run_blastphylo, calculate_ph
 
 # flask server packages
 from flask import Flask, render_template, redirect, url_for, request, jsonify, make_response
-from werkzeug.utils import secure_filename
-import logging, click
-import time
 
-######################################################################################################################## general functions and settings
+
+
+app = Flask(__name__, static_folder='../build', static_url_path='/')
+here = os.path.dirname(__file__)
+print('here', here)
+# general functions and settings
 # create tmp output folder for output file
-actual_dir = os.getcwd()
-flask_tmp_dir = actual_dir + '/flask_tmp/'
-shutil.rmtree(flask_tmp_dir, ignore_errors=True)
-
+flask_tmp_dir = here + '/flask_tmp/'
+flast_tmp_dir = tempfile.TemporaryDirectory()
+# shutil.rmtree(flask_tmp_dir, ignore_errors=True)
+app.config['NCBI_TAXONOMY_SEARCHBAR_ENTRIES'] = os.path.join(here, 'data', 'searchbar_entries.json')
+app.config['TEST_EXAMPLE_MAPPING'] = os.path.join(here, 'test_example/mapping_example/blast_result_sada.csv')
+app.config['TEST_EXAMPLE_COMPARISON'] = os.path.join(here, 'test_example/comparison_example/blast_result_mpsA_B.csv')
 try:                          # during first installation need to generate flask_tmp folder and download NCBI database
     os.mkdir(flask_tmp_dir)
-    print('Download NCBI database')
-    from ete2 import NCBITaxa
-    ncbi = NCBITaxa()
-    print('complete')
 except:
     print('flask_tmp folder is already generated')
-UPLOAD_FOLDER = '/server/flask_tmp'
-
-# set up normalisation dictionary of the NCBI taxonomy
-ncbi_taxonomy_normalisation = {}
-ncbi_norm_dir = actual_dir + '/ncbi_normalisation.json'
-try:
-    print('Load NCBI taxonomy normalisation')
-    with open(ncbi_norm_dir) as ncbi_json:
-        ncbi_taxonomy_normalisation = json.load(ncbi_json)
-except:
-    print('Run ncbi_taxonomy_normalisation.py to generate json file')
 
 
 # generate fasta file from textfield input and check for amino acid sequence (can handle any number of queries)
@@ -83,8 +72,6 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
     #print(query_header)
     return valid_pro_seq, query_header
 
-# start server
-app = Flask(__name__, static_folder='../build', static_url_path='/')
 
 # global parameter for the run and for the export of the data
 hit_seqs = {}
@@ -100,7 +87,6 @@ unique_newick = ''
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
-
 
 
 # accession for data export
@@ -144,7 +130,7 @@ def searchNcbiTaxa():
     if request.method == 'POST':
         searchquery = request.form['searchquery']
         #print(searchquery)
-        ncbi_taxa_file = actual_dir + '/data/searchbar_entries.json'
+        ncbi_taxa_file = app.config['NCBI_TAXONOMY_SEARCHBAR_ENTRIES']
 
         with open(ncbi_taxa_file, 'r') as f:
             ncbi_taxa = json.load(f)
@@ -154,9 +140,6 @@ def searchNcbiTaxa():
         return {'result': matching_taxa}
     else:
         return {'result': None}
-
-
-
 
 
 # taxa-based phylogeny
@@ -248,9 +231,10 @@ def menu():
                     protein = None
                 print('Data input: CSV table')
             elif protein_file_type == '2':
-                protein = actual_dir + '/test_example/mapping_example/blast_result_sada.csv'
+                protein = app.config['TEST_EXAMPLE_MAPPING']
+                print('protein', protein)
             elif protein_file_type == '3':
-                protein = actual_dir + '/test_example/comparison_example/blast_result_mpsA_B.csv'
+                protein = app.config['TEST_EXAMPLE_COMPARISON']
 
 
 
@@ -299,7 +283,7 @@ def menu():
             return {'error': error}
         else:
             # start processing of the data
-            print('\nStart PhyloBlast')
+            print('\nStart BLASTphylo')
             try:
                 d3_tree, d3_no_hit_tree, hit_seqs, accs_seqs, queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
                 if protein_file_type == '2':
@@ -327,7 +311,6 @@ def menu():
 if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-    app.run(host=os.getenv('IP', '0.0.0.0'),
-            port=int(os.getenv('PORT', 5000)))
+    app.run()
 
 
