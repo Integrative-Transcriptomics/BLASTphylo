@@ -240,9 +240,9 @@ class Menu extends Component {
                     <Form.Label>Or, upload</Form.Label>
                     <Form.Control as='select' id='file_type' name='file_type' onChange={this.handleChange}>
                         <option value="0">Fasta file</option>
-                        <option value="1">BLAST result</option>
-                        <option value="2">Test example: Mapping</option>
-                        <option value="3">Test example: Comparison</option>
+                        <option value="1">Precalculated BLAST result</option>
+                        <option value="2">Test example: one query</option>
+                        <option value="3">Test example: two queries</option>
                     </Form.Control>
                     <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['protFile'])}>
                         <BiHelpCircle style={{color: 'blue', 'margin': '0px 10px 0px 5px'}}/>
