@@ -82,6 +82,7 @@ function showTooltip(node, barhover, extraDataLength){
                         .style("background-color", "rgba(35, 29, 51, 0.7)");
 
     var text = null;   // define the content of the tooltip
+    console.log('extradatalength', extraDataLength)
     if(extraDataLength === 1){ // unique sequence-based phylogeny
         text = '<b>' + node.data.name + '</b> <br /> taxa: ' + String(node.data.value[0]) + '<br />';
     }else if (extraDataLength === 2){ // taxa-based phylogeny
@@ -526,7 +527,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
         }
 
 	    function click(event, d) {
-	        console.log(clicked_nodes.Bacillales);
             if(onclickInteraction){
                 if (d.children) {   // node is going to be collapsed
                     console.log('if case');
@@ -1420,4 +1420,4 @@ function publicationReady(){
 }
 
 
-export {chart, hitBars, showClades,  startTreevis, collapseTree, publicationReady, stackBars};
+export {chart, hitBars, showClades, startTreevis, collapseTree, publicationReady, stackBars};

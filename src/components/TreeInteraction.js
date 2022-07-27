@@ -49,6 +49,8 @@ class TreeInteraction extends Component{
         }
     }
     handleReturn(event){
+
+
         var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
         //document.getElementById('returnButton').style.display = 'none';
         const rank = taxonomyLevel.indexOf(this.state.rankSelect);
@@ -61,8 +63,11 @@ class TreeInteraction extends Component{
             chart(this.props.data.actualTree, null, rank, true, false, false);
         }
         // update visualizations
-        chart({'size': treeCopy['size']}, null, rank, false, true, true);
-
+        // add if else depending on taxonomy or phylogeny
+        if(this.props.calculationMethod=='taxa'){
+            chart({'size': treeCopy['size']}, null, rank, false, true, true);
+        }else{
+            chart({'size': treeCopy['size']}, this.props.data.extraInfo, rank, false, true, true);}
 
         if(!(taxonomyLevel.includes(treeCopy['value'][2]))){
                 hitBars(this.state.hitSelect);
@@ -115,6 +120,7 @@ class TreeInteraction extends Component{
         else {
             console.log(this.state.publicationReady);
             console.log(document.getElementById("publicationReady"));
+            console.log("return from publication ready")
             this.handleReturn();
             this.setState({publicationReady: !this.state.publicationReady});
         }
