@@ -93,18 +93,33 @@ function showTooltip(node, barhover, extraDataLength){
         var additionalText = '';
 
         if(node.children || node._children){ // NCBI taxonomy normalisation for inner nodes
-            var taxa_leaves = getNumberOfLeaves(node.data, 0);
             var taxa_ncbi_leaves = ncbi_normalisation[node.data.name][1];
+            if(taxonomyLevel.includes(node.data.value[2]) || node.data.value[2] === 'no rank'){
+                var taxa_q1 = getNumberOfLeavesStacks(node.data, 0, 0)
+                var taxa_q2 = getNumberOfLeavesStacks(node.data, 0, 1)
+                var percentage_taxa_q1 = (taxa_q1/parseInt(taxa_ncbi_leaves))*100;
+                var percentage_taxa_q2 = (taxa_q2/parseInt(taxa_ncbi_leaves))*100;
+                additionalText = 'taxa represented:<br />' +
+                query_header[0] + ': ' + String(taxa_q1) + '/' + taxa_ncbi_leaves +
+             ' ('+ String(percentage_taxa_q1.toFixed(2))+'%)<br />' +
+                query_header[1] + ': ' + String(taxa_q2) + '/' + taxa_ncbi_leaves +
+             ' ('+ String(percentage_taxa_q2.toFixed(2))+'%)<br />';
+
+            }
+            else{
+            var taxa_leaves = getNumberOfLeaves(node.data, 0);
             var percentage_taxa = (taxa_leaves/parseInt(taxa_ncbi_leaves))*100;
             additionalText = 'taxa represented: ' + String(taxa_leaves) + '/' + taxa_ncbi_leaves +
              ' ('+ String(percentage_taxa.toFixed(2))+'%)<br />';
+            }
         }
 
         if(taxonomyLevel.includes(node.data.value[2]) || node.data.value[2] === 'no rank'){                             // taxonomic mapping 2 proteins
-            text = '<b>' + node.data.name + '</b> <br />'+ query_header[0] +' hits: ' + String(node.data.value[0]) + '<br />' +
-	                query_header[1] + ' hits: ' + String(node.data.value[1]) + '<br /> rank: ' + node.data.value[2] + '<br />' + additionalText;
+            text = '<b>' + node.data.name + '</b> <br />'+
+                query_header[0] +' node/subtree hits: ' + String(node.data.value[0][0]) + '/' + String(node.data.value[0][1]) + '<br />' +
+	            query_header[1] +' node/subtree hits: ' + String(node.data.value[1][0]) + '/' + String(node.data.value[1][1]) + '<br />' + additionalText;
 	    }else{ // taxonomic mapping 1 protein
-	        text = '<b>' + node.data.name + '</b> <br /> hits: ' + String(node.data.value[0][0]) + '<br />' +
+	        text = '<b>' + node.data.name + '</b> <br /> node hits: ' + String(node.data.value[0][0]) + '<br />' +
 	                'subtree hits: ' + String(node.data.value[0][1]) + '<br /> rank: ' + node.data.value[1] + '<br />' + additionalText;
 	    }
     }

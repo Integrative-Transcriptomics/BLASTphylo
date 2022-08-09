@@ -263,12 +263,12 @@ class TreeInteraction extends Component{
 
             const renderCollapseTooltip = (props) => (
                 <Tooltip id="collapse_tooltip" {... props}>
-                    collapse all nodes below selected taxonomic rank
+                    collapse tree to selected taxonomic rank
                 </Tooltip>
             );
             const renderBarchartTooltip = (props) => (
                 <Tooltip id="barchart_tooltip" {... props}>
-                    visualize node/subtree hits for actual state of the tree
+                    select counts displayed in barchart next to the tree
                 </Tooltip>
             );
 

@@ -32,7 +32,7 @@ print('here', here)
 # general functions and settings
 # create tmp output folder for output file
 flask_tmp_dir = here + '/flask_tmp/'
-flast_tmp_dir = tempfile.TemporaryDirectory()
+#flask_tmp_dir = tempfile.TemporaryDirectory()
 # shutil.rmtree(flask_tmp_dir, ignore_errors=True)
 app.config['NCBI_TAXONOMY_SEARCHBAR_ENTRIES'] = os.path.join(here, 'data', 'searchbar_entries.json')
 app.config['TEST_EXAMPLE_MAPPING'] = os.path.join(here, 'test_example/mapping_example/blast_result_sada.csv')

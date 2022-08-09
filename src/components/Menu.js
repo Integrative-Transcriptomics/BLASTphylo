@@ -13,15 +13,15 @@ import SearchBar from './SearchBar.js'
 
 // constant dictionary for help messages
 const helpMessages = {
-    'blasttype': ['BLAST search', 'Select the BLAST search you want to use. Dependent on the selection the given sequence will be checked for usability'],
+    'blasttype': ['BLAST search', 'Select the BLAST search you want to use.'],
     'prot': ['Sequence', 'Enter query sequence without white spaces in the text area'],
-    'protFile': ['FastA files', 'Either a sequence or already calculated BLAST result with the columns: qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq'],
-    'NCBI': ['NCBI taxonomy', 'Enter comma-separated list of scientific names or taxonomic IDs. Addition of \'|subtree\' will select complete subtree. Check https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi for more information' ],
-    'ownTaxa': ['Newick string', 'Enter a newick string in the text area or upload a text file which contain a newick string.'],
+    'protFile': ['FastA files', 'Upload either a Fasta sequence file or an already calculated BLAST result with the columns: qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq'],
+    'NCBI': ['NCBI taxonomy', 'Enter a comma-separated list of scientific names or taxonomic IDs without spaces. Adding of \'|subtree\' will select the complete subtree. Check https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi for more information' ],
+    'ownTaxa': ['Newick string', 'Enter a newick string in the text area or upload a text file which contains a newick string.'],
     'eValue': ['E-value', 'Common filter parameter for BLAST searches'],
-    'query': ['Query coverage', 'Result of the BLAST search will be filtered for the minimal query coverage (= alignment length/query length)'],
-    'hit': ['Hit or Subject coverage', 'Result of the BLAST search will be filtered for the minimal hit coverage (= alignment length/subject length)'],
-    'alignment': ['Alignment identity', 'Result of the BLAST search will be filtered for the minimal alignment identity (= matches/ alignment length)']
+    'query': ['Query coverage', 'Results of the BLAST search will be filtered for the minimal query coverage (= alignment length/query length)'],
+    'hit': ['Hit or Subject coverage', 'Results of the BLAST search will be filtered for the minimal hit coverage (= alignment length/subject length)'],
+    'alignment': ['Alignment identity', 'Results of the BLAST search will be filtered for the minimal alignment identity (= matches/alignment length)']
 };
 
 class Menu extends Component {

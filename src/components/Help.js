@@ -1,8 +1,11 @@
 // used libraries
 import React, {Component} from 'react';
 import * as d3 from 'd3';
-import phylogeny from '../visualisations/phylogeny_label.png';
-import taxonomy from '../visualisations/taxonomic_map_label.png';
+import phylogeny from '../visualisations/phylogeny.png';
+import phylogeny2 from '../visualisations/phylogeny2.png';
+
+//import taxonomy from '../visualisations/taxonomic_map_label.png';
+import taxonomy from '../visualisations/taxonomy.png';
 
 class Help extends Component {
     render() {
@@ -11,10 +14,10 @@ class Help extends Component {
             <div id='helpInfo'>
                 <div id='generalInfo'>
                     <h2 class='helpHeader'>About</h2>
-                    <p> BLASTphylo is an interactive web-tool, which applies a BLASTp search for a given protein sequence and
-                        maps the result on a given taxonomic tree. In addition, a phylogeny calculation of the remaining BLAST
-                        hits can be performed and visualized.
-                        For the calculations, local installations of
+                    <p> BLASTphylo is an interactive web-tool, which applies BLAST to a given protein/gene sequence,
+                        maps the resulting hits onto a given taxonomic tree, and calculates a phylogeny, all in an automated pipeline.
+                        Taxonomic and phylogenetic trees are visualized interactively and allow the user to manipulate the tree on demand, e.g. collapsing the taxonomy to a certain taxonomic rank.
+                        If used locally installations of
                         <a class='menulinks' href='https://www.ncbi.nlm.nih.gov/books/NBK279690/' rel='nofollow'> BLAST</a>,
                         <a class='menulinks' href='https://mafft.cbrc.jp/alignment/software/index.html' rel='nofollow'> MAFFT </a>
                         and
@@ -38,35 +41,37 @@ function HowToDoHelpInfo(){
             <h2 class='helpHeader'>How to get started:</h2>
             <ol>
                 <li>Select your BLAST type: BLASTn, BLASTp, or BLASTx</li>
-                <li>Enter one/two sequence(s) or upload a FASTA file <br/>
-                <div class='subList'><i>required format:</i><br />
+                <li>Enter one/two sequence(s) or upload a FASTA file in the following format<br/>
                     <p style={{'margin-left':'20px'}}>
                         >query1 <br/>
                         AAATTTGMMM<br />
                         >query2 <br />
                         TTTGCGPPP<br />
                     </p>
+                Alternatively, upload a pre-computed BLAST result in .csv format using the following columns:
+                <div class='subList'>qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq<br />
                 </div>
+                <p style={{color:"#fcb42d"}}>We highly recommend to use a pre-computed BLAST result as an input when using the web-version of BLASTphylo for performance reasons!</p>
                 </li>
                 <li>Define your taxonomic tree:
                     <ul style={{margin:'5px'}} class='sublist'>
-                        <li>Enter list of taxonomic IDs or scientific names</li>
-                        <li><b>|subtree</b> select complete subtree </li>
-                        <li><b>taxa|!(....)</b> remove all taxon in brackets from the subtree below the taxa <br />
+                        <li>Enter a comma-separated list of taxonomic IDs or scientific names (Note: do not use spaces between list items)</li>
+                        <li>The keyword <b>|subtree</b> selects the complete subtree rooted at the specified taxon <b>taxon|subtree</b></li>
+                        <li>The keyword <b>|!(....)</b> removes all taxa in brackets from the subtree rooted at the taxon <b>taxon|!(....)</b><br />
                         <p style={{margin:'8px'}} > <i>example:</i> Staphylococcus|!(1280|subtree) = Staphylococcus except for the Staphylococcus aureus (txid: 1280) subtree </p>
                         </li>
-                        <li><b>search bar:</b> Start typing to search for bacteria. Click on the listed bacteria to add them to the taxonomy</li>
+                        <li>search bar: Start typing to search for bacteria. Select a taxon from the list to add them to the taxonomy.</li>
                     </ul>
                 </li>
-                <li>Check setting of the filter parameter. They will influence the used sequences for the taxa-bassed phylogeny
+                <li>Check parameter used to filter the BLAST result:
                     <ul class='subList'>
-                        <li><b>E-value: </b>expect value for random hit</li>
-                        <li><b>alignment identity:  </b>minimal identity between query and subject sequencen within the alignment</li>
+                        <li><b>E-value: </b> number of expected hits of similar quality (score) that could be found just by chance.</li>
+                        <li><b>alignment identity:  </b>minimal identity between query and subject sequence within the alignment</li>
                         <li><b>query coverage:  </b>alignment has to cover at least <b>x</b>% of the query sequence</li>
                         <li><b>subject coverage:    </b>alignment has to cover at least <b>x</b>% of the HSP for the subject sequence</li>
                     </ul>
                 </li>
-                <li>Click on <b>Submit</b>. You will be redircted to the taxonomic mappind when the calculation is completed.</li>
+                <li>Click on <b>Submit</b>. You will be redirected to the taxonomic mapping as soon as the calculation is completed.</li>
             </ol>
         </div>
     );
@@ -109,20 +114,21 @@ function TaxonomyHelpInfo(){
     return(
         <div id='taxonomyHelpInfo'>
             <h2 class='helpHeader'>Taxonomic Mapping</h2>
-            <p> Visualization of the taxonomic mapping for the BLAST result, which only includes taxa with minimal one hit
-                or subtree hit. Hits are directly attached to BLAST hits, whereas subtree hits represent the sum of all hits
-                below a taxon. Hover over the nodes to see the actual hit values and the taxonomic rank of the node <b>(5)</b>.
-                For an easier comparison of the values, a <b>bar chart (3)</b> can be visualized.
-                Furthermore, the visualized taxonomic level can be selected with the <b>collapse to (3)</b> option. The actual state
-                of the <b> bar chart </b> and <b> collapse to </b> option is written next to the buttons <b>(4)</b>. <br/>
+            <p> This visualization shows the subset of taxa of the specified taxonomy for which BLAST found at least one homologous sequence to the query sequence. It offers the following features:
+                <ul>
+                <li><b>(1)</b> Auto-collapse the tree to the specified taxonomic rank.</li>
+                <li><b>(2)</b> Choose one of the following count information which are displayed in a barplot next to the tree:</li>
+                <ul class='subList'>
+                        <li>node hits: number of hits found for the respective leaf taxon</li>
+                        <li>subtree hits: number of hits found within the subtree rooted at the respective leaf taxon</li>
+                        <li>covered taxa: percentage of strains within the subtree rooted at the respective leaf taxon for which a homologous sequence was found</li>
+                    </ul>
+                <li><b>(3)</b> Toggle for an optimized layout.</li>
+                <li><b>(4)</b> Hovering over nodes provides additional information.</li>
+                </ul>
             </p>
-            <img src={taxonomy} alt='taxonomyPicture' />
-            <p> With the <b>phylogeny calculation (1)</b> you can start two different types of phylogeny calculations.
-                One the one hand a taxa-based phylogeny and on the other hand unique sequence-based phylogeny. <br/>
-                The taxa-based phylogeny extracts the best hit for each taxon, whereas the unique sequence-based phylogeny uses
-                all hit (subject) sequences.
-                Finally, you can export the visualization with the <b>export tree visualization (2)</b> option. The export
-                includes a <b>publication-ready</b> option to remove large white spaces between nodes.
+            <p style={{"text-align":"center"}}>
+            <img src={taxonomy} alt='taxonomyPicture' width="800" height='auto'/>
             </p>
         </div>
     );
@@ -132,19 +138,23 @@ function PhylogenyHelpInfo(){
     return(
         <div id='phylogenyHelpInfo'>
             <h2 class='helpHeader'>Phylogenetic Analysis</h2>
-            <p> Visualizations of the phylogeny calculation based on the taxonomic mapping. For the MSA calculation
-                MAFFT and for the tree construction, FastTree was used. <br/>
-                BLASTphylo includes two different types of phylogeny calculations: taxa-based (shown below) and unique sequence-based.
-                The taxa-based phylogeny extracted the best hit sequence for each taxon, whereas the unique sequence-based
-                phylogeny, independent of the taxa, uses all BLAST hits.
+            <p> MAFFT is used to compute the multiple sequence alignment. The phylogenetic tree is calculated using FastTree.
+                BLASTphylo includes two different types of phylogeny calculations: taxa-centered and unique sequence-centered.
+                The taxa-centered phylogeny uses the best scoring hit sequence for each taxon, whereas the unique sequence-centered
+                phylogeny uses all BLAST hits.
+                <br/>
+                <br/>
+                The following visualization shows a taxa-centered phylogeny. Leaf nodes are labeled by taxa.
             </p>
-            <img src={phylogeny} alt='phylogenyPicture' />
-            <p> Both phylogeny calculations can be visualized as <b>clade-based (3)</b> or <b>distance-based (4)</b> trees.
-                The distance-based visualization allows the comparison of the phylogenetic distance between the sequences and the
-                clade-based focus on the tree structure for an easier comparison of direct neighborhoods. <br/>
-                In the taxa-based phylogeny, additional information <b>(1)</b> about the uniqueness and phylum level of
-                the taxa can be visualized. For the unique sequence-based phylogeny, the node size represents the number of
-                taxa which are attached to this hit. Similar to the taxonomic mapping, the tree can be exported as a jpeg or SVG file <b>(2)</b>.
+            <p style={{"text-align":"center"}}>
+            <img src={phylogeny2} alt='phylogenyPicture2' width="500" height='auto'/>
+            </p>
+                <br/>
+                <p>
+                The following visualization shows a sequence-centered phylogeny. Leaf nodes are labeled by protein ID.
+                </p>
+            <p style={{"text-align":"center"}}>
+            <img src={phylogeny} alt='phylogenyPicture' width="500" height='auto'/>
             </p>
         </div>
     );

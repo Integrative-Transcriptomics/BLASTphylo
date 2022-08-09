@@ -31,7 +31,7 @@ class ExportTreeImage extends Component{
             figureName = 'taxonomicmapping';
         }
 
-        domtoimage.toPng(element, { quality: 1, bgcolor: 'white',
+        domtoimage.toJpeg(element, { quality: 1, bgcolor: 'white',
                                             style:{overflow:'visible'} })
             .then(function (dataUrl) {
                 var link = document.createElement('a');
