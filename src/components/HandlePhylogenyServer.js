@@ -8,7 +8,6 @@ import {Spinner, Table} from 'react-bootstrap';
 class HandlePhylogenyServer extends Component{
     constructor(props){
         super(props);
-        console.log(props)
         d3v6.select('#tree_vis').remove();
         d3v6.select('#clade_vis').remove();
         d3v6.select('#visualisation').style('border', '2px solid white')

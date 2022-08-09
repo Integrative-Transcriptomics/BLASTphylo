@@ -19,7 +19,6 @@ import {chart, startTreevis, publicationReady, hitBars, stackBars} from '../visu
 class TaxonomicAnalysisMenu extends Component{
      constructor(props){
         super(props);
-        console.log(props)
         // generation of the tree visualisation
         //var treeData = startTreevis(this.props.data.tree, this.props.queries);
         //console.log(treeData['size'])

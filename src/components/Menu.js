@@ -28,8 +28,6 @@ class Menu extends Component {
 
     constructor(props) {
         super(props);
-
-        console.log(props)
         this.protFileInput = React.createRef();
         this.treeFileInput = React.createRef();
         this.state = { blasttype: 'blastp',
@@ -62,7 +60,6 @@ class Menu extends Component {
          }
          else if (this.state.protein === ''){
             var protFileContent = this.protFileInput.current.files[0];
-            console.log(protFileContent)
             if(typeof protFileContent === 'undefined'){
                 error.push({'message': 'Sequence is undefined. Please, enter a nucleotide or protein sequence'});
             }else{
@@ -72,7 +69,6 @@ class Menu extends Component {
          }
         if(this.state.tree_menu_selection === '1'){
             var treeFileContent = this.treeFileInput.current.files[0];
-            console.log(treeFileContent)
             if((typeof treeFileContent === 'undefined') && (this.state.tree_data.length === 0)){
                 error.push({'message': 'Taxonomy is undefined. Please, define a taxonomy'});
             }else if(this.state.tree_data.length === 0){
@@ -123,7 +119,6 @@ class Menu extends Component {
 
     // Handle changes in the parameter settings
     handleChange(event) {
-        console.log(event.target.name)
         if (event.target.name === 'blast'){
             this.setState({blasttype: event.target.id})
         }

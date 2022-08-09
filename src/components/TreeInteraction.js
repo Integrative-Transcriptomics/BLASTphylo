@@ -20,7 +20,6 @@ var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phyl
 class TreeInteraction extends Component{
      constructor(props){
         super(props);
-        console.log('Tree interaction props', props)
         this.state = {hitSelect: '-',
                       rankSelect: 'class',
                       counter: 0,
@@ -54,7 +53,6 @@ class TreeInteraction extends Component{
         var taxonomyLevel = ['life', 'domain', 'superkingdom', 'kingdom', 'clade', 'phylum', 'class', 'order', 'family', 'genus', 'species group','species', 'strain'];
         //document.getElementById('returnButton').style.display = 'none';
         const rank = taxonomyLevel.indexOf(this.state.rankSelect);
-        console.log('handleReturn', rank);
 
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.props.data.actualTree};
@@ -84,9 +82,7 @@ class TreeInteraction extends Component{
         if(!this.state.publicationReady){
             document.getElementById('collapse_menu').disabled = false;
             this.setState({rankSelect: event});
-            console.log(this.state.rankSelect);
             collapseTree(event);
-            console.log(event);
 
             // no white space on the strain level --> disable publication ready
 //            if(event === 'strain'){
@@ -100,7 +96,6 @@ class TreeInteraction extends Component{
     handleNoHit(){
         if (!this.state.noHitTree){
             d3v6.select('#tree_vis').remove();
-            console.log(this.props.data);
             chart(this.props.data.noHitTree, false, this.state.rankSelect, true, false, false);
             this.setState({noHitTree: !this.state.noHitTree});
         }
@@ -111,16 +106,11 @@ class TreeInteraction extends Component{
     }
 
     handlePublicationReady(){
-        console.log('print publicationReady state', this.state.publicationReady);
-        console.log(document.getElementById("publicationReady"));
         if (!this.state.publicationReady){
             publicationReady();
             this.setState({publicationReady: !this.state.publicationReady});
         }
         else {
-            console.log(this.state.publicationReady);
-            console.log(document.getElementById("publicationReady"));
-            console.log("return from publication ready")
             this.handleReturn();
             this.setState({publicationReady: !this.state.publicationReady});
         }
@@ -195,13 +185,11 @@ class TreeInteraction extends Component{
         //chart(treeCopy, this.props.data.extraInfo, null, true, true, true);
         if(this.state.counter === 0){
             const treeCopy = {...this.props.data.actualTree};
-            console.log(treeCopy['size'])
             chart(treeCopy, this.props.data.extraInfo, null, true, true, false);
         }else{
             const treeCopy = {...this.props.data.actualTree};
             var sizeOriginal = this.props.data.tree['size'][0];
             treeCopy['size'][0] = sizeOriginal;
-            console.log(treeCopy['size'])
             chart(treeCopy, this.props.data.extraInfo, null, false, true, true);
         }
         if(document.getElementById('infoSelection')){

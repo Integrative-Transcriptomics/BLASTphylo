@@ -139,7 +139,6 @@ def run_blast(prot, prot_file_type, blast_type, eValue, min_align_ident, min_que
     alignIdent = preFilter['pident'] > (float(min_align_ident))
 
     result = preFilter[(preFilter['evalue'] < float(eValue)) & (preFilter['qcovhsp'] > (float(min_query_cover))) & subjectCoverage & alignIdent]
-    print(result.shape)
 
     return result
 
@@ -466,7 +465,6 @@ def read_tree_input(tree_input, ncbi_boolean, needTaxIDs):
 
     if ncbi_boolean == '0': # NCBI taxonomy
         roots, tree_taxIDs = translate_string_in_taxa(tree_input)
-        print('roots, treetaxids', roots)
     elif ncbi_boolean == '1': # own taxonomic phylogeny
         tree = Tree(tree_input, format=8)
         tree_taxIDs = translate_nodes([node.name for node in tree.traverse('preorder')])
@@ -499,7 +497,6 @@ def translate_string_in_taxa(taxonomy):
 
     i = 0
     while i < len(taxonomy):
-        print(taxonomy[i])
         if taxonomy[i] == '|':
             if taxonomy[i+1] == '!':   # input was taxa|!(....)
                 previous_symbol = '!'
@@ -527,11 +524,8 @@ def translate_string_in_taxa(taxonomy):
                 i = j+1
 
             elif taxonomy[i+1:i+8] == 'subtree':   # input was taxa|subtree
-                print('subtree')
-                print(root)
                 #print('extract subtree')
                 rootID, rootName = translate_node(root, 0)
-                print(rootID, rootName)
                 tree_taxa.update(set(ncbi.get_descendant_taxa(rootID, intermediate_nodes=True)))
                 tree_taxa.update(set([rootID]))
                 regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN]'              # important have to be ID
@@ -543,7 +537,6 @@ def translate_string_in_taxa(taxonomy):
         elif taxonomy[i] == ',':  # check next list element
             if len(root) > 0:  # input was  taxa,
                 rootID, rootName = translate_node(root, 0)
-                print(rootID, rootName)
                 regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN] OR '
                 tree_taxa.update(set([rootID]))
                 root = ''
@@ -556,7 +549,6 @@ def translate_string_in_taxa(taxonomy):
             else:
                 root += taxonomy[i]
             i += 1
-        #print(tree_taxa)
     if len(root) > 0:   # add last element of the list
         rootID, rootName = translate_node(root, 0)
         regular_exp = regular_exp + 'txid' + str(rootID) + '[ORGN]'
@@ -645,7 +637,6 @@ def compute_no_hit_tree_in_d3(filtered_blast_result, branch_length, ncbi_boolean
     taxa_keys = filtered_blast_result.keys()
 
     rank = ncbi.get_rank([root])
-    print('rank', rank)
 
     rank_root = rank[int(root)]
     rank_below_root = rank_map[rank_root]
@@ -684,7 +675,6 @@ def wrapper_transfer_ncbi_tree(filtered_blast_result, ncbi_boolean, branch_lengt
         taxa_lineages.extend(ncbi.get_lineage(i))
     taxa_keys_lineage = list(set(taxa_lineages))
     taxa_keys_lineage.remove(131567)
-    print(taxa_keys_lineage)
 
     tree_lineage = ncbi.get_topology(taxa_keys_lineage)
     #print(tree_lineage.get_ascii(attributes=["sci_name"]))

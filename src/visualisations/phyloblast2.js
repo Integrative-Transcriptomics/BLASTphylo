@@ -82,7 +82,6 @@ function showTooltip(node, barhover, extraDataLength){
                         .style("background-color", "rgba(35, 29, 51, 0.7)");
 
     var text = null;   // define the content of the tooltip
-    console.log('extradatalength', extraDataLength)
     if(extraDataLength === 1){ // unique sequence-based phylogeny
         text = '<b>' + node.data.name + '</b> <br /> taxa: ' + String(node.data.value[0]) + '<br />';
     }else if (extraDataLength === 2){ // taxa-based phylogeny
@@ -199,16 +198,11 @@ function expand(d, b){
 // ############################################################  main visualisation
 // main visualisation of the tree
 function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclickInteraction, returnFromStatic) {
-    console.log('on chart function is called')
-    console.log('clicks');
-    console.log(clicked_nodes);
-    console.log(onclickInteraction);
     // reset global variables if new taxonomic Mapping should be visualized
     if(firstVisualisationOfTree){
         hitSelection = '-';
         clicked_nodes = {};
     }
-    console.log('data', data)
     branchLength = data['size'][1];
     const duration = 750;
     let i = 0;
@@ -239,7 +233,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
 
     // rest original size of root
     if(returnFromStatic && root.data._size){
-        console.log('resize root')
         root.data.size = root.data._size.slice();
         delete root.data._size;
     }
@@ -310,7 +303,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
     // publication ready tree visualisation have no onclickInteractions
     // --> resize the node to their actual child size
     if(!(onclickInteraction)){
-        console.log('run resize of tree')
         root.descendants().reverse().forEach(function(d){
             if(d.children){
                 d.data._size = d.data.size.slice();
@@ -348,7 +340,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
 
     // compute width of text in SVG beforehand to align the barplot directly next to the tree
     var actualDepth = d3v6.max(root.leaves(), function(n){return n.depth;});
-    console.log('actual depth', actualDepth);
     var leaveNames = [];
     root.leaves().forEach(d => leaveNames.push(d.data.name));
     var textWidth = []
@@ -369,7 +360,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
     })
 
     max_name_length = d3v6.max(textWidth);
-    console.log(max_name_length);
         //              max tree depth                 max label             spaces
     var width = (actualDepth * branchLength) +  (max_name_length) + 20 ;
     treeRankWidth = (actualDepth * branchLength);
@@ -544,9 +534,7 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
 	    function click(event, d) {
             if(onclickInteraction){
                 if (d.children) {   // node is going to be collapsed
-                    console.log('if case');
                     clicked_nodes[d.data.name] = 0;  // node is collapsed
-                    console.log(clicked_nodes.Bacillales);
                     d3v6.select('#nodetext' + d.id).attr('fill', 'black')
                                 .attr("x",  12)
                                 .attr("text-anchor", "start")
@@ -564,7 +552,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                 }else if(!(d.children) && !(d._children) && extraData != null && Object.keys(extraData).length === 1){ // link to NCBI for unqiue phylogeny
                     window.open('https://www.ncbi.nlm.nih.gov/protein/'.concat(d.data.name), '_blank');
                 } else {    // not is going to be expanded
-                    console.log('else case');
                     clicked_nodes[d.data.name] = 1;  // node is not collapsed
                     d3v6.select('#nodetext' + d.id).attr('fill', d =>  d.children || d._children ? 'transparent' : 'black')
                                              .text(d =>  d.children || d._children ? 'p' : d.data.name);
@@ -573,7 +560,6 @@ function chart(data, extraData, taxonomicLevel, firstVisualisationOfTree, onclic
                 }
                 update(d);
 
-                console.log(hitSelection);
                 if (extraData === null){   // taxonomic mapping
                     if(taxonomyLevel.includes(d.data.value[2]) || d.data.value[2] === 'no rank'){
                         stackBars(hitSelection);
@@ -708,7 +694,6 @@ function hitBars(value){
     var currentWidth = (currentDepth * branchLength);
     var barPlotShift = currentWidth-treeRankWidth+max_name_length-treeTextWidth;
 
-    console.log(value);
     if (value !== 'covered taxa'){
         var hitValue = null;
         if (value === 'node hits'){  // shown node bars
@@ -724,7 +709,6 @@ function hitBars(value){
         var nodes = treeData.descendants();
         var max_hit = d3v6.max(treeData.leaves(), function(d){return d.data.value[0][hitValue];});
 
-        console.log('if case');
         // define the number of ticks for the axis
         var ticksStep = 0;
         if((max_hit >=  1000) || (max_hit <= 10)){
@@ -788,13 +772,11 @@ function hitBars(value){
 
     else{ // covered taxa (strains)
         var nodes = treeData.descendants();
-        console.log('else case');
         // compute bar values of represented taxa
         var taxaCounts = []
         nodes.forEach(function(d){
             taxaCounts.push(normalizedTaxaCount(d));
         });
-        console.log(taxaCounts);
 
         var maxTaxaCount = d3v6.max(taxaCounts);
         var ticksStep = 0;
@@ -995,7 +977,6 @@ function stackBars(value){
     }
 
     else{
-        console.log('else case')
         var nodes = treeData.descendants();
         var stacks = [];
         var stacksSum = [];
@@ -1013,11 +994,8 @@ function stackBars(value){
             stacksSum.push(query_0 + query_1)
             stacks.push(stack_dict);
         });
-        console.log('stacks', stacks);
-        console.log(stacksSum);
 
         var maxTaxaCount = d3v6.max(stacksSum);
-        console.log('maxhit', maxTaxaCount);
 
         // define ticks of the axis
         var ticksStep = 0;
@@ -1028,7 +1006,6 @@ function stackBars(value){
         }
 
         var scaleX = d3v6.scaleLinear().domain([0, maxTaxaCount]).range([0, svgWidth-50]);
-        console.log(scaleX);
 
         // x-Axis
         hitbars.append('g')
@@ -1390,10 +1367,8 @@ function showClades(taxData, accData, ownAddData, libTree){
 var previousTaxonomicLevel = 'class';
 function collapseTree(rank){
 
-    console.log('run collapse')
     var taxonLevel = taxonomyLevel.indexOf(rank);
     d3v6.select('#tree_vis').remove();
-    console.log('size', treeVis['size']);
     chart(treeVis, null, taxonLevel, false, true, false); // update main visualization
 
     if(taxonomyLevel.includes(treeVis['value'][1]) || (treeVis['value'][1] === 'no rank')){ // update bar chart

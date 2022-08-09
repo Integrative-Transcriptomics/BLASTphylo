@@ -19,7 +19,6 @@ import TreeInteraction from './TreeInteraction.js';
 
     constructor(props){
         super(props);
-        console.log(props);
         this.state = {taxonomicMapData: this.props.data,
                        taxaPhyloData: null,
                        seqPhyloData:null,
@@ -33,7 +32,6 @@ import TreeInteraction from './TreeInteraction.js';
     }
 
     handleTabSwitch(event){
-        console.log(event);
         if(event === 'phylogeny'){
             //this.setState({isActualComponent: 'handlePhylogeny'});
             //this.setState({phylogenyState: event});
@@ -90,11 +88,9 @@ import TreeInteraction from './TreeInteraction.js';
 
 
     render() {
-        console.log('this.props.data', this.props.data)
         var isActualComponent = this.state.isActualComponent;
         const taxonomicMapData = this.state.taxonomicMapData;
         var userMenu = <div />;  // sub div: menus for the visualizations (export visualization, etc)
-        console.log(this.state)
         let actualComponent;
         d3v6.select('#phyloblastAlert').remove();
         d3v6.select('#tree_vis').remove();
@@ -103,7 +99,6 @@ import TreeInteraction from './TreeInteraction.js';
         // switch view based on the isActualComponent state
         if (isActualComponent === 'taxonomy'){ // taxonomic Mapping
             const copy = {'tree': {...taxonomicMapData.tree}, 'noHitTree':{...taxonomicMapData.noHitTree}, 'extraInfo': [0], 'actualTree': {...taxonomicMapData.actualTree}};
-            console.log(copy)
             actualComponent = <TaxonomicAnalysisMenu data={copy} queries={taxonomicMapData.queries}  />;
             userMenu = <TreeInteraction data={copy} queries={taxonomicMapData.queries} calculationMethod={'taxa'}/>;
 
@@ -125,7 +120,6 @@ import TreeInteraction from './TreeInteraction.js';
             d3v6.select('#visualisation').style('border', 'hidden');
             console.log('Tabhandling: No tab from selection')
         }
-        console.log(this.state.isActualComponent)
 
 
             return (

@@ -25,7 +25,6 @@ class SearchBar extends Component{
     // access server and search for matching pattern
     searchBacteria(event){
         this.setState({spinnerStyle: 1});
-        console.log(event)
         var self = this;
         var path = 'server/searchNcbiTaxa'
 
@@ -35,7 +34,7 @@ class SearchBar extends Component{
 
             axios.post(path, formData)
                 .then(function (response){
-                    console.log(response);
+                    //console.log(response);
                     self.setState({matching_taxa:response.data.result});
                     self.setState({htmlSize: 10});
                 })
@@ -54,9 +53,6 @@ class SearchBar extends Component{
     }
 
     handleSelection(event){
-        console.log(event);
-
-
         if(this.state.taxon.length > 0){
             var oldValue = document.getElementById('taxa').value;
             document.getElementById('taxa').value = oldValue.concat(event.target.value).concat(',');

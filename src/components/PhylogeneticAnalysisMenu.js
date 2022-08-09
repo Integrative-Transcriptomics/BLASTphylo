@@ -24,7 +24,6 @@ import {showClades, publicationReady, chart} from '../visualisations/phyloblast2
 class PhylogeneticAnalysisMenu extends Component{
     constructor(props){
         super(props);
-        //console.log(props)
         // set state for visualisations
         var treeData = this.props.data.tree;
         this.state = {ownInfo: null, counter: 0,
@@ -118,7 +117,6 @@ class PhylogeneticAnalysisMenu extends Component{
         const rank = taxonomyLevel.indexOf(this.state.rankSelect);
         d3v6.select('#tree_vis').remove();
         const treeCopy = {...this.props.data.tree};
-        console.log(treeCopy['size'])
         // update the visualizations
         chart({'size': treeCopy['size']}, this.props.data.extraInfo, rank, false, true, true);
         /***if(event === 'Tabchange'){
