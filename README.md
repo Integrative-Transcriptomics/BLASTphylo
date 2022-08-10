@@ -1,10 +1,8 @@
 # BLASTphylo
 
-BLASTphylo is an interactive web-tool, which applies a BLASTp search for a given protein and 
-maps the result on a given taxonomic tree. In addition, a phylogeny calculation of the 
-remaining BLAST hits can be performed and visualized. BLASTphylo is available for Unix and MAC. 
-We recommand Mozilla Firefox as browser. 
-
+BLASTphylo is an interactive web-tool, which applies BLAST to a given protein/gene sequence, maps the resulting hits onto a given taxonomic tree, and calculates a phylogeny, all in an automated pipeline. Taxonomic and phylogenetic trees are visualized interactively and allow the user to manipulate the tree on demand, e.g. collapsing the taxonomy to a certain taxonomic rank. If used locally please follow the installation instructions below. <br>
+<br>
+BLASTphylo is available as a web-tool an can be accessed here: [Visit BLASTphylo](https://tuevis.cs.uni-tuebingen.de/blastphylo/)
 
 ## Required Tools
 
@@ -17,10 +15,11 @@ command.
 
 ## Installation Manual
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and require [npm](https://www.npmjs.com/get-npm) (suggest: node v14.15.0, npm v6.14.8) and [python](https://www.python.org/) (suggest: v3.6.9) for the installation
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and requires [npm](https://www.npmjs.com/get-npm) (suggest: node v14.15.0, npm v6.14.8) and [python](https://www.python.org/) (suggest: v3.6.9) for the installation
 
 ### Step 1: Create a venv in the parent directory of BLASTphylo
 
+For example use:
 `cd <path/to/BLASTphylo>` <br>
 `virtualenv --python=/usr/bin/python3.6 <your-venv>`
 
@@ -31,33 +30,24 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
  `pip install .`
 
 
-### Step 3: Installation of the front-end
+### Step 3: Installations for the front-end
 
  `npm install`  <br>
 command will end with `found 3 vulnerabilities (2 moderate, 1 high)`
 
 ### Step 4: Start BLASTphylo
 
-Change in the project directory and run
- `npm run blastphylo`
+Change into the project directory and run
+ `npm run blastphylo`. Start the Flask server. 
 
-Make sure that all needed modules are installed before running the app.
-Runs the app and the server in the background.
-Open [http://localhost:3000](http://localhost:3000) to view BLASTphylos 
-*menu* page in the browser. <br>
-Enable the pop-up-window function for this app. 
+Make sure that all required modules are installed before running the app.
+Open [http://localhost:3000](http://localhost:3000) to open BLASTphylo in the browser. Enable the pop-up-window function for this app. 
 
 ## Available Examples
 
-In the project directory folder **server/test_examples** contain a example BLAST
-result and FASTA files, which was used to implement BLASTphylo. In addition, different example taxonomies are
-given. <br>
-
-1. mapping_example <br>
-2. comparison_example <br>
-
+The project directory folder **server/test_examples** contains several example data which can be used as an input for BLASTphylo. <br>
 
 
 ## Help
 For more details about the different features of BLASTphylo switch
-to the **help page** in the top right corner of the *menu* page.
+to the **help page** in the top right corner of the application.
