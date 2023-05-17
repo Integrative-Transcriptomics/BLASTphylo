@@ -94,10 +94,23 @@ function showTooltip(node, barhover, extraDataLength){
         if(node.children || node._children){ // NCBI taxonomy normalisation for inner nodes
             var taxa_ncbi_leaves = ncbi_normalisation[node.data.name][1];
             if(taxonomyLevel.includes(node.data.value[2]) || node.data.value[2] === 'no rank'){
-                var taxa_q1 = getNumberOfLeavesStacks(node.data, 0, 0)
-                var taxa_q2 = getNumberOfLeavesStacks(node.data, 0, 1)
+                try {
+                var taxa_q1 = getNumberOfLeavesStacks(node.data, 0, 0);
                 var percentage_taxa_q1 = (taxa_q1/parseInt(taxa_ncbi_leaves))*100;
+                }
+                catch(error){
+                var taxa_q1 = 0;
+                var percentage_taxa_q1 = 0;
+                }
+                try {
+                var taxa_q2 = getNumberOfLeavesStacks(node.data, 0, 1);
                 var percentage_taxa_q2 = (taxa_q2/parseInt(taxa_ncbi_leaves))*100;
+                }
+                catch(error){
+                var taxa_q2 = 0;
+                var percentage_taxa_q2 = 0;
+                }
+
                 additionalText = 'taxa represented:<br />' +
                 query_header[0] + ': ' + String(taxa_q1) + '/' + taxa_ncbi_leaves +
              ' ('+ String(percentage_taxa_q1.toFixed(2))+'%)<br />' +
@@ -600,9 +613,16 @@ function getNumberOfLeavesStacks(node, count, query){
 
 function normalizedTaxaCountStack(node, query){
     if (node.children || node._children){
+        try {
         var taxa_leaves = getNumberOfLeavesStacks(node.data, 0, query);
         var taxa_ncbi_leaves = ncbi_normalisation[node.data.name][1];
         var percentage_taxa = (taxa_leaves/parseInt(taxa_ncbi_leaves))*100;
+        }
+        catch(error){
+        var percentage_taxa = 0;
+        }
+        if (percentage_taxa > 100){
+        percentage_taxa = 0}
         return percentage_taxa;
     } else {return 0}
 }

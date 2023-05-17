@@ -4,7 +4,7 @@ import axios from 'axios';
 import * as d3v6 from 'd3v6';
 import {Spinner, Button, Form, Popover, OverlayTrigger, Dropdown, FormControl} from 'react-bootstrap';
 import {BiHelpCircle} from 'react-icons/bi';
-import { ReactSearchAutocomplete } from 'react-search-autocomplete';
+import {ReactSearchAutocomplete } from 'react-search-autocomplete';
 
 // own style sheets
 import './menuStyle.css';
@@ -33,6 +33,7 @@ class Menu extends Component {
         this.state = { blasttype: 'blastp',
                        protein: '',
                        protein_file_type: '0',
+                       example: '',
                        tree_data: '',
                        tree_menu_selection: '0',
                        eValue: '0.05',
@@ -44,6 +45,8 @@ class Menu extends Component {
         // functions
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.inputField = this.inputField.bind(this);
+
 
    }
 
@@ -54,9 +57,9 @@ class Menu extends Component {
     handleSubmit(){
         const formData = new FormData();
         var error = [];
-         if ((this.state.protein_file_type === '2') || (this.state.protein_file_type === '3') ){
+         if (this.state.protein_file_type === '2') {
             formData.append('fasta_file', null);
-            formData.append('fasta_filename', this.state.protein_file_type);
+            formData.append('fasta_filename', this.state.example);
          }
          else if (this.state.protein === ''){
             var protFileContent = this.protFileInput.current.files[0];
@@ -117,6 +120,7 @@ class Menu extends Component {
         }
     }
 
+
     // Handle changes in the parameter settings
     handleChange(event) {
         if (event.target.name === 'blast'){
@@ -126,11 +130,12 @@ class Menu extends Component {
             this.setState({protein: event.target.value});
         }
         else if (event.target.name === "file_type"){
-            this.setState({protein_file_type: event.target.value});
-            if((event.target.value === '2') || (event.target.value === '3')){
-                document.getElementById('taxa').value = 'Bacteria|subtree';
-                this.setState({tree_data: '2|subtree'});
-            }
+             this.setState({protein_file_type: event.target.value});
+        }
+        else if (event.target.name === "example"){
+            this.setState({example: event.target.value})
+            document.getElementById('taxa').value = 'Bacteria|subtree';
+            this.setState({tree_data: '2|subtree'});
         }
         else if (event.target.name === "tree_menu"){
             this.setState({tree_menu_selection: event.target.value});
@@ -178,6 +183,59 @@ class Menu extends Component {
             document.getElementById('own taxonomy').style.display = "block";
         }
    }
+   inputField = () => {
+   // check browser and switch newline symbol
+         const actualBrowser = checkBrowser();
+         let placeholderFasta;
+         if(actualBrowser === 'safari'){
+            placeholderFasta = '>query1&#x0a; MEMEFNENNIDLETIIRDEVNKYLSRDI&#x0a; GDLPATQQAPLELREKYEKMEVPNKGRDIYEV';
+         }else{
+            placeholderFasta = '>query1\nMEMEFNENNIDLETIIRDEVNKYLSRDI\nGDLPATQQAPLELREKYEKMEVPNKGRDIYEV';
+         }
+         let input_file;
+         input_file=<Form.File ref={this.protFileInput} id='fasta_file' name='fasta_file'
+                onChange={this.handleChange} accept='.fasta,.fastq,.csv,.fna' />;
+    switch (this.state.protein_file_type) {
+      case "0":
+        return (
+          <Form.Group>
+            <Form inline>
+                    <Form.Label>Enter nucleotide/protein sequence:</Form.Label>
+                </Form>
+                <Form.Control as='textarea' placeholder={placeholderFasta} rows={5} cols={50} id='fasta_seq' name='fasta_seq' onChange={this.handleChange} />
+                <Form inline>
+                    <Form.Label>Or upload a Fasta file:</Form.Label>
+                </Form>
+                <Form.File ref={this.protFileInput} id='fasta_file' name='fasta_file'
+                onChange={this.handleChange} accept='.fasta,.fastq,.fna' />
+          </Form.Group>
+        );
+      case "1":
+        return (
+          <Form.Group>
+             <Form inline>
+                    <Form.Label>Upload BLAST result table:</Form.Label>
+             </Form>
+             <Form.File ref={this.protFileInput} id='blast_file' name='blast_file'
+                onChange={this.handleChange} accept='.csv' />
+          </Form.Group>
+        );
+      case "2":
+        return (<Form.Group>
+             <Form inline>
+                    <Form.Label>Load example data:</Form.Label>
+             </Form>
+             <Form id='example_data' name='example_data'>
+                        <Form.Check name='example' type='radio' value='2' id='example0' label={'One query sequence'} onChange={this.handleChange} />
+                        <Form.Check name='example' type='radio' value='3' id='example1' label={'Comparing two query sequences'} onChange={this.handleChange} />
+                </Form>
+          </Form.Group>
+        );
+      default:
+        return null;
+    }
+    };
+
 
     render() {
         // remove old visualisations and reduce size of default divs
@@ -217,34 +275,22 @@ class Menu extends Component {
                     </OverlayTrigger>
                 </Form>
                 <Form id='blasttypes' inline>
-                        <Form.Check inline type={'radio'} name='blast' id='blastp' label={'blastp'} onChange={this.handleChange} />
+                        <Form.Check inline type={'radio'} name='blast' id='blastp' label={'blastp'} defaultChecked onChange={this.handleChange} />
                         <Form.Check inline type={'radio'} name='blast' id='blastn' label={'blastn'} onChange={this.handleChange} />
                         <Form.Check inline type={'radio'} name='blast' id='blastx' label={'blastx'} onChange={this.handleChange} />
                 </Form>
                 <br/>
                 <Form inline>
-                    <Form.Label>Enter nucleotide/protein sequence:</Form.Label>
-                    <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['prot'])}>
-                        <BiHelpCircle style={{color: 'blue'}}/>
-                    </OverlayTrigger>
+                    <Form.Label>Select your input type or choose from several demo examples:</Form.Label>
                 </Form>
-                <Form.Control as='textarea' placeholder={placeholderFasta} rows={5} cols={50} id='fasta_seq' name='fasta_seq' onChange={this.handleChange} />
-            </Form.Group>
-            <Form.Group>
-                <Form inline>
-                    <Form.Label>Or, upload</Form.Label>
-                    <Form.Control as='select' id='file_type' name='file_type' onChange={this.handleChange}>
-                        <option value="0">Fasta file</option>
-                        <option value="1">Precalculated BLAST result</option>
-                        <option value="2">Test example: one query</option>
-                        <option value="3">Test example: two queries</option>
-                    </Form.Control>
-                    <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['protFile'])}>
-                        <BiHelpCircle style={{color: 'blue', 'margin': '0px 10px 0px 5px'}}/>
-                    </OverlayTrigger>
+                <Form id='input_type' name='input_type' inline>
+                        <Form.Check inline type={'radio'} name='file_type' value='0' id='fasta' label={'Query sequence'} defaultChecked onChange={this.handleChange} />
+                        <Form.Check inline type={'radio'} name='file_type' value='1' id='blastresult' label={'BLAST result'} onChange={this.handleChange} />
+                        <Form.Check inline type={'radio'} name='file_type' value='2' id='demo' label={'Demo'} onChange={this.handleChange} />
                 </Form>
-                <Form.File ref={this.protFileInput} id='fasta_file' name='fasta_file'
-                onChange={this.handleChange} accept='.fasta,.fastq,.csv,.fna' />
+                {this.inputField()}
+                <br/>
+
             </Form.Group>
             </Form>
             <br />

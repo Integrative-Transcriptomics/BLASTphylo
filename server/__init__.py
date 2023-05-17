@@ -200,8 +200,10 @@ def menu():
                 protein = None
 
         protein_file_type = ''
+        fasta_filename = ''
         if len(protein_seq) == 0:
             protein_file_type = request.form['protein_file_type']
+            fasta_filename = request.form['fasta_filename']
             if protein_file_type == '0': # fasta like file
                 protein_data = request.files['fasta_file'].read()
 
@@ -226,10 +228,10 @@ def menu():
                     protein = None
                 print('Data input: CSV table')
             elif protein_file_type == '2':
-                protein = app.config['TEST_EXAMPLE_MAPPING']
-                print('protein', protein)
-            elif protein_file_type == '3':
-                protein = app.config['TEST_EXAMPLE_COMPARISON']
+                if fasta_filename == '2':
+                    protein = app.config['TEST_EXAMPLE_MAPPING']
+                else :
+                    protein = app.config['TEST_EXAMPLE_COMPARISON']
 
 
 
@@ -280,9 +282,9 @@ def menu():
             print('\nStart BLASTphylo')
             try:
                 d3_tree, d3_no_hit_tree, hit_seqs, accs_seqs, queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
-                if protein_file_type == '2':
+                if fasta_filename == '2':
                     queries = ['sada']
-                elif protein_file_type == '3':
+                elif fasta_filename == '3':
                     queries = ['mpasA', 'mpsB']
 
                 # remove temporary filesvalue
