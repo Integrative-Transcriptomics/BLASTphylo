@@ -17,11 +17,6 @@ class Help extends Component {
                     <p> BLASTphylo is an interactive web-tool, which applies BLAST to a given protein/gene sequence,
                         maps the resulting hits onto a given taxonomic tree, and calculates a phylogeny, all in an automated pipeline.
                         Taxonomic and phylogenetic trees are visualized interactively and allow the user to manipulate the tree on demand, e.g. collapsing the taxonomy to a certain taxonomic rank.
-                        If used locally installations of
-                        <a class='menulinks' href='https://www.ncbi.nlm.nih.gov/books/NBK279690/' rel='nofollow'> BLAST</a>,
-                        <a class='menulinks' href='https://mafft.cbrc.jp/alignment/software/index.html' rel='nofollow'> MAFFT </a>
-                        and
-                        <a class='menulinks' href='http://www.microbesonline.org/fasttree/' rel='nofollow'> FastTree </a> are required.
                     </p>
                 </div>
                 <br />
@@ -39,40 +34,62 @@ function HowToDoHelpInfo(){
     return(
         <div id='howtoHelpInfo'>
             <h2 class='helpHeader'>How to get started:</h2>
+            <h4>BLAST search</h4>
+            Choose between:
             <ol>
-                <li>Select your BLAST type: BLASTn, BLASTp, or BLASTx</li>
-                <li>Enter one/two sequence(s) or upload a FASTA file in the following format<br/>
+                <li> <b>Fasta sequence(s)</b>:<br/>
+                Enter one/two sequence(s) or upload a FASTA file in the following format<br/>
                     <p style={{'margin-left':'20px'}}>
                         >query1 <br/>
                         AAATTTGMMM<br />
                         >query2 <br />
                         TTTGCGPPP<br />
                     </p>
-                Alternatively, upload a pre-computed BLAST result in .csv format using the following columns:
+                Choosing this input option leads BLASTphylo to do a BLAST search in the nr/nt database. Please, specifiy if you want to run blastp, blastn or blastx.
+                </li>
+                <li> <b>BLAST result</b>:</li>
+                Upload a pre-computed BLAST result in .csv format using the following columns:
                 <div class='subList'>qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq<br />
                 </div>
+                Unfortunately, the web version of BLAST does not provide a (straightforward) download option for all information required for BLASTphylo. In particular, the respective taxIDs associated with each hit found with BLAST is missing. However, if using a local/standalone version of BLAST, the features required for BLASTphylo can be specified with the following BLAST parameter:
+<div class='subList'>-outfmt “6 qacc sacc qstart qend sstart send slen nident evalue pident staxids qcovs sseq”<br/>
+</div>
+This results in a tabular output format with columns as specified, which can be uploaded to BLASTphylo. Examples for feasible files can be found <a class='menulinks' href='https://itnc.informatik.uni-tuebingen.de/index.php/s/qCawZesxWjG8J9f'> here</a>.
                 <p style={{color:"#fcb42d"}}>We highly recommend to use a pre-computed BLAST result as an input when using the web-version of BLASTphylo for performance reasons!</p>
-                </li>
-                <li>Define your taxonomic tree:
-                    <ul style={{margin:'5px'}} class='sublist'>
-                        <li>Enter a comma-separated list of taxonomic IDs or scientific names (Note: do not use spaces between list items)</li>
-                        <li>The keyword <b>|subtree</b> selects the complete subtree rooted at the specified taxon <b>taxon|subtree</b></li>
-                        <li>The keyword <b>|!(....)</b> removes all taxa in brackets from the subtree rooted at the taxon <b>taxon|!(....)</b><br />
-                        <p style={{margin:'8px'}} > <i>example:</i> Staphylococcus|!(1280|subtree) = Staphylococcus except for the Staphylococcus aureus (txid: 1280) subtree </p>
-                        </li>
-                        <li>search bar: Start typing to search for bacteria. Select a taxon from the list to add them to the taxonomy.</li>
-                    </ul>
-                </li>
-                <li>Check parameter used to filter the BLAST result:
+                <li> <b>Demo</b>: </li>
+                When choosing one of the two example data sets, all other fields are automatically filled and BLASTphylo can be started by clicking 'submit'.
+                </ol>
+                <h4>Taxonomy</h4>
+                As a default the NCBI taxonomy is used. Restricting the taxonomy to specific taxa or parts of the taxonomy can be done in the following way:
+                <ol>
+                <li> Specific taxon or multiple taxa in a comma separated list (Note: do not use spaces between list items), e.g.</li>
+                <div class='subList'>1279,1224<br/>
+                </div>
+                or
+                <div class='subList'>Staphylococcus,Pseudomonadota<br/>
+                </div>
+                <li> Subtree of specific taxon, e.g.</li>
+                <div class='subList'>1279|subtree<br/>
+                </div>
+                or
+                <div class='subList'>Staphylococcus|subtree<br/>
+                </div>
+                <li> Exclude part of a subtree, e.g.</li>
+                <div class='subList'>1279|!(1280|subtree)<br/>
+                </div>
+                </ol>
+                Optional: Search for taxon name or taxId using the search bar.<br/>
+                <br/>
+                <h4>Filter conditions</h4>
+                Check parameter used to filter the BLAST result:
                     <ul class='subList'>
                         <li><b>E-value: </b> number of expected hits of similar quality (score) that could be found just by chance.</li>
                         <li><b>alignment identity:  </b>minimal identity between query and subject sequence within the alignment</li>
                         <li><b>query coverage:  </b>alignment has to cover at least <b>x</b>% of the query sequence</li>
                         <li><b>subject coverage:    </b>alignment has to cover at least <b>x</b>% of the HSP for the subject sequence</li>
                     </ul>
-                </li>
-                <li>Click on <b>Submit</b>. You will be redirected to the taxonomic mapping as soon as the calculation is completed.</li>
-            </ol>
+                <h4>Submit</h4>
+                Click on <b>Submit</b>. You will be redirected to the taxonomic mapping as soon as the calculation is completed.
         </div>
     );
 }

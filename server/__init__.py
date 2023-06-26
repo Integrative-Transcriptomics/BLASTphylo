@@ -52,22 +52,29 @@ def generate_fasta_from_input(textfieldinput, outdir, blast_type):
     regNuc = "^[ACTG]*$"
 
     split_input = textfieldinput.split('>')
+    print('splitinput', split_input)
 
     for fasta in split_input:
+        print('fasta', fasta)
         if len(fasta) > 0:
-            split_fasta = fasta.split('\n')
-            seq = ''.join(split_fasta[1:]).replace('\r', '')
+            if '\n' in fasta:
+                split_fasta = fasta.split('\n')
+                seq = ''.join(split_fasta[1:]).replace('\r', '')
+                if seq =='':
+                    return False, query_header
+                if blast_type == 'blastp':  # check for valid protein sequence
+                    valid_pro_seq = re.search(regAA, seq)
+                elif blast_type == 'blastx' or blast_type == 'blastn': # check for valid nucleotid sequence
+                    valid_pro_seq = re.search(regNuc, seq)
 
-            if blast_type == 'blastp':  # check for valid protein sequence
-                valid_pro_seq = re.search(regAA, seq)
-            elif blast_type == 'blastx' or blast_type == 'blastn': # check for valid nucleotid sequence
-                valid_pro_seq = re.search(regNuc, seq)
-
-            if valid_pro_seq:
-                query_header.append(split_fasta[0])
-                fastas.append(SeqRecord(Seq(seq), id=split_fasta[0], description=''))
+                if valid_pro_seq:
+                    query_header.append(split_fasta[0])
+                    fastas.append(SeqRecord(Seq(seq), id=split_fasta[0], description=''))
+                else:
+                    print(valid_pro_seq)
+                    return valid_pro_seq, query_header
             else:
-                return valid_pro_seq
+                return False, query_header
     SeqIO.write(fastas, outdir, "fasta")
     return valid_pro_seq, query_header
 
@@ -142,14 +149,27 @@ def searchNcbiTaxa():
 # taxa-based phylogeny
 @app.route('/server/phylogeny', methods=['POST', 'GET'])
 def phylogeny():
+
     global hit_seqs
     global taxa_newick
-    print('Start taxa-based phylogeny calculation')
-    d3Tree, newick_phylogeny, phylum_info, acc_info = calculate_phylogeny(hit_seqs, None, flask_tmp_dir, 'True',  False)
-    taxa_newick = newick_phylogeny
+    errors = []
+    d3Tree = None
+    newick_phylogeny=None,
+    phylum_info = None,
 
-    return {'tree': d3Tree, 'newick': newick_phylogeny[:-1], 'extraInfo': [phylum_info, acc_info],
-            'actualTree': copy.deepcopy(d3Tree)}
+    print('Start taxa-based phylogeny calculation')
+    data, errors = calculate_phylogeny(hit_seqs, None, flask_tmp_dir, 'True',  False)
+    if len(errors)>0:
+        return {'tree': None, 'newick': None, 'extraInfo': None,
+           'actualTree': None, 'errors': errors}
+    else:
+        d3Tree, newick_phylogeny, phylum_info, acc_info = data
+        taxa_newick = newick_phylogeny
+
+        return {'tree': d3Tree, 'newick': newick_phylogeny[:-1], 'extraInfo': [phylum_info, acc_info],
+           'actualTree': copy.deepcopy(d3Tree), 'errors': errors}
+    #return {'tree': d3Tree, 'newick': newick_phylogeny[:-1], 'extraInfo': [phylum_info, acc_info],
+    #        'actualTree': copy.deepcopy(d3Tree)}
 
 # unique sequence-based phylogeny
 @app.route('/server/phylogenyUnique', methods=['POST', 'GET'])
@@ -157,11 +177,16 @@ def phylogenyUnique():
     global accs_seqs
     global unique_newick
     print('Start unique sequence-based phylogeny calculation')
-    d3_phylogeny, newick_phylogeny = calculate_phylogeny(accs_seqs, None, flask_tmp_dir, 'True',  True)
-    unique_newick = newick_phylogeny
+    data, errors = calculate_phylogeny(accs_seqs, None, flask_tmp_dir, 'True',  True)
+    if len(errors)>0:
+        return {'tree': None, 'newick': None, 'extraInfo': [0],
+                'actualTree': None, 'errors': errors}
+    else:
+        d3_phylogeny, newick_phylogeny = data
+        unique_newick = newick_phylogeny
 
-    return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1], 'extraInfo': [0],
-            'actualTree': copy.deepcopy(d3_phylogeny)}
+        return {'tree': d3_phylogeny, 'newick': newick_phylogeny[:-1], 'extraInfo': [0],
+            'actualTree': copy.deepcopy(d3_phylogeny), 'errors': errors}
 
 
 # data generation for taxonomic mapping
@@ -174,7 +199,12 @@ def menu():
         global accs_seqs
         global d3_tree
         global queries
-
+        hit_seqs = {}
+        accs_seqs = {}
+        d3_tree = {}
+        queries = []
+        taxa_newick = ''
+        unique_newick = ''
         tree_data = None
         tree_menu_selection = None
         error = []
@@ -187,7 +217,7 @@ def menu():
         protein_seq = request.form['protein']
         if len(protein_seq) > 0:
             if '>' not in protein_seq:
-                error.append({'message': 'Protein sequence(s) does not contain > identifier'})
+                error.append({'message': 'Protein sequence(s) does not contain > identifier.'})
                 protein = None
             # generation of tmp file
             temp_prot_file = tempfile.NamedTemporaryFile(prefix=flask_tmp_dir)
@@ -196,8 +226,9 @@ def menu():
             if valid_pro_seq:
                 protein = temp_prot_file.name
             else:
-                error.append({'message': 'Protein sequence(s) contain irregular amino acids'})
+                error.append({'message': 'One of the queries contains no or irregular letters.'})
                 protein = None
+
 
         protein_file_type = ''
         fasta_filename = ''
@@ -216,15 +247,13 @@ def menu():
             elif protein_file_type == '1': # blast result csv file
                 protein_data = request.files['fasta_file'].read().decode('utf-8')
                 protein = protein_data
-                try:
-                    blastResult = pd.read_csv(StringIO(protein), sep='\t')
-                except:
+                blastResult = pd.read_csv(StringIO(protein), sep='\t')
+                if len(blastResult.columns) != 13:
                     blastResult = pd.read_csv(StringIO(protein), sep=',')
                 queries_np = blastResult.iloc[:,0].unique()
                 queries = queries_np.tolist()
                 if len(blastResult.columns) != 13:
-                    error.append({'message': 'Uploaded BLAST result has to much/less columns. Check the help page for '
-                                             'more details.'})
+                    error.append({'message': 'Uploaded BLAST result is incorrectly formatted. Check the help page for more details.'})
                     protein = None
                 print('Data input: CSV table')
             elif protein_file_type == '2':
@@ -237,15 +266,25 @@ def menu():
 
         # tree
         tree_menu_selection = request.form['tree_menu_selection']
-
+        print(tree_menu_selection)
         # ncbi taxonomy
         taxaIDs = None
         if tree_menu_selection == '0':
+            print('tree menu selection')
             tree_data = request.form['tree_data']
 
             # check if given scientific names and taxon IDs are valid
             tree_taxa = tree_data.split(',')
             taxa = [taxon.split('|')[0] for taxon in tree_taxa]
+            try:
+                print('try')
+                subtree_strings = [taxon.split('|')[1] for taxon in tree_taxa]
+                # check if string behind | is subtree
+                for i in subtree_strings:
+                    if i != 'subtree':
+                        error.append({'message': 'String behind | is not subtree.'})
+            except:
+                print('except')
             taxaIDs = translate_nodes(taxa)
 
         # user defined taxonomy
@@ -257,7 +296,7 @@ def menu():
             try:
                 tree = Tree(tree_data, format=8)
             except:
-                error.append({'message': 'Uploaded tree file contain a BLASTphylo incompatible format. Newick string need labels for all nodes.'})
+                error.append({'message': 'Uploaded tree file contains a BLASTphylo incompatible format. Newick string needs labels for all nodes.'})
                 tree_data = None
 
 
@@ -272,8 +311,7 @@ def menu():
         print('min. hit coverage: ' + min_hit_cover)
 
         if tree_menu_selection == '0' and len(taxaIDs) == 0:
-            error.append({'message': 'Given taxa are not present in NCBI taxonomy'})
-        print(error)
+            error.append({'message': 'Given taxa are not present in NCBI taxonomy.'})
 
         if len(error) > 0:
             return {'error': error}
@@ -281,7 +319,7 @@ def menu():
             # start processing of the data
             print('\nStart BLASTphylo')
             try:
-                d3_tree, d3_no_hit_tree, hit_seqs, accs_seqs, queries = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
+                d3_tree, d3_no_hit_tree, hit_seqs, accs_seqs, queries, blasterrors = run_blastphylo(protein, protein_file_type, tree_data, tree_menu_selection, blasttype, eValue, min_align_identity, min_query_cover, min_hit_cover, flask_tmp_dir)
                 if fasta_filename == '2':
                     queries = ['sada']
                 elif fasta_filename == '3':
@@ -290,17 +328,18 @@ def menu():
                 # remove temporary filesvalue
                 if protein_file_type == '0':
                     temp_prot_file.close()
-
                 if len(d3_tree) > 0:
                     print('Root of the tree: ' + d3_tree['name'])
                     return {'tree': d3_tree, 'noHitTree': d3_no_hit_tree, 'error': None, 'queries': queries, 'actualTree': d3_tree}
                 else:
-                    return {'tree': None, 'noHitTree': None, 'error': None, 'queries': queries, 'actualTree': None}
+                    return {'tree': None, 'noHitTree': None, 'error': blasterrors[0], 'queries': queries, 'actualTree': None}
             except:
-                return {'tree': None, 'noHitTree': None, 'error': None, 'queries': queries, 'actualTree': None}
+                if protein_file_type == '0':
+                    temp_prot_file.close()
+                return {'tree': None, 'noHitTree': None, 'error': 'undefined', 'queries': queries, 'actualTree': None}
     else:
         return None
-      
+
 
 
 # start flask server

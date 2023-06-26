@@ -124,7 +124,7 @@ class TaxonomicAnalysisMenu extends Component{
 
                                         <Form inline>
                                             <Form.Check inline type={'radio'} name='treeExportOptions' id='svgSelect' label={'SVG'} onChange={this.handleTreeExportFormat} defaultChecked/>
-                                            <Form.Check inline type={'radio'} name='treeExportOptions' id='jpegSelect' label={'JPEG'} onChange={this.handleTreeExportFormat} />
+                                            <Form.Check inline type={'radio'} name='treeExportOptions' id='jpegSelect' label={'PNG'} onChange={this.handleTreeExportFormat} />
                                         </Form>
 
                                     </div>

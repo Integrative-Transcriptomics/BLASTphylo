@@ -20,6 +20,7 @@ class SearchBar extends Component{
         this.searchBacteria = this.searchBacteria.bind(this)
         this.handleInputChange = this.handleInputChange.bind(this)
         this.handleSelection = this.handleSelection.bind(this)
+        console.log(props)
     }
 
     // access server and search for matching pattern
@@ -54,8 +55,17 @@ class SearchBar extends Component{
 
     handleSelection(event){
         if(this.state.taxon.length > 0){
-            var oldValue = document.getElementById('taxa').value;
-            document.getElementById('taxa').value = oldValue.concat(event.target.value).concat(',');
+            //this.test();
+            console.log(this.state.taxon);
+            var Element = document.getElementById('taxa')
+            var tempvalue;
+            if (Element.value === '') {
+                tempvalue = event.target.value;
+            } else {
+                tempvalue = Element.value.concat(',').concat(event.target.value);
+            }
+            Element.value=tempvalue;
+            this.props.handleChange(tempvalue);
         }
     }
 
@@ -77,7 +87,7 @@ class SearchBar extends Component{
                 <div id='SearchbarContent'>
                 <div id='SearchField'>
                         <SearchField
-                            placeholder='Search for bacteria'
+                            placeholder='Search for bacteria and press enter'
                             onEnter={this.searchBacteria}
                             onSearchClick={this.searchBacteria}
                             onChange={this.handleInputChange}

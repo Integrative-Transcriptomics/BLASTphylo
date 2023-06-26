@@ -46,7 +46,7 @@ class Menu extends Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.inputField = this.inputField.bind(this);
-
+        //this.handleChangeSearchbar = this.handleChangeSearchbar(this);
 
    }
 
@@ -99,7 +99,7 @@ class Menu extends Component {
            var self = this;
            axios.post('server/menu', formData)
              .then(function (response) {
-                 console.log(response.data);
+                 console.log('responsedata', response.data);
                  if(response.data.error === null){
                      if(document.getElementById('alert')){
                         document.getElementById('alert').remove();
@@ -107,12 +107,43 @@ class Menu extends Component {
                      self.props.changeComp('data', response.data);
                      self.props.changeComp('actual', 'tabhandling');
                  }else{
-                     self.props.sendErrors(response.data.error);
-                     //self.props.changeComp('actual', 'menu');
+                     if(response.data.error === 'noHits'){
+                        alert('No significant hits found within the taxonomy specified.')}
+                     else if(response.data.error === 'treeD3failed'){
+                        alert('Failed to generate D3 tree.')}
+                     else if(response.data.error === 'undefined'){
+                        alert('An undefined error occured.')}
+                     else if(response.data.error === 'wrongColumns'){
+                        alert('Your uploaded BLAST result contains invalid values.')}
+                     else if(response.data.error === 'blastfailed'){
+                        alert('BLAST run failed due to server timeout. We kindly ask the user to run BLAST oneself and upload te result to BLASTphylo.')}
+                     else {
+                        console.log('here');
+                        let error_message = '';
+                        for (let i = 0; i < response.data.error.length; i++) {
+                            if (error_message === '') {
+                                error_message = error_message.concat(response.data.error[i]['message']);
+                            } else {
+                                error_message = error_message.concat('\n').concat(response.data.error[i]['message']);
+                            }
+                        }
+
+                        console.log(response.data.error[0]['message']);
+                        alert(error_message);
+                        }
+
+                     //self.props.sendErrors(response.data.error);
+                     self.props.changeComp('actual', 'menu');
+                     //document.getElementById('submit').style.display = "none";
+                     document.getElementById('loadingButton').style.display = "none";
+                     document.getElementById('submit').style.display = 'initial';
                  }
             })
             .catch(error => {
-                console.log(error);
+                alert('BLAST run failed due to server timeout (max. 5 min). We kindly ask the user to run BLAST himself and upload the result to BLASTphylo.');
+                self.props.changeComp('actual', 'menu');
+                document.getElementById('loadingButton').style.display = "none";
+                document.getElementById('submit').style.display = 'initial';
             }
            )
         }else{
@@ -120,6 +151,11 @@ class Menu extends Component {
         }
     }
 
+
+    handleChangeSearchbar = (value) => {
+        this.setState({tree_data: value});
+        console.log('change');
+    }
 
     // Handle changes in the parameter settings
     handleChange(event) {
@@ -143,6 +179,7 @@ class Menu extends Component {
         }
         else if (event.target.name === "taxa"){
             this.setState({tree_data: event.target.value});
+            console.log('change');
         }
         else if (event.target.name === "newick_string"){
             this.setState({tree_data: event.target.value});
@@ -188,7 +225,7 @@ class Menu extends Component {
          const actualBrowser = checkBrowser();
          let placeholderFasta;
          if(actualBrowser === 'safari'){
-            placeholderFasta = '>query1&#x0a; MEMEFNENNIDLETIIRDEVNKYLSRDI&#x0a; GDLPATQQAPLELREKYEKMEVPNKGRDIYEV';
+            placeholderFasta = '>query1\nMEMEFNENNIDLETIIRDEVNKYLSRDI\nGDLPATQQAPLELREKYEKMEVPNKGRDIYEV';
          }else{
             placeholderFasta = '>query1\nMEMEFNENNIDLETIIRDEVNKYLSRDI\nGDLPATQQAPLELREKYEKMEVPNKGRDIYEV';
          }
@@ -265,6 +302,17 @@ class Menu extends Component {
         return(
 
             <div id="menu" >
+            <Form as='fieldset'>
+            <legend>About</legend>
+            <Form inline>
+            <Form.Label> BLASTphylo is a web tool to visualize the occurrence of a protein in the taxonomy for different taxonomic ranks and to visualize the phylogenetic relationships of these proteins as an interactive tree.
+            For more information on the input formats or potential user interactions with BLASTphylo's visualizations, please visit the help page found by clicking on the '?' (upper right corner).
+            </Form.Label>
+            <br/>
+            <Form.Label class="text-warning"> Please note that the current version of BLASTphylo is limited to bacterial proteins and genes.</Form.Label>
+            </Form>
+            </Form>
+            <br/>
             <Form as='fieldset' id='BlastpSearch'>
             <legend>Blast Search</legend>
             <Form.Group >
@@ -298,7 +346,7 @@ class Menu extends Component {
             <legend>Taxonomy</legend>
             <Form.Group>
                 <Form inline>
-                    <Form.Label>Select input type:</Form.Label>
+                    <Form.Label>Use:</Form.Label>
                     <Form.Control as='select' id='tree_menu' name='tree_menu' onChange={this.handleChange}>
                         <option value='0'>NCBI taxonomy</option>
                         <option value='1'>own taxonomic phylogeny</option>
@@ -307,14 +355,13 @@ class Menu extends Component {
             </Form.Group>
             <Form.Group id='NCBI taxonomy'>
                 <Form inline>
-                    <Form.Label>Enter list of taxa as scientific names or taxonomic IDs:</Form.Label>
+                    <Form.Label>Specify taxon name(s) or taxID(s) to restrict the search to part of the taxonomy:</Form.Label>
                     <OverlayTrigger trigger='click' placement='right' overlay={MakeItem(helpMessages['NCBI'])}>
                         <BiHelpCircle style={{color: 'blue'}}/>
                     </OverlayTrigger>
                 </Form>
-                <SearchBar />
                 <Form.Control as='textarea' rows={5} cols={50} id='taxa' name='taxa'
-                placeholder='Staphylococcus,Staphylococcus aureus|subtree' onChange={this.handleChange} />
+                placeholder='Example formats: &#10;Bacterial subtree: Bacteria|subtree or 2|subtree &#10;Specific taxon: Staphylococcus or 1279 &#10;Multiple taxa: 1279|subtree,Proteobacteria|subtree &#10;Subtree of specific taxon: Staphylococcus|subtree or 1279|subtree &#10;Exclude part of a subtree: 1279|!(1280|subtree)' onChange={this.handleChange} />
             </Form.Group>
             <Form.Group id='own taxonomy' style={{display: 'none'}}>
                 <Form inline>
@@ -331,6 +378,12 @@ class Menu extends Component {
                         onChange={this.handleChange} accept='.txt,.dnd' />
                 </Form>
             </Form.Group>
+                <Form.Group>
+                <Form inline>
+                    <Form.Label>Optional: Search for taxon name or taxId to be used in the field above:</Form.Label>
+                </Form>
+                </Form.Group>
+                <SearchBar handleChange={this.handleChangeSearchbar}/>
             </Form>
             <br />
             <Form as='fieldset' id='FilterConditions'>

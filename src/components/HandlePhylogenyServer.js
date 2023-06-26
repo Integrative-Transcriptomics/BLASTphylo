@@ -21,11 +21,27 @@ class HandlePhylogenyServer extends Component{
         var path = 'server/' + this.props.data;
         axios.post(path, null)
          .then(function (response) {
-             //console.log(response.data);
-             self.props.saveActualData(path, response.data);
+             console.log(response.data);
+             if (response.data.errors.length===0){
+                console.log('herehere')
+                self.props.saveActualData(path, response.data);}
+             else{
+                console.log('else')
+                let error_message = '';
+                for (let i = 0; i < response.data.errors.length; i++) {
+                    if (error_message === '') {
+                        error_message = error_message.concat(response.data.errors[i]);
+                    } else {
+                        error_message = error_message.concat('\n').concat(response.data.errors[i]);
+                    }
+                }
+                alert(error_message);
+
+                //this.setState({isActualComponent: 'menu'});
+         }
          })
          .catch(error => {
-            console.log('Error occurred')
+            alert('Phylogeny can not be computed. Go back to the taxonomy tree or restart blastphylo.')
             //console.log(error);
          })
    }
